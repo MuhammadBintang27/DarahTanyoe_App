@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
         fontFamily: 'DMSans',
         useMaterial3: true,
       ),
-      home: const NotifikasiScreen(), // Langsung merujuk ke halaman Notifikasi
+      home: const NotificationPage(), // Langsung merujuk ke halaman Notifikasi
     );
   }
 }

@@ -1,179 +1,218 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-// Model untuk data notifikasi
-class NotifikasiData {
-  final String judul;
-  final String deskripsi;
-  final DateTime waktu;
-  final bool dibaca;
-  final String tipe; // 'permintaan_darah', 'konfirmasi', 'penolakan', dll.
+class NotificationModel {
+  final IconData icon;
+  final Color iconBackgroundColor;
+  final String title;
+  final String subtitle;
+  final String timeAgo;
+  final bool isRead;
 
-  NotifikasiData({
-    required this.judul,
-    required this.deskripsi,
-    required this.waktu,
-    this.dibaca = false,
-    required this.tipe,
+  NotificationModel({
+    required this.icon,
+    required this.iconBackgroundColor,
+    required this.title,
+    required this.subtitle,
+    required this.timeAgo,
+    this.isRead = false,
   });
-
-  // Factory method untuk data contoh
-  factory NotifikasiData.sample() {
-    return NotifikasiData(
-      judul: 'Permintaan Donor Darah Baru',
-      deskripsi: 'Ada permintaan donor darah mendesak untuk pasien Budi Santoso di RSUD Zainul Abidin',
-      waktu: DateTime.now().subtract(const Duration(hours: 2)),
-      tipe: 'permintaan_darah',
-    );
-  }
 }
 
-class NotifikasiScreen extends StatefulWidget {
-  const NotifikasiScreen({super.key});
+class NotificationPage extends StatefulWidget {
+  final VoidCallback? onBackPressed;
+
+  const NotificationPage({
+    Key? key,
+    this.onBackPressed,
+  }) : super(key: key);
 
   @override
-  State<NotifikasiScreen> createState() => _NotifikasiScreenState();
+  State<NotificationPage> createState() => _NotificationPageState();
 }
 
-class _NotifikasiScreenState extends State<NotifikasiScreen> {
-  // Daftar notifikasi
-  final List<NotifikasiData> _notifikasi = [
-    NotifikasiData.sample(),
-    NotifikasiData(
-      judul: 'Konfirmasi Donor Darah',
-      deskripsi: 'Permintaan donor Anda untuk pasien An. Siti telah dikonfirmasi',
-      waktu: DateTime.now().subtract(const Duration(days: 1)),
-      dibaca: true,
-      tipe: 'konfirmasi',
+class _NotificationPageState extends State<NotificationPage> {
+  final List<NotificationModel> _notifications = [
+    NotificationModel(
+      icon: Icons.water_drop_outlined,
+      iconBackgroundColor: const Color(0xFF5A7D7C),
+      title: 'Ada permintaan darah di sekitar Anda.',
+      subtitle: 'Ketuk untuk melihat informasi lebih lanjut',
+      timeAgo: '2j',
     ),
-    NotifikasiData(
-      judul: 'Permintaan Ditolak',
-      deskripsi: 'Maaf, permintaan donor Anda tidak dapat dilanjutkan',
-      waktu: DateTime.now().subtract(const Duration(days: 3)),
-      dibaca: true,
-      tipe: 'penolakan',
+    NotificationModel(
+      icon: Icons.volunteer_activism_outlined,
+      iconBackgroundColor: const Color(0xFF41628A),
+      title: 'Seseorang telah mendonorkan darah untuk Anda.',
+      subtitle: 'Ketuk untuk melihat informasi lebih lanjut',
+      timeAgo: '2j',
+    ),
+    NotificationModel(
+      icon: Icons.handshake_outlined,
+      iconBackgroundColor: const Color(0xFF6D7958),
+      title: 'Permintaan darah Anda telah terpenuhi.',
+      subtitle: 'Ketuk untuk melihat informasi lebih lanjut',
+      timeAgo: '2j',
+    ),
+    NotificationModel(
+      icon: Icons.card_giftcard_outlined,
+      iconBackgroundColor: const Color(0xFF8A4250),
+      title: 'Donor, dapatkan poin, dan tukar dengan voucher sembako.',
+      subtitle: 'Ketuk untuk melihat informasi lebih lanjut',
+      timeAgo: '2j',
+    ),
+    NotificationModel(
+      icon: Icons.hourglass_empty_outlined,
+      iconBackgroundColor: const Color(0xFF8C7D64),
+      title: 'Permintaan darah Anda telah mencapai batas waktu',
+      subtitle: 'Ketuk untuk melihat informasi lebih lanjut',
+      timeAgo: '2j',
     ),
   ];
 
-  // Method untuk format waktu relatif
-  String _formatWaktu(DateTime waktu) {
-    final now = DateTime.now();
-    final difference = now.difference(waktu);
-
-    if (difference.inMinutes < 60) {
-      return '${difference.inMinutes} menit yang lalu';
-    } else if (difference.inHours < 24) {
-      return '${difference.inHours} jam yang lalu';
-    } else if (difference.inDays < 7) {
-      return '${difference.inDays} hari yang lalu';
-    } else {
-      return '${waktu.day}/${waktu.month}/${waktu.year}';
-    }
-  }
-
-  // Method untuk mendapatkan warna berdasarkan tipe notifikasi
-  Color _getWarnaTipe(String tipe) {
-    switch (tipe) {
-      case 'permintaan_darah':
-        return const Color(0xFFAB4545); // Merah
-      case 'konfirmasi':
-        return const Color(0xFF2E7D32); // Hijau
-      case 'penolakan':
-        return const Color(0xFFB71C1C); // Merah gelap
-      default:
-        return const Color(0xFF333333); // Abu-abu
-    }
-  }
-
-  // Method untuk mendapatkan ikon berdasarkan tipe notifikasi
-  IconData _getIkonTipe(String tipe) {
-    switch (tipe) {
-      case 'permintaan_darah':
-        return Icons.bloodtype;
-      case 'konfirmasi':
-        return Icons.check_circle;
-      case 'penolakan':
-        return Icons.cancel;
-      default:
-        return Icons.notifications;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    // Set status bar
+    // Set status bar dengan warna putih dan ikon hitam
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.white,
       statusBarIconBrightness: Brightness.dark,
-      statusBarBrightness: Brightness.light,
+      statusBarBrightness: Brightness.light, // For iOS
     ));
 
     return Scaffold(
-      body: Column(
+      body: Stack(
         children: [
-          // AppBar Custom
-          Container(
-            height: 80,
-            decoration: const BoxDecoration(
-              color: Color(0xFFAB4545),
-            ),
-            child: SafeArea(
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                  const Expanded(
-                    child: Center(
-                      child: Text(
-                        'Notifikasi',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(right: 16),
-                    child: Text(
-                      'Bersihkan Semua',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // Daftar Notifikasi
-          Expanded(
-            child: Container(
-              decoration: const BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage('assets/images/background.png'),
-                  fit: BoxFit.cover,
+          // Main Content Area
+          Column(
+            children: [
+              // Custom AppBar with absolute position
+              Container(
+                height: 80,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFAB4545),
                 ),
-              ),
-              child: Container(
-                color: Colors.white.withOpacity(0.75),
-                child: _notifikasi.isEmpty
-                    ? _buildEmptyNotifikasi()
-                    : ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _notifikasi.length,
-                        itemBuilder: (context, index) {
-                          final notifikasi = _notifikasi[index];
-                          return _buildItemNotifikasi(notifikasi);
+                child: SafeArea(
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back, color: Colors.white),
+                        onPressed: widget.onBackPressed ?? () {
+                          Navigator.of(context).pop();
                         },
                       ),
+                      const Expanded(
+                        child: Center(
+                          child: Padding(
+                            padding: EdgeInsets.only(top: 0),
+                            child: Text(
+                              'Notifikasi',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Space for symmetry
+                      const SizedBox(width: 48),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Body content below the app bar
+              Expanded(
+                child: Container(
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('assets/images/background.png'),
+                      fit: BoxFit.cover,
+                      opacity: 0.5,
+                    ),
+                  ),
+                  child: Container(
+                    color: Colors.white.withOpacity(0.5),
+                    
+                    padding: const EdgeInsets.only(top: 30),
+                    child: Column(
+                      children: [
+                        // User pill container
+                        Container(
+
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          alignment: Alignment.center,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: Colors.grey.shade300),
+                            ),
+                          ),
+                          
+                        ),
+                        
+                        // Notification list
+                        Expanded(
+                          child: ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            itemCount: _notifications.length,
+                            itemBuilder: (context, index) {
+                              final notification = _notifications[index];
+                              return _buildNotificationItem(notification);
+                            },
+                          ),
+                        ),
+                        
+                        // Footer copyright
+                       // Footer copyright styled like the image
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 24),
+                          alignment: Alignment.center,
+                          child: const Text(
+                            '© 2025 Beyond. Hak Cipta Dilindungi.',
+                            style: TextStyle(
+                              color: Color(0xFF8A8A8A),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          // Logo positioned between appBar and content
+          Positioned(
+            top: 80.0 - 15,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Image.asset(
+                  'assets/images/darah_tanyoe_logo.png',
+                  height: 25,
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
           ),
@@ -182,107 +221,152 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
     );
   }
 
-  // Widget untuk item notifikasi
-  Widget _buildItemNotifikasi(NotifikasiData notifikasi) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: notifikasi.dibaca ? Colors.white : const Color(0xFFFFF0F0),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: notifikasi.dibaca ? Colors.grey.shade300 : const Color(0xFFAB4545),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 5,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-        leading: Container(
-          width: 50,
-          height: 50,
+ Widget _buildNotificationItem(NotificationModel notification) {
+    return Stack(
+      children: [
+        // Main notification card
+        Container(
+          margin: const EdgeInsets.only(bottom: 20), // Increased bottom margin
           decoration: BoxDecoration(
-            color: _getWarnaTipe(notifikasi.tipe).withOpacity(0.2),
-            shape: BoxShape.circle,
-          ),
-          child: Center(
-            child: Icon(
-              _getIkonTipe(notifikasi.tipe),
-              color: _getWarnaTipe(notifikasi.tipe),
-              size: 26,
-            ),
-          ),
-        ),
-        title: Text(
-          notifikasi.judul,
-          style: TextStyle(
-            fontWeight: notifikasi.dibaca ? FontWeight.normal : FontWeight.bold,
-            color: Colors.black87,
-          ),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 4),
-            Text(
-              notifikasi.deskripsi,
-              style: const TextStyle(
-                color: Colors.black54,
-                fontSize: 12,
+            color: const Color(0xFFF5F0DD), // Beige background color
+            borderRadius: BorderRadius.circular(18), // Slightly larger border radius
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08), // Slightly stronger shadow
+                blurRadius: 6,
+                offset: const Offset(0, 3),
               ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+            ],
+            border: Border.all(
+              color: const Color(0xFFE6DFC8), // Light border color
+              width: 1,
             ),
-            const SizedBox(height: 4),
-            Text(
-              _formatWaktu(notifikasi.waktu),
-              style: TextStyle(
-                color: Colors.grey.shade600,
-                fontSize: 10,
-              ),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(18),
+            child: Stack(
+              children: [
+                // Background image with low opacity
+                Positioned.fill(
+                  child: Opacity(
+                    opacity: 0.2, // Very subtle background
+                    child: Image.asset(
+                      'assets/images/Hero.png',
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                // Card content
+                InkWell(
+                  onTap: () {
+                    // Handle notification tap
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center, // Center items vertically
+                      children: [
+                        // Icon container
+                        Container(
+                          margin: const EdgeInsets.only(right: 14), // More space after icon
+                          alignment: Alignment.center, // Center the icon
+                          child: Icon(
+                            notification.icon,
+                            color: const Color(0xFF4D4D4D),
+                            size: 30, // Larger icon
+                          ),
+                        ),
+                        
+                        // Notification content
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min, // Only take necessary vertical space
+                            children: [
+                              Text(
+                                notification.title,
+                                style: const TextStyle(
+                                  fontSize: 15, // Slightly larger font
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF333333),
+                                ),
+                              ),
+                              const SizedBox(height: 5), // More space
+                              Text(
+                                notification.subtitle,
+                                style: const TextStyle(
+                                  fontSize: 13, // Slightly larger font
+                                  color: Color(0xFF666666),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        
+                        // Time and more options
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          mainAxisSize: MainAxisSize.min, // Only take necessary vertical space
+                          children: [
+                            Text(
+                              notification.timeAgo,
+                              style: const TextStyle(
+                                fontSize: 13, // Slightly larger font
+                                color: Color(0xFF9E9E9E),
+                              ),
+                            ),
+                            const SizedBox(height: 5), // More space
+                            const Icon(
+                              Icons.more_horiz,
+                              color: Color(0xFF9E9E9E),
+                              size: 22, // Slightly larger icon
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
-      ),
+        
+        // Red dot indicator in top-left corner
+        Positioned(
+          top: 0,
+          left: 0,
+          child: Container(
+            width: 14, // Slightly larger dot
+            height: 14,
+            decoration: const BoxDecoration(
+              color: Color(0xFFA83838),
+              shape: BoxShape.circle,
+            ),
+          ),
+        ),
+      ],
     );
   }
+   }
 
-  // Widget untuk tampilan saat tidak ada notifikasi
-  Widget _buildEmptyNotifikasi() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.asset(
-            'assets/images/empty_notifications.png', // Asumsikan Anda memiliki gambar ini
-            width: 200,
-            height: 200,
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Tidak Ada Notifikasi',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.black54,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Anda akan menerima notifikasi saat ada aktivitas',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade600,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
+// Example usage
+class NotificationExample extends StatelessWidget {
+  const NotificationExample({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      theme: ThemeData(
+        primarySwatch: Colors.red,
+        scaffoldBackgroundColor: Colors.grey[100],
       ),
+      home: const NotificationPage(),
+      debugShowCheckedModeBanner: false,
     );
   }
+}
+
+void main() {
+  runApp(const NotificationExample());
 }
