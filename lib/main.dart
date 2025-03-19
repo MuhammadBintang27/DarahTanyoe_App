@@ -1,6 +1,9 @@
+import 'package:darahtanyoe_app/pages/authentication/blood_info.dart';
+import 'package:darahtanyoe_app/pages/authentication/login_page.dart';
+import 'package:darahtanyoe_app/pages/authentication/splash_screen.dart';
 import 'package:flutter/material.dart';
-import 'pages/DetailPermintaanDarah.dart';
-import 'service/DonationService.dart';
+
+import 'pages/authentication/address_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,22 +14,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Get sample patient data from the service
-    final patientData = DonationService.getSamplePatientData();
-    
-    // Get the current donation status (in this example, completed,rejected,pending,countdown,confirmed)
-    final donationStatus = DonationService.getDonationStatus(DonationStatusType.countdown);
-
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
+      title: 'Flutter Demo',
       theme: ThemeData(
-        primarySwatch: Colors.red,
-        primaryColor: const Color(0xFFAB4545),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        fontFamily: 'DMSans',
+        useMaterial3: true,
       ),
-      home: BloodDonationDetailScreen(
-        patientData: patientData,
-        donationStatus: donationStatus,
-      ),
+      home: const LoginPage(), // Ganti ke SplashScreen dulu
     );
   }
 }
