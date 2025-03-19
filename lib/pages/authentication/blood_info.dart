@@ -2,9 +2,48 @@ import 'package:darahtanyoe_app/components/copyright.dart';
 import 'package:darahtanyoe_app/components/my_button.dart';
 import 'package:flutter/material.dart';
 import '../../components/my_textfield.dart';
+import '../../service/auth_service.dart';
 
-class DataDiri extends StatelessWidget {
-  const DataDiri({Key? key}) : super(key: key);
+class BloodInfo extends StatefulWidget {
+  const BloodInfo({Key? key}) : super(key: key);
+
+  @override
+  _BloodInfoState createState() => _BloodInfoState();
+}
+
+class _BloodInfoState extends State<BloodInfo> {
+  final AuthService _authService = AuthService();
+
+  String? _selectedBloodType;
+  String? _selectedRhesus;
+  String? _selectedLastDonation;
+  List<String> _selectedMedicalHistory = [];
+
+  void _submitBloodInfo() async {
+    if (_selectedBloodType == null || _selectedRhesus == null || _selectedLastDonation == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Harap lengkapi semua data")),
+      );
+      return;
+    }
+
+    bool success = await _authService.saveBloodInfo(
+      _selectedBloodType!,
+      _selectedRhesus!,
+      _selectedLastDonation!,
+      _selectedMedicalHistory,
+    );
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Informasi darah berhasil disimpan!")),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Gagal menyimpan informasi darah")),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +53,6 @@ class DataDiri extends StatelessWidget {
     return Scaffold(
       body: Stack(
         children: [
-          // Background pattern
           Container(
             decoration: BoxDecoration(
               color: Colors.white,
@@ -24,8 +62,6 @@ class DataDiri extends StatelessWidget {
               ),
             ),
           ),
-
-          // Main content
           Column(
             children: [
               Expanded(
@@ -41,19 +77,17 @@ class DataDiri extends StatelessWidget {
                   ),
                 ),
               ),
-
-              // Form Section
               Container(
                 width: screenWidth,
-                height: screenHeight * 0.6,
+                height: screenHeight * 0.7,
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Color(0xFFCC5555), // Darker red at top
-                      Color(0xFFCC8888), // Mid transition
-                      Color(0xFFF8F0F0), // Light color at bottom
+                      Color(0xFFCC5555),
+                      Color(0xFFCC8888),
+                      Color(0xFFF8F0F0),
                     ],
                     stops: [0.3, 0.7, 1.0],
                   ),
@@ -70,7 +104,7 @@ class DataDiri extends StatelessWidget {
                       children: [
                         Center(
                           child: Text(
-                            'DATA DIRI',
+                            'Informasi Darah',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 26,
@@ -86,51 +120,50 @@ class DataDiri extends StatelessWidget {
                               color: Colors.white,
                               size: 18,
                             ),
-                            onPressed: () {},
+                            onPressed: () => Navigator.pop(context),
                           ),
                         ),
                       ],
                     ),
-
                     const SizedBox(height: 34),
-
-                    _buildLabel('Nama Lengkap'),
+                    _buildLabel('Golongan Darah'),
                     MyTextField(
-                      hintText: 'Nama lengkap',
-                      keyboardType: TextInputType.text,
-                      inputType: InputType.text,
+                      hintText: 'Pilih golongan darah',
+                      inputType: InputType.dropdown,
+                      dropdownItems: ['A', 'B', 'AB', 'O'],
+                      onChanged: (value) => _selectedBloodType = value,
                     ),
-
                     const SizedBox(height: 20),
-
-                    _buildLabel('Usia'),
+                    _buildLabel('Rhesus'),
                     MyTextField(
-                      hintText: 'Usia',
-                      keyboardType: TextInputType.number,
-                      inputType: InputType.text,
+                      hintText: 'Pilih Rhesus',
+                      inputType: InputType.dropdown,
+                      dropdownItems: ['Positif (+)', 'Negatif (-)'],
+                      onChanged: (value) => _selectedRhesus = value,
                     ),
-
                     const SizedBox(height: 20),
-
-                    _buildLabel('Email'),
+                    _buildLabel('Riwayat Donor Terakhir'),
                     MyTextField(
-                      hintText: 'Email',
-                      keyboardType: TextInputType.emailAddress,
-                      inputType: InputType.text,
+                      hintText: 'Pilih tanggal',
+                      inputType: InputType.date,
+                      onChanged: (value) => _selectedLastDonation = value,
                     ),
-
+                    const SizedBox(height: 20),
+                    _buildLabel('Riwayat Penyakit'),
+                    MyTextField(
+                      hintText: 'Pilih Riwayat Penyakit',
+                      inputType: InputType.dropdown,
+                      dropdownItems: ['Tidak Ada', 'Diabetes', 'Hipertensi', 'Jantung', 'Hepatitis', 'Lainnya'],
+                      onChanged: (value) => _selectedMedicalHistory = [value],
+                    ),
                     const SizedBox(height: 26),
-
                     MyButton(
                       text: "Lanjut",
-                      onPressed: () {},
+                      onPressed: _submitBloodInfo,
                       color: const Color(0xFF476EB6),
                     ),
-
                     const SizedBox(height: 20),
-
                     const Spacer(),
-
                     CopyrightWidget(),
                   ],
                 ),

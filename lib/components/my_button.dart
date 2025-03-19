@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class MyButton extends StatelessWidget {
   final String text;
@@ -19,6 +20,7 @@ class MyButton extends StatelessWidget {
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: color, // Gunakan warna yang bisa diubah
+          foregroundColor: Colors.white, // Warna teks saat tombol ditekan
           minimumSize: const Size(120, 44),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
@@ -29,7 +31,11 @@ class MyButton extends StatelessWidget {
         ),
         child: Text(
           text,
-          style: const TextStyle(color: Colors.white, fontSize: 16),
+          style: GoogleFonts.dmSans(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
     );
