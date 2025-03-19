@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
         fontFamily: 'DMSans',
         useMaterial3: true,
       ),
-      home: const BloodInfo(), // Ganti ke SplashScreen dulu
+      home: const LoginPage(), // Ganti ke SplashScreen dulu
     );
   }
 }
