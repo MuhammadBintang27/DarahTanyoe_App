@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../pages/DetailPermintaanDarah.dart';
+import '../pages/detail_permintaan/detail_permintaan_darah.dart';
 
 class DonationService {
   // Method to get sample patient data
