@@ -1,8 +1,9 @@
 import 'package:darahtanyoe_app/components/action_button.dart';
+import 'package:darahtanyoe_app/widget/header_widget.dart';
 import 'package:flutter/material.dart';
 
-import '../components/article_slider.dart';
-import '../components/my_navbar.dart';
+import '../../components/article_slider.dart';
+import '../../components/my_navbar.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -28,7 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           children: [
             // Header di luar scroll
-            _buildHeader(),
+            HeaderWidget(),
 
             // Expanded agar sisanya bisa di-scroll
             Expanded(
@@ -52,43 +53,10 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     ),
-    bottomNavigationBar: CustomBottomNavBar(
-      selectedIndex: _selectedIndex,
-      onItemSelected: (index) {
-        setState(() {
-          _selectedIndex = index;
-        });
-      },
-    ),
+    bottomNavigationBar: CustomBottomNavBar(selectedIndex: 0),
+
   );
 }
-
-
-  Widget _buildHeader() {
-    return Padding(
-      padding: EdgeInsets.all(16.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Image.asset(
-              'assets/images/darah_tanyoe_logo.png',
-              width: 200,
-            ),
-          ),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.amber,
-              shape: BoxShape.circle,
-            ),
-            padding: EdgeInsets.all(8),
-            child: Icon(Icons.notifications, color: Colors.white),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildUserProfile() {
   return Padding(
