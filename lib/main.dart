@@ -1,7 +1,7 @@
 import 'package:darahtanyoe_app/pages/authentication/blood_info.dart';
 import 'package:darahtanyoe_app/pages/authentication/login_page.dart';
 import 'package:darahtanyoe_app/pages/authentication/splash_screen.dart';
-import 'package:darahtanyoe_app/pages/home_screen.dart';
+import 'package:darahtanyoe_app/pages/mainpage/home_screen.dart';
 import 'package:flutter/material.dart';
 
 import 'pages/authentication/address_page.dart';
