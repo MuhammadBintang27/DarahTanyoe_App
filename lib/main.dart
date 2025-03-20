@@ -1,13 +1,5 @@
-import 'package:darahtanyoe_app/pages/authentication/blood_info.dart';
-import 'package:darahtanyoe_app/pages/authentication/login_page.dart';
-import 'package:darahtanyoe_app/pages/authentication/splash_screen.dart';
-import 'package:darahtanyoe_app/pages/data_permintaan/data_diri.dart';
-import 'package:darahtanyoe_app/pages/mainpage/home_screen.dart';
-import 'package:darahtanyoe_app/pages/mainpage/transaksi.dart';
-import 'package:flutter/material.dart';
 
-import 'pages/authentication/address_page.dart';
-import 'pages/detail_permintaan/detail_permintaan_darah.dart';
+import 'package:darahtanyoe_app/pages/authentication/login_page.dart';
 
 void main() {
   runApp(const MyApp());
