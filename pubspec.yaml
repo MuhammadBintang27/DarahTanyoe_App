@@ -14,7 +14,6 @@ dependencies:
   flutter_native_splash: ^2.4.4
   pinput: ^5.0.1
   google_fonts: ^6.1.0
-  pinput: ^5.0.1
   geolocator: ^13.0.3
   google_maps_flutter: ^2.11.0
   geocoding: ^3.0.0
@@ -27,14 +26,16 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
+  fonts:
+    - family: DM Sans
+      fonts:
+        - asset: assets/fonts/DMSans-Regular.ttf
+        - asset: assets/fonts/DMSans-Bold.ttf
 
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/images/
+    - assets/logo/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
