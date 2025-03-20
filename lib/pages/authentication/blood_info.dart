@@ -3,6 +3,7 @@ import 'package:darahtanyoe_app/components/my_button.dart';
 import 'package:flutter/material.dart';
 import '../../components/my_textfield.dart';
 import '../../service/auth_service.dart';
+import '../mainpage/home_screen.dart';
 
 class BloodInfo extends StatefulWidget {
   const BloodInfo({Key? key}) : super(key: key);
@@ -20,7 +21,9 @@ class _BloodInfoState extends State<BloodInfo> {
   List<String> _selectedMedicalHistory = [];
 
   void _submitBloodInfo() async {
-    if (_selectedBloodType == null || _selectedRhesus == null || _selectedLastDonation == null) {
+    if (_selectedBloodType == null ||
+        _selectedRhesus == null ||
+        _selectedLastDonation == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Harap lengkapi semua data")),
       );
@@ -37,6 +40,10 @@ class _BloodInfoState extends State<BloodInfo> {
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Informasi darah berhasil disimpan!")),
+      );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => HomeScreen()),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -96,7 +103,8 @@ class _BloodInfoState extends State<BloodInfo> {
                     topRight: Radius.circular(50),
                   ),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 40),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 30, vertical: 40),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -153,7 +161,14 @@ class _BloodInfoState extends State<BloodInfo> {
                     MyTextField(
                       hintText: 'Pilih Riwayat Penyakit',
                       inputType: InputType.dropdown,
-                      dropdownItems: ['Tidak Ada', 'Diabetes', 'Hipertensi', 'Jantung', 'Hepatitis', 'Lainnya'],
+                      dropdownItems: [
+                        'Tidak Ada',
+                        'Diabetes',
+                        'Hipertensi',
+                        'Jantung',
+                        'Hepatitis',
+                        'Lainnya'
+                      ],
                       onChanged: (value) => _selectedMedicalHistory = [value],
                     ),
                     const SizedBox(height: 26),

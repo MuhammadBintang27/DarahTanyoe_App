@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../mainpage/home_screen.dart';
+import '../mainpage/transaksi.dart';
+
 class Validasi extends StatefulWidget {
   final String nama;
   final String usia;
@@ -236,28 +239,86 @@ Widget _navigationButtons(BuildContext context) {
       );
     } else {
       // Menampilkan pop-up gambar
-      _showPopup();
+      showCustomDialog(context, widget);
     }
   }
 
-  void _showPopup() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          child: GestureDetector(
-            onTap: () {
-              // Menutup popup
-              Navigator.pop(context); // Menutup dialog
-            },
-            child: Image.asset(
-              'assets/images/popup_permintaan.png',
-              fit: BoxFit.cover,
-            ),
+  void showCustomDialog(BuildContext context, Validasi Patient) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Container(
+          padding: EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
           ),
-        );
-      },
-    );
-  }
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.check_circle, size: 80, color: Colors.green),
+              SizedBox(height: 10),
+              Text(
+                "Permintaan Anda Berhasil",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 10),
+              Text(
+                "Pengajuan Anda sedang diproses. Mohon TUNGGU KONFIRMASI dari pihak RS/PMI terkait sebelum mendatangi lokasi pendonoran.",
+                style: TextStyle(fontSize: 14),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.amber,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop(); // Tutup dialog
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => TransactionBlood(),
+                    ),
+                  );
+                },
+                child: Text("Lihat Permintaan", style: TextStyle(color: Colors.black)),
+              ),
+              SizedBox(height: 10),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey[800],
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop(); // Tutup dialog
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => HomeScreen(),
+                    ),
+                  );
+                },
+                child: Text("Kembali ke Beranda", style: TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
 }
