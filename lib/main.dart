@@ -1,8 +1,5 @@
 
-import 'package:flutter/material.dart';
-import 'package:darahtanyoe_app/pages/mainpage/home_screen.dart';
-
-
+import 'package:darahtanyoe_app/pages/authentication/login_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -20,7 +17,7 @@ class MyApp extends StatelessWidget {
         fontFamily: 'DM Sans',
         useMaterial3: true,
       ),
-      home: HomeScreen(), // Ganti ke SplashScreen dulu
+      home: LoginPage(), // Ganti ke SplashScreen dulu
     );
   }
 }

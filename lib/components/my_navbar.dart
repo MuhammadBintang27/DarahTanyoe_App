@@ -4,6 +4,7 @@ import 'package:darahtanyoe_app/pages/authentication/login_page.dart';
 import 'package:darahtanyoe_app/pages/authentication/personal_info.dart';
 import 'package:darahtanyoe_app/pages/data_permintaan/data_darah.dart';
 import 'package:darahtanyoe_app/pages/data_permintaan/jadwal_lokasi.dart';
+import 'package:darahtanyoe_app/pages/mainpage/transaksi.dart';
 import 'package:flutter/material.dart';
 import 'package:darahtanyoe_app/pages/mainpage/home_screen.dart';
 
@@ -26,7 +27,7 @@ class CustomBottomNavBar extends StatelessWidget {
         nextPage = LoginPage();
         break;
       case 2:
-        nextPage = PersonalInfo();
+        nextPage = TransactionBlood();
         break;
       case 3:
         nextPage = AddressPage();
