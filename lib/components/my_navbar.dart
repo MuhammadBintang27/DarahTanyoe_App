@@ -7,6 +7,7 @@ import 'package:darahtanyoe_app/pages/data_permintaan/jadwal_lokasi.dart';
 import 'package:darahtanyoe_app/pages/mainpage/transaksi.dart';
 import 'package:flutter/material.dart';
 import 'package:darahtanyoe_app/pages/mainpage/home_screen.dart';
+import 'package:darahtanyoe_app/pages/mainpage/peta_darah.dart';
 
 
 class CustomBottomNavBar extends StatelessWidget {
@@ -27,10 +28,10 @@ class CustomBottomNavBar extends StatelessWidget {
         nextPage = LoginPage();
         break;
       case 2:
-        nextPage = TransactionBlood();
+        nextPage = BloodMap();
         break;
       case 3:
-        nextPage = AddressPage();
+        nextPage = TransactionBlood();
         break;
       case 4:
         nextPage = BloodInfo();
