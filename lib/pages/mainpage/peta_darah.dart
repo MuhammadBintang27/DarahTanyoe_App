@@ -5,6 +5,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:async';
 
 import '../../components/my_navbar.dart';
 
@@ -28,35 +29,39 @@ class _BloodMapState extends State<BloodMap> {
   List<Map<String, dynamic>> locationSuggestions = [];
 
   Future<void> _fetchLocationSuggestions(String query) async {
-    if (query.isEmpty) {
-      setState(() {
-        locationSuggestions = [];
-      });
-      return;
-    }
+  if (query.isEmpty) {
+    setState(() {
+      locationSuggestions = [];
+    });
+    return;
+  }
 
+  if (_debounce?.isActive ?? false) _debounce?.cancel();
+  _debounce = Timer(Duration(milliseconds: 500), () async {
     final url = Uri.parse(
         'https://nominatim.openstreetmap.org/search?q=$query&format=json');
 
     try {
       final response = await http.get(url);
-
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         setState(() {
           locationSuggestions = data
               .map((item) => {
-            'display_name': item['display_name'],
-            'lat': double.parse(item['lat']),
-            'lon': double.parse(item['lon'])
-          })
+                    'display_name': item['display_name'],
+                    'lat': double.parse(item['lat']),
+                    'lon': double.parse(item['lon'])
+                  })
               .toList();
         });
       }
     } catch (e) {
       print('Error fetching location suggestions: $e');
     }
-  }
+  });
+}
+
+Timer? _debounce;
 
   void _selectLocation(Map<String, dynamic> location) {
     final lat = location['lat'];
@@ -172,6 +177,7 @@ class _BloodMapState extends State<BloodMap> {
                       ),
                     ),
                   ),
+
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20.0),
                     child: Divider(
@@ -229,6 +235,7 @@ class _BloodMapState extends State<BloodMap> {
                             ),
                           ),
                         ),
+
                         const SizedBox(width: 10.0),
                         Expanded(
                           child: Container(
@@ -278,9 +285,10 @@ class _BloodMapState extends State<BloodMap> {
                       ],
                     ),
                   ),
+
                   const SizedBox(height: 26.0),
                   SizedBox(
-                    height:470,
+                    height:460,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20.0),
                       child: ClipRRect(
@@ -290,8 +298,8 @@ class _BloodMapState extends State<BloodMap> {
                             FlutterMap(
                               mapController: mapController,
                               options: MapOptions(
-                                center: userLocation ?? LatLng(-6.2088, 106.8456),
-                                zoom: 13.0,
+                                initialCenter: userLocation ?? LatLng(-6.2088, 106.8456),
+                                initialZoom: 13.0,
                               ),
                               children: [
                                 TileLayer(
@@ -388,6 +396,7 @@ class _BloodMapState extends State<BloodMap> {
                       ),
                     ),
                   ),
+
                 ],
               ),
             ),
