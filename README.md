@@ -1,0 +1,84 @@
+# DarahTanyoe: Ekosistem Cerdas Berbasis AI untuk Donor Darah yang Transparan dan Real-Time
+
+## Deskripsi
+DarahTanyoe adalah platform inovatif berbasis mobile dan web yang menghubungkan pasien, pendonor, rumah sakit, dan PMI dalam satu ekosistem digital. Dengan fitur real-time monitoring stok darah dan pencocokan otomatis antara pemohon dan pendonor, aplikasi ini bertujuan untuk meningkatkan transparansi dan efisiensi dalam sistem donor darah.
+
+## Fitur Utama
+- **Dashboard Real-Time**: Menampilkan ketersediaan stok darah di rumah sakit dan PMI terdekat.
+- **Pencocokan Otomatis**: Menghubungkan pendonor dan pasien berdasarkan golongan darah dan lokasi.
+- **Notifikasi Darurat**: Sistem otomatis yang mengirimkan pemberitahuan kepada pendonor terdekat.
+- **Validasi dan Verifikasi**: RS/PMI memverifikasi setiap permintaan untuk memastikan keakuratan dan keamanan.
+- **Reward System**: Pendonor mendapatkan poin yang dapat ditukar dengan berbagai keuntungan.
+
+## Teknologi yang Digunakan
+### **Mobile App Development**
+- **Flutter (Dart)**: Framework untuk aplikasi mobile cross-platform (Android & iOS).
+- **Riverpod**: State management yang modular dan efisien.
+- **Dio**: Networking untuk komunikasi API dengan caching dan error handling.
+- **Hive/Isar**: Penyimpanan data lokal untuk sesi pengguna.
+
+### **Web Development (untuk RS/PMI)**
+- **Next.js (React)**: Framework untuk frontend dengan SSR dan SSG.
+- **Tailwind CSS**: Styling modern dan efisien.
+- **Supabase Auth**: Autentikasi pengguna berbasis OAuth dan OTP.
+
+### **Backend Services**
+- **Node.js + Express**: REST API backend untuk menangani permintaan donor dan stok darah.
+- **Supabase (PostgreSQL + Realtime Database)**: Database dengan fitur live updates.
+- **Redis**: Caching dan queuing system.
+- **WebSockets (Supabase Realtime)**: Untuk komunikasi data real-time.
+
+### **Geolocation Services**
+- **Google Maps API**: Menampilkan lokasi rumah sakit dan pendonor terdekat.
+- **Supabase PostGIS**: Query geolocation untuk pencarian pendonor dalam radius tertentu.
+
+### **Push Notification System**
+- **Firebase Cloud Messaging (FCM)**: Notifikasi real-time ke pengguna.
+- **Twilio WhatsApp Business API**: Broadcast WhatsApp untuk permintaan donor.
+
+### **Server dan Infrastruktur**
+- **Vercel**: Deployment untuk frontend dan backend.
+- **Supabase**: Deployment database PostgreSQL dengan fitur serverless.
+- **Firebase App Distribution / TestFlight**: Pengujian aplikasi sebelum rilis.
+
+## Instalasi dan Penggunaan
+### **1. Clone Repository**
+```sh
+git clone https://github.com/user/darahtanyoe.git
+cd darahtanyoe
+```
+
+### **2. Backend Setup**
+```sh
+cd backend
+npm install
+npm start
+```
+
+### **3. Frontend Setup**
+```sh
+cd frontend
+npm install
+npm run dev
+```
+
+### **4. Mobile App Setup**
+```sh
+cd mobile
+flutter pub get
+flutter run
+```
+
+## Kontribusi
+Kami terbuka untuk kontribusi dari siapa saja yang tertarik dalam meningkatkan sistem donor darah. Silakan buat pull request atau hubungi kami untuk informasi lebih lanjut.
+
+## Tim Pengembang
+**Tim BEYOND**
+- Glenn Hakim
+- Musliadi
+- Ahmad Syah Ramadhan
+- Muhammad Habil Aswad
+- Muhammad Bintang Indra Hidayat
+
+## Lisensi
+Proyek ini menggunakan lisensi [MIT](LICENSE).
