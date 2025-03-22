@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:darahtanyoe_app/pages/authentication/personal_info.dart';
-import 'package:darahtanyoe_app/pages/mainpage/main_navigasi_screen.dart';
+import 'package:darahtanyoe_app/pages/mainpage/main_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:http/http.dart' as http;
