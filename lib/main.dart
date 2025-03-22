@@ -1,7 +1,5 @@
 
-import 'package:darahtanyoe_app/pages/authentication/blood_info.dart';
-import 'package:darahtanyoe_app/pages/authentication/login_page.dart';
-import 'package:darahtanyoe_app/pages/data_permintaan/data_diri.dart';
+import 'package:darahtanyoe_app/pages/mainpage/main_navigasi_screen.dart';
 import 'package:flutter/material.dart';
 
 import 'service/auth_service.dart';
@@ -24,7 +22,7 @@ class MyApp extends StatelessWidget {
         fontFamily: 'DM Sans',
         useMaterial3: true,
       ),
-      home: DataDiri(), // Ganti ke SplashScreen dulu
+      home: MainScreen(), // Ganti ke SplashScreen dulu
     );
   }
 }

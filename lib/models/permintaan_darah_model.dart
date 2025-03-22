@@ -3,7 +3,6 @@ class PermintaanDarahModel {
   final String patientAge;
   final String phoneNumber;
   final String bloodType;
-  final String rhesus;
   final String bloodBagsNeeded;
   final String description;
   final String donationLocation;
@@ -19,7 +18,6 @@ class PermintaanDarahModel {
     required this.patientAge,
     required this.phoneNumber,
     required this.bloodType,
-    required this.rhesus,
     required this.bloodBagsNeeded,
     required this.description,
     required this.donationLocation,
@@ -37,7 +35,6 @@ class PermintaanDarahModel {
       'patientAge': patientAge,
       'phoneNumber': phoneNumber,
       'bloodType': bloodType,
-      'rhesus': rhesus,
       'bloodBagsNeeded': bloodBagsNeeded,
       'description': description,
       'donationLocation': donationLocation,
@@ -56,7 +53,6 @@ class PermintaanDarahModel {
       patientAge: json['patientAge'] ?? '',
       phoneNumber: json['phoneNumber'] ?? '',
       bloodType: json['bloodType'] ?? '',
-      rhesus: json['rhesus'] ?? '',
       bloodBagsNeeded: json['bloodBagsNeeded'] ?? '',
       description: json['description'] ?? '',
       donationLocation: json['donationLocation'] ?? '',
@@ -74,7 +70,6 @@ class PermintaanDarahModel {
     String? patientAge,
     String? phoneNumber,
     String? bloodType,
-    String? rhesus,
     String? bloodBagsNeeded,
     String? description,
     String? donationLocation,
@@ -90,7 +85,6 @@ class PermintaanDarahModel {
       patientAge: patientAge ?? this.patientAge,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       bloodType: bloodType ?? this.bloodType,
-      rhesus: rhesus ?? this.rhesus,
       bloodBagsNeeded: bloodBagsNeeded ?? this.bloodBagsNeeded,
       description: description ?? this.description,
       donationLocation: donationLocation ?? this.donationLocation,

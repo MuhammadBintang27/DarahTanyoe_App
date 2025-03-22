@@ -88,7 +88,6 @@ class _TransactionBloodState extends State<TransactionBlood> {
       body: isLoading 
         ? _buildLoadingIndicator() 
         : _buildTransactionBody(),
-      bottomNavigationBar: CustomBottomNavBar(selectedIndex: 0),
     );
   }
   
@@ -231,7 +230,7 @@ class _TransactionBloodState extends State<TransactionBlood> {
           padding: const EdgeInsets.only(bottom: 16),
           child: _buildBloodCard(
             status: _getStatusText(permintaan.status),
-            bloodType: "${permintaan.bloodType}${permintaan.rhesus}",
+            bloodType: "${permintaan.bloodType}",
             date: formattedDate,
             hospital: permintaan.donationLocation,
             distance: _calculateDistance(permintaan.donationLocation),
@@ -454,7 +453,6 @@ class _TransactionBloodState extends State<TransactionBlood> {
       patientAge: int.tryParse(permintaan.patientAge) ?? 0,
       phoneNumber: permintaan.phoneNumber,
       bloodType: permintaan.bloodType,
-      rhesus: permintaan.rhesus,
       bloodBagsNeeded: int.tryParse(permintaan.bloodBagsNeeded) ?? 0,
       description: permintaan.description,
       donationLocation: permintaan.donationLocation,

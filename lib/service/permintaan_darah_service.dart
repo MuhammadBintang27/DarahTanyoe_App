@@ -122,7 +122,7 @@ class PermintaanDarahService {
   static void _printDebugData() {
     print('=========== DATA PERMINTAAN DARAH ===========');
     for (var item in _cachedData) {
-      print('${item.uniqueCode} | ${item.patientName} | ${item.bloodType}${item.rhesus} | Status: ${item.status}');
+      print('${item.uniqueCode} | ${item.patientName} | ${item.bloodType} | Status: ${item.status}');
     }
     print('============================================');
   }

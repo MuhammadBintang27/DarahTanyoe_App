@@ -17,7 +17,6 @@ class PatientDonationData {
   final int patientAge;
   final String phoneNumber;
   final String bloodType;
-  final String rhesus;
   final int bloodBagsNeeded;
   final String description;
   final String donationLocation;
@@ -28,7 +27,6 @@ class PatientDonationData {
     required this.patientAge,
     required this.phoneNumber,
     required this.bloodType,
-    required this.rhesus,
     required this.bloodBagsNeeded,
     required this.description,
     required this.donationLocation,
@@ -58,7 +56,6 @@ class PatientDonationData {
       patientAge: 20,
       phoneNumber: '+628131231445',
       bloodType: 'O',
-      rhesus: 'Negatif (-)',
       bloodBagsNeeded: 5,
       description: 'Butuh darah cepat setelah cuci darah',
       donationLocation: 'RSUD Zainul Abidin',
@@ -374,13 +371,7 @@ class _BloodDonationDetailScreenState extends State<BloodDonationDetailScreen> {
                                       ),
                                     ),
                                     const SizedBox(width: 16),
-                                    Expanded(
-                                      child: _buildInfoCard(
-                                        title: 'Rhesus',
-                                        value: widget.patientData.rhesus,
-                                        icon: Icons.water_drop,
-                                      ),
-                                    ),
+                                    
                                   ],
                                 ),
                                 const SizedBox(height: 20),
@@ -1046,7 +1037,6 @@ class UsageExample extends StatelessWidget {
       patientAge: 20,
       phoneNumber: '+628131231445',
       bloodType: 'O',
-      rhesus: 'Negatif (-)',
       bloodBagsNeeded: 5,
       description: 'Butuh darah cepat setelah cuci darah',
       donationLocation: 'RSUD Zainul Abidin',
