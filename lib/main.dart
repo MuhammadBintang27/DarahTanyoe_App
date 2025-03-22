@@ -1,8 +1,14 @@
 
+import 'package:darahtanyoe_app/pages/authentication/blood_info.dart';
 import 'package:darahtanyoe_app/pages/authentication/login_page.dart';
+import 'package:darahtanyoe_app/pages/data_permintaan/data_diri.dart';
 import 'package:flutter/material.dart';
 
-void main() {
+import 'service/auth_service.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await AuthService.init(); // Inisialisasi Hive
   runApp(const MyApp());
 }
 
@@ -18,7 +24,7 @@ class MyApp extends StatelessWidget {
         fontFamily: 'DM Sans',
         useMaterial3: true,
       ),
-      home: LoginPage(), // Ganti ke SplashScreen dulu
+      home: DataDiri(), // Ganti ke SplashScreen dulu
     );
   }
 }

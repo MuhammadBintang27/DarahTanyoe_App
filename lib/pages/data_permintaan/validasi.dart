@@ -10,7 +10,6 @@ class Validasi extends StatefulWidget {
   final String usia;
   final String nomorHP;
   final String golDarah;
-  final String rhesus;
   final String jumlahKantong;
   final String deskripsi;
   final String lokasi;
@@ -22,7 +21,6 @@ class Validasi extends StatefulWidget {
     required this.usia,
     required this.nomorHP,
     required this.golDarah,
-    required this.rhesus,
     required this.jumlahKantong,
     required this.deskripsi,
     required this.lokasi,
@@ -110,10 +108,9 @@ class _ValidasiState extends State<Validasi> {
             _buildLabeledField("Usia Pasien", "${widget.usia} Tahun"),
           ),
           _buildLabeledField("Nomor Handphone (WhatsApp)", widget.nomorHP),
-          _buildRow(
-            _buildLabeledField("Golongan Darah", widget.golDarah),
-            _buildLabeledField("Rhesus", widget.rhesus),
-          ),
+          
+          _buildLabeledField("Golongan Darah", widget.golDarah),
+        
           _buildLabeledField("Jumlah Kebutuhan Kantong", widget.jumlahKantong),
           _buildLabeledField("Deskripsi Kebutuhan", widget.deskripsi,
               maxLines: 3),
@@ -227,6 +224,7 @@ class _ValidasiState extends State<Validasi> {
   }
 
   void _validasiSebelumLanjut() {
+
   if (widget.nama.isEmpty ||
       widget.usia.isEmpty ||
       widget.nomorHP.isEmpty ||

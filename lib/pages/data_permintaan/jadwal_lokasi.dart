@@ -6,7 +6,6 @@ class JadwalLokasi extends StatefulWidget {
   final String usia;
   final String nomorHP;
   final String golDarah;
-  final String rhesus;
   final String jumlahKantong;
   final String deskripsi;
 
@@ -15,7 +14,6 @@ class JadwalLokasi extends StatefulWidget {
     required this.usia,
     required this.nomorHP,
     required this.golDarah,
-    required this.rhesus,
     required this.jumlahKantong,
     required this.deskripsi,
   });
@@ -288,7 +286,6 @@ Widget _datePickerField() {
                   usia: widget.usia,
                   nomorHP: widget.nomorHP,
                   golDarah: widget.golDarah,
-                  rhesus: widget.rhesus,
                   lokasi: lokasiController.text,
                   tanggal: tanggalController.text,
                   jumlahKantong: widget.jumlahKantong,

@@ -16,14 +16,11 @@ class _BloodInfoState extends State<BloodInfo> {
   final AuthService _authService = AuthService();
 
   String? _selectedBloodType;
-  String? _selectedRhesus;
   String? _selectedLastDonation;
   List<String> _selectedMedicalHistory = [];
 
   void _submitBloodInfo() async {
-    if (_selectedBloodType == null ||
-        _selectedRhesus == null ||
-        _selectedLastDonation == null) {
+    if (_selectedBloodType == null || _selectedLastDonation == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Harap lengkapi semua data")),
       );
@@ -32,7 +29,6 @@ class _BloodInfoState extends State<BloodInfo> {
 
     bool success = await _authService.saveBloodInfo(
       _selectedBloodType!,
-      _selectedRhesus!,
       _selectedLastDonation!,
       _selectedMedicalHistory,
     );
@@ -86,7 +82,7 @@ class _BloodInfoState extends State<BloodInfo> {
               ),
               Container(
                 width: screenWidth,
-                height: screenHeight * 0.7,
+                height: screenHeight * 0.6,
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
@@ -138,16 +134,8 @@ class _BloodInfoState extends State<BloodInfo> {
                     MyTextField(
                       hintText: 'Pilih golongan darah',
                       inputType: InputType.dropdown,
-                      dropdownItems: ['A', 'B', 'AB', 'O'],
+                      dropdownItems: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
                       onChanged: (value) => _selectedBloodType = value,
-                    ),
-                    const SizedBox(height: 20),
-                    _buildLabel('Rhesus'),
-                    MyTextField(
-                      hintText: 'Pilih Rhesus',
-                      inputType: InputType.dropdown,
-                      dropdownItems: ['Positif (+)', 'Negatif (-)'],
-                      onChanged: (value) => _selectedRhesus = value,
                     ),
                     const SizedBox(height: 20),
                     _buildLabel('Riwayat Donor Terakhir'),
@@ -167,7 +155,7 @@ class _BloodInfoState extends State<BloodInfo> {
                         'Hipertensi',
                         'Jantung',
                         'Hepatitis',
-                        'Lainnya'
+                        'HIV'
                       ],
                       onChanged: (value) => _selectedMedicalHistory = [value],
                     ),
