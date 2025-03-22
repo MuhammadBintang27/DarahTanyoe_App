@@ -22,11 +22,30 @@ dependencies:
   geocoding: ^3.0.0
   hive_flutter: ^1.1.0
   flutter_secure_storage: ^9.0.0
+  flutter_launcher_icons: ^0.14.3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/logo_aplikasi.png"
+  min_sdk_android: 21
+  web:
+    generate: true
+    image_path: "assets/images/logo_aplikasi.png"
+    background_color: "#FFFFFF"
+    theme_color: "#FFFFFF"
+  windows:
+    generate: true
+    image_path: "assets/images/logo_aplikasi.png"
+    icon_size: 48
+  macos:
+    generate: true
+    image_path: "assets/images/logo_aplikasi.png"
 
 flutter:
   uses-material-design: true
