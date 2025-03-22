@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
         fontFamily: 'DM Sans',
         useMaterial3: true,
       ),
-      home: MainScreen(), // Ganti ke SplashScreen dulu
+      home: SplashScreen(), // Ganti ke SplashScreen dulu
     );
   }
 }
