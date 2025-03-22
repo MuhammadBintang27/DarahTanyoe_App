@@ -1,0 +1,8 @@
+flutter_native_splash:
+  color: "#CC5555"  # Warna latar belakang
+  image: assets/images/donation_illustration.png  # Logo utama
+  branding: assets/images/logo_splash.png  # Opsional, bisa dihapus
+  fullscreen: true  # Menampilkan splash screen dalam mode full screen
+  android_12:
+    color: "#CC5555"
+    image: assets/images/logo_splash.png

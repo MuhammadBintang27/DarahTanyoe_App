@@ -19,8 +19,8 @@ class PatientDonationData {
   final String bloodType;
   final int bloodBagsNeeded;
   final String description;
-  final String donationLocation;
-  final DateTime deadline;
+  final String partner_id;
+  final String expiry_date;
   
   PatientDonationData({
     required this.patientName,
@@ -29,25 +29,11 @@ class PatientDonationData {
     required this.bloodType,
     required this.bloodBagsNeeded,
     required this.description,
-    required this.donationLocation,
-    required this.deadline,
+    required this.partner_id,
+    required this.expiry_date,
   });
   
-  // Format tanggal dengan format Indonesia
-  String get deadlineFormatted {
-    List<String> months = [
-      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
-      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-    ];
-    
-    String day = deadline.day.toString();
-    String month = months[deadline.month - 1];
-    String year = deadline.year.toString();
-    String hour = deadline.hour.toString().padLeft(2, '0');
-    String minute = deadline.minute.toString().padLeft(2, '0');
-    
-    return '$day $month $year, $hour:$minute WIB';
-  }
+  
   
   // Factory method untuk membuat contoh data (untuk pengujian)
   factory PatientDonationData.sample() {
@@ -58,8 +44,8 @@ class PatientDonationData {
       bloodType: 'O',
       bloodBagsNeeded: 5,
       description: 'Butuh darah cepat setelah cuci darah',
-      donationLocation: 'RSUD Zainul Abidin',
-      deadline: DateTime.now().add(const Duration(days: 1, hours: 12, minutes: 32, seconds: 6)),
+      partner_id: 'RSUD Zainul Abidin',
+      expiry_date: "2023-09-30 12:00:00",
     );
   }
 }
@@ -398,7 +384,7 @@ class _BloodDonationDetailScreenState extends State<BloodDonationDetailScreen> {
                                     Expanded(
                                       child: _buildInfoCard(
                                         title: 'Lokasi Pendonoran',
-                                        value: widget.patientData.donationLocation,
+                                        value: widget.patientData.partner_id,
                                         icon: Icons.location_on,
                                       ),
                                     ),
@@ -406,7 +392,7 @@ class _BloodDonationDetailScreenState extends State<BloodDonationDetailScreen> {
                                     Expanded(
                                       child: _buildInfoCard(
                                         title: 'Jadwal Berakhir',
-                                        value: widget.patientData.deadlineFormatted,
+                                        value: widget.patientData.expiry_date,
                                         icon: Icons.access_time,
                                       ),
                                     ),
@@ -885,8 +871,8 @@ class FirebaseService {
     //     rhesus: data['rhesus'] ?? '',
     //     bloodBagsNeeded: data['bloodBagsNeeded'] ?? 0,
     //     description: data['description'] ?? '',
-    //     donationLocation: data['donationLocation'] ?? '',
-    //     deadline: data['deadline']?.toDate() ?? DateTime.now().add(const Duration(days: 1)),
+    //     partner_id: data['partner_id'] ?? '',
+    //     expiry_date: data['expiry_date']?.toDate() ?? DateTime.now().add(const Duration(days: 1)),
     //   );
     // }
     
@@ -908,7 +894,7 @@ class FirebaseService {
     //     uniqueCode: data['uniqueCode'] ?? '',
     //     filledBags: data['filledBags'] ?? 0,
     //     status: status,
-    //     remainingTime: data['deadline']?.toDate(),
+    //     remainingTime: data['expiry_date']?.toDate(),
     //     onCancelRequest: () {
     //       // Implementasi pembatalan di sini
     //       FirebaseFirestore.instance.collection('donations').doc(donationId).update({
@@ -970,7 +956,7 @@ class FirebaseService {
   //         uniqueCode: data['uniqueCode'] ?? '',
   //         filledBags: data['filledBags'] ?? 0,
   //         status: status,
-  //         remainingTime: data['deadline']?.toDate(),
+  //         remainingTime: data['expiry_date']?.toDate(),
   //         onCancelRequest: () {
   //           cancelDonationRequest(donationId);
   //         },
@@ -1039,8 +1025,8 @@ class UsageExample extends StatelessWidget {
       bloodType: 'O',
       bloodBagsNeeded: 5,
       description: 'Butuh darah cepat setelah cuci darah',
-      donationLocation: 'RSUD Zainul Abidin',
-      deadline: DateTime.now().add(const Duration(days: 2)),
+      partner_id: 'RSUD Zainul Abidin',
+      expiry_date: "2023-08-31",
     );
     
     // Status donasi yang berbeda berdasarkan parameter

@@ -1,4 +1,3 @@
-import 'package:darahtanyoe_app/components/my_navbar.dart';
 import 'package:darahtanyoe_app/widget/header_widget.dart';
 import '../../models/permintaan_darah_model.dart';
 import '../../service/permintaan_darah_service.dart';
@@ -217,14 +216,12 @@ class _TransactionBloodState extends State<TransactionBlood> {
     return Column(
       children: permintaanList.map((permintaan) {
         // Konversi string tanggal ke format yang lebih mudah dibaca
-        String formattedDate = _formatDate(permintaan.deadlineFormatted);
+        String formattedDate = _formatDate(permintaan.partner_id);
         
         // Hitung kantong darah yang telah terpenuhi
         int bagCount = permintaan.bloodBagsFulfilled;
         int totalBags = int.tryParse(permintaan.bloodBagsNeeded) ?? 5;
         
-        // Tentukan apakah permintaan urgent berdasarkan tanggal deadline
-        bool isUrgent = _isUrgentRequest(permintaan.deadlineFormatted);
         
         return Padding(
           padding: const EdgeInsets.only(bottom: 16),
@@ -232,14 +229,13 @@ class _TransactionBloodState extends State<TransactionBlood> {
             status: _getStatusText(permintaan.status),
             bloodType: "${permintaan.bloodType}",
             date: formattedDate,
-            hospital: permintaan.donationLocation,
-            distance: _calculateDistance(permintaan.donationLocation),
+            hospital: permintaan.partner_id,
+            distance: _calculateDistance(permintaan.partner_id),
             bagCount: bagCount,
             totalBags: totalBags,
             isCompleted: permintaan.status == PermintaanDarahModel.STATUS_COMPLETED,
             isCancelled: permintaan.status == PermintaanDarahModel.STATUS_CANCELLED,
             isRequest: true,
-            isUrgent: isUrgent,
             uniqueCode: permintaan.uniqueCode,
             permintaan: permintaan, // Meneruskan permintaan ke card
           ),
@@ -455,8 +451,8 @@ class _TransactionBloodState extends State<TransactionBlood> {
       bloodType: permintaan.bloodType,
       bloodBagsNeeded: int.tryParse(permintaan.bloodBagsNeeded) ?? 0,
       description: permintaan.description,
-      donationLocation: permintaan.donationLocation,
-      deadline: _parseDeadline(permintaan.deadlineFormatted),
+      partner_id: permintaan.partner_id,
+      expiry_date: permintaan.expiry_date,
     );
     
     // Tentukan status berdasarkan status permintaan
@@ -487,12 +483,11 @@ class _TransactionBloodState extends State<TransactionBlood> {
       uniqueCode: permintaan.uniqueCode,
       filledBags: permintaan.bloodBagsFulfilled,
       status: statusType,
-      remainingTime: statusType == DonationStatusType.countdown ? _parseDeadline(permintaan.deadlineFormatted) : null,
+      remainingTime: statusType == DonationStatusType.countdown ? _parseexpiry_date(permintaan.partner_id) : null,
       onCancelRequest: () async {
         // Implementasi pembatalan permintaan
         final updatedPermintaan = permintaan.copyWith(
           status: PermintaanDarahModel.STATUS_CANCELLED,
-          updatedAt: DateTime.now().toIso8601String(),
         );
         
         bool success = await PermintaanDarahService.updatePermintaan(updatedPermintaan);
@@ -564,35 +559,7 @@ class _TransactionBloodState extends State<TransactionBlood> {
   }
   
   // Helper function to determine if a request is urgent
-  bool _isUrgentRequest(String deadlineString) {
-    try {
-      DateTime deadline;
-      if (deadlineString.contains('-')) {
-        // Format: DD-MM-YYYY HH:MM
-        List<String> parts = deadlineString.split(' ');
-        List<String> dateParts = parts[0].split('-');
-        List<String> timeParts = parts.length > 1 ? parts[1].split(':') : ['00', '00'];
-        
-        deadline = DateTime(
-          int.parse(dateParts[2]),
-          int.parse(dateParts[1]),
-          int.parse(dateParts[0]),
-          int.parse(timeParts[0]),
-          int.parse(timeParts[1]),
-        );
-      } else {
-        // Assume ISO format
-        deadline = DateTime.parse(deadlineString);
-      }
-      
-      // Consider request urgent if deadline is within 48 hours
-      final now = DateTime.now();
-      final difference = deadline.difference(now).inHours;
-      return difference <= 48 && difference > 0;
-    } catch (e) {
-      return false;
-    }
-  }
+ 
   
   // Helper function to get status text
   String _getStatusText(String statusCode) {
@@ -620,12 +587,12 @@ class _TransactionBloodState extends State<TransactionBlood> {
     return '${randomDistance.toStringAsFixed(1)} km dari lokasi Anda';
   }
   
-  // Helper function untuk parse deadline
-  DateTime _parseDeadline(String deadlineFormatted) {
+  // Helper function untuk parse expiry_date
+  DateTime _parseexpiry_date(String partner_id) {
     try {
-      if (deadlineFormatted.contains('-')) {
+      if (partner_id.contains('-')) {
         // Format: DD-MM-YYYY HH:MM
-        List<String> parts = deadlineFormatted.split(' ');
+        List<String> parts = partner_id.split(' ');
         List<String> dateParts = parts[0].split('-');
         List<String> timeParts = parts.length > 1 ? parts[1].split(':') : ['00', '00'];
         
@@ -638,10 +605,10 @@ class _TransactionBloodState extends State<TransactionBlood> {
         );
       } else {
         // Coba parse sebagai ISO string
-        return DateTime.parse(deadlineFormatted);
+        return DateTime.parse(partner_id);
       }
     } catch (e) {
-      print('Error parsing deadline: $e');
+      print('Error parsing expiry_date: $e');
       // Kembalikan waktu default jika parsing gagal
       return DateTime.now().add(const Duration(days: 1));
     }

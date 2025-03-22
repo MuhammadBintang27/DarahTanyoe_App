@@ -272,13 +272,11 @@ class _ValidasiState extends State<Validasi> {
       bloodType: widget.golDarah,
       bloodBagsNeeded: widget.jumlahKantong,
       description: widget.deskripsi,
-      donationLocation: widget.lokasi,
-      deadlineFormatted: widget.tanggal,
+      partner_id: widget.lokasi,
+      expiry_date: widget.tanggal,
       uniqueCode: uniqueCode,
       bloodBagsFulfilled: 0,
       status: PermintaanDarahModel.STATUS_PENDING,
-      createdAt: now.toIso8601String(),
-      updatedAt: now.toIso8601String(),
     );
 
     // Menyimpan permintaan
