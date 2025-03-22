@@ -5,13 +5,12 @@ class PermintaanDarahModel {
   final String bloodType;
   final String bloodBagsNeeded;
   final String description;
-  final String donationLocation;
-  final String deadlineFormatted;
+  final String partner_id;
+  final String expiry_date;
   final String uniqueCode;
   final int bloodBagsFulfilled;
   final String status;
-  final String createdAt;
-  final String updatedAt;
+  
 
   PermintaanDarahModel({
     required this.patientName,
@@ -20,13 +19,11 @@ class PermintaanDarahModel {
     required this.bloodType,
     required this.bloodBagsNeeded,
     required this.description,
-    required this.donationLocation,
-    required this.deadlineFormatted,
+    required this.partner_id,
+    required this.expiry_date,
     required this.uniqueCode,
     this.bloodBagsFulfilled = 0,
     this.status = "Pending",
-    required this.createdAt,
-    required this.updatedAt,
   });
 
   Map<String, dynamic> toJson() {
@@ -37,13 +34,12 @@ class PermintaanDarahModel {
       'bloodType': bloodType,
       'bloodBagsNeeded': bloodBagsNeeded,
       'description': description,
-      'donationLocation': donationLocation,
-      'deadlineFormatted': deadlineFormatted,
+      'partner_id': partner_id,
+      'expiry_date': expiry_date,
       'uniqueCode': uniqueCode,
       'bloodBagsFulfilled': bloodBagsFulfilled,
       'status': status,
-      'createdAt': createdAt,
-      'updatedAt': updatedAt,
+      
     };
   }
 
@@ -55,13 +51,11 @@ class PermintaanDarahModel {
       bloodType: json['bloodType'] ?? '',
       bloodBagsNeeded: json['bloodBagsNeeded'] ?? '',
       description: json['description'] ?? '',
-      donationLocation: json['donationLocation'] ?? '',
-      deadlineFormatted: json['deadlineFormatted'] ?? '',
+      partner_id: json['partner_id'] ?? '',
+      expiry_date: json['expiry_date'] ?? '',
       uniqueCode: json['uniqueCode'] ?? '',
       bloodBagsFulfilled: json['bloodBagsFulfilled'] ?? 0,
       status: json['status'] ?? 'Pending',
-      createdAt: json['createdAt'] ?? DateTime.now().toIso8601String(),
-      updatedAt: json['updatedAt'] ?? DateTime.now().toIso8601String(),
     );
   }
 
@@ -72,13 +66,11 @@ class PermintaanDarahModel {
     String? bloodType,
     String? bloodBagsNeeded,
     String? description,
-    String? donationLocation,
-    String? deadlineFormatted,
+    String? partner_id,
+    String? expiry_date,
     String? uniqueCode,
     int? bloodBagsFulfilled,
     String? status,
-    String? createdAt,
-    String? updatedAt,
   }) {
     return PermintaanDarahModel(
       patientName: patientName ?? this.patientName,
@@ -87,13 +79,11 @@ class PermintaanDarahModel {
       bloodType: bloodType ?? this.bloodType,
       bloodBagsNeeded: bloodBagsNeeded ?? this.bloodBagsNeeded,
       description: description ?? this.description,
-      donationLocation: donationLocation ?? this.donationLocation,
-      deadlineFormatted: deadlineFormatted ?? this.deadlineFormatted,
+      partner_id: partner_id ?? this.partner_id,
+      expiry_date: expiry_date ?? this.expiry_date,
       uniqueCode: uniqueCode ?? this.uniqueCode,
       bloodBagsFulfilled: bloodBagsFulfilled ?? this.bloodBagsFulfilled,
       status: status ?? this.status,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? DateTime.now().toIso8601String(),
     );
   }
 

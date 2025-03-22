@@ -1,5 +1,6 @@
 import 'package:darahtanyoe_app/components/copyright.dart';
 import 'package:darahtanyoe_app/components/my_button.dart';
+import 'package:darahtanyoe_app/pages/mainpage/main_navigasi_screen.dart';
 import 'package:flutter/material.dart';
 import '../../components/my_textfield.dart';
 import '../../service/auth_service.dart';
@@ -17,7 +18,7 @@ class _BloodInfoState extends State<BloodInfo> {
 
   String? _selectedBloodType;
   String? _selectedLastDonation;
-  List<String> _selectedMedicalHistory = [];
+  String? _selectedMedical;
 
   void _submitBloodInfo() async {
     if (_selectedBloodType == null || _selectedLastDonation == null) {
@@ -30,7 +31,7 @@ class _BloodInfoState extends State<BloodInfo> {
     bool success = await _authService.saveBloodInfo(
       _selectedBloodType!,
       _selectedLastDonation!,
-      _selectedMedicalHistory,
+      _selectedMedical!,
     );
 
     if (success) {
@@ -39,7 +40,7 @@ class _BloodInfoState extends State<BloodInfo> {
       );
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => HomeScreen()),
+        MaterialPageRoute(builder: (context) => MainScreen()),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -157,7 +158,7 @@ class _BloodInfoState extends State<BloodInfo> {
                         'Hepatitis',
                         'HIV'
                       ],
-                      onChanged: (value) => _selectedMedicalHistory = [value],
+                      onChanged: (value) => _selectedMedical = value,
                     ),
                     const SizedBox(height: 26),
                     MyButton(

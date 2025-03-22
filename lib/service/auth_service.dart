@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'package:darahtanyoe_app/pages/authentication/personal_info.dart';
+import 'package:darahtanyoe_app/pages/mainpage/main_navigasi_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:http/http.dart' as http;
-
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../pages/authentication/login_page.dart';
-import '../pages/mainpage/home_screen.dart';
 
 class AuthService {
   static final AuthService _instance = AuthService._internal();
@@ -45,82 +45,78 @@ class AuthService {
 
   /// **✅ Kirim OTP**
   Future<bool> sendOTP(String phone) async {
-  var request = http.Request('POST', Uri.parse('$baseUrl/users/masuk'));
-  request.body = jsonEncode({"phone": phone});
-  request.headers.addAll({'Content-Type': 'application/json'});
-  registrationData['phoneNumber'] = phone;
+    var request = http.Request('POST', Uri.parse('$baseUrl/users/masuk'));
+    request.body = jsonEncode({"phone": phone});
+    request.headers.addAll({'Content-Type': 'application/json'});
 
-  try {
-    loadingCallback?.call(true);
-    print(phone);
+    try {
+      loadingCallback?.call(true);
+      print("Mengirim OTP ke: $phone");
 
-    http.StreamedResponse response = await request.send();
-
-    if (response.statusCode == 200) {
-      String responseBody = await response.stream.bytesToString();
-      registrationData['phone'] = phone;
-      await _saveToLocalStorage();
-      successCallback?.call();
-      return true;
-    } else {
-      throw jsonDecode(await response.stream.bytesToString())['message'];
+      http.StreamedResponse response = await request.send();
+      if (response.statusCode == 200) {
+        successCallback?.call();
+        return true;
+      } else {
+        throw jsonDecode(await response.stream.bytesToString())['message'];
+      }
+    } catch (e) {
+      errorCallback?.call(e.toString());
+      return false;
+    } finally {
+      loadingCallback?.call(false);
     }
-  } catch (e) {
-    errorCallback?.call(e.toString());
-    return false;
-  } finally {
-    loadingCallback?.call(false);
   }
-}
 
+  final storage = FlutterSecureStorage();
 
   /// **✅ Verifikasi OTP**
   Future<bool> verifyOTP(String otp, String phone, BuildContext context) async {
-  try {
-    loadingCallback?.call(true);
-    final response = await http.post(
-      Uri.parse('$baseUrl/users/verifyOTP'),
-      body: jsonEncode({"token": otp, "phone": registrationData['phone']}),
-      headers: {'Content-Type': 'application/json'},
-    );
+    try {
+      loadingCallback?.call(true);
+      final response = await http.post(
+        Uri.parse('$baseUrl/users/verifyOTP'),
+        body: jsonEncode({"token": otp, "phone": phone}),
+        headers: {'Content-Type': 'application/json'},
+      );
 
-    if (response.statusCode == 200) {
-      final responseData = jsonDecode(response.body);
-      
-      if (responseData['user'] != null && responseData['user'].isNotEmpty) {
-        registrationData['otpVerified'] = true;
-        await _saveToLocalStorage();
-        print("User ditemukan: ${responseData['user']}");
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        final String? accessToken =
+            responseData['data']['session']['access_token'];
+        print("Access token: $accessToken");
+        if (accessToken != null) {
+          await storage.write(key: 'access_token', value: accessToken);
+          print("Access token berhasil disimpan.");
+        }
 
-        successCallback?.call();
-
-        // Navigasi ke HomeScreen
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => HomeScreen()),
-        );
-        return true;
+        if (responseData['user'] != null && responseData['user'].isNotEmpty) {
+          registrationData['otpVerified'] = true;
+          await _saveToLocalStorage();
+          successCallback?.call();
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => MainScreen()),
+          );
+          return true;
+        } else {
+          print("User tidak ditemukan, mengarah ke PersonalInfo...");
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => PersonalInfo()),
+          );
+          return false;
+        }
       } else {
-        print("User tidak ditemukan, mengarah ke LoginPage...");
-        
-        // Navigasi ke LoginPage
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => PersonalInfo()),
-        );
-        return false;
+        throw jsonDecode(response.body)['message'];
       }
-    } else {
-      throw jsonDecode(response.body)['message'];
+    } catch (e) {
+      errorCallback?.call(e.toString());
+      return false;
+    } finally {
+      loadingCallback?.call(false);
     }
-  } catch (e) {
-    errorCallback?.call(e.toString());
-    return false;
-  } finally {
-    loadingCallback?.call(false);
   }
-}
-
 
   /// **✅ Simpan Informasi Pribadi**
   Future<bool> savePersonalInfo(String name, int age, String email) async {
@@ -141,7 +137,8 @@ class AuthService {
   }
 
   /// **✅ Simpan Alamat**
-  Future<bool> saveAddress(String address, double latitude, double longitude) async {
+  Future<bool> saveAddress(
+      String address, double latitude, double longitude) async {
     try {
       loadingCallback?.call(true);
       registrationData['address'] = address;
@@ -159,34 +156,51 @@ class AuthService {
   }
 
   /// **✅ Simpan Informasi Darah dan Selesaikan Registrasi**
-  Future<bool> saveBloodInfo(String bloodType, String lastDonation, List<String> medicalHistory) async {
-    try {
-      loadingCallback?.call(true);
-      final response = await http.post(
-        Uri.parse('$baseUrl/users/daftar'),
-        body: jsonEncode({
-          registrationData,
-        }),
-        headers: {'Content-Type': 'application/json'},
-      );
+  Future<bool> saveBloodInfo(String bloodType, String lastDonation,
+    String medicalHistory) async {
+  try {
+    loadingCallback?.call(true);
 
-      if (response.statusCode == 200) {
-        registrationData['bloodType'] = bloodType;
-        registrationData['lastDonation'] = lastDonation;
-        registrationData['medicalHistory'] = medicalHistory;
-        await _saveToLocalStorage();
-        successCallback?.call();
-        return true;
-      } else {
-        throw jsonDecode(response.body)['message'];
-      }
-    } catch (e) {
-      errorCallback?.call(e.toString());
-      return false;
-    } finally {
-      loadingCallback?.call(false);
+    // Simpan data ke registrationData
+    registrationData['blood_type'] = bloodType;
+    registrationData['last_donation_date'] = lastDonation;
+    registrationData['health_notes'] = medicalHistory;
+    registrationData['user_type'] = "pendonor_peminta";
+    print("Updated Registration Data: ${jsonEncode(registrationData)}");
+
+    final String? accessToken = await storage.read(key: 'access_token');
+    if (accessToken == null) throw "Access token tidak ditemukan";
+
+    // Buat salinan data tanpa phoneNumber
+    final Map<String, dynamic> dataToSend = Map.from(registrationData);
+    dataToSend.remove('phoneNumber');
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/users/daftar'),
+      body: jsonEncode(dataToSend), // Kirim data tanpa phoneNumber
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $accessToken',
+      },
+    );
+
+    print("Final Registration Data Sent: ${jsonEncode(dataToSend)}");
+
+    if (response.statusCode == 201) {
+      await _saveToLocalStorage();
+      successCallback?.call();
+      return true;
+    } else {
+      throw jsonDecode(response.body)['message'];
     }
+  } catch (e) {
+    errorCallback?.call(e.toString());
+    return false;
+  } finally {
+    loadingCallback?.call(false);
   }
+}
+
 
   /// **✅ Reset Data Registrasi**
   Future<void> resetRegistration() async {

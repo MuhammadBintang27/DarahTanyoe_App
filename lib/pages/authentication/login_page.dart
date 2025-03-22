@@ -142,8 +142,10 @@ class _LoginPageState extends State<LoginPage> {
                         text: _isLoading ? '' : 'Lanjut',
                         onPressed: () async {
                           if (_formKey.currentState!.validate()) {
-                            _authService.registrationData['phoneNumber'] = _phoneController.text;
-                            _authService.sendOTP(_phoneController.text);
+                            _authService.registrationData['phoneNumber'] =
+                                _phoneController.text;
+                            _authService.sendOTP(_authService
+                                .registrationData['phoneNumber']);
                           }
                         },
                       ),
