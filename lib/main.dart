@@ -1,21 +1,17 @@
-
-import 'package:darahtanyoe_app/pages/authentication/login_page.dart';
-import 'package:darahtanyoe_app/pages/authentication/splash_screen.dart';
-import 'package:darahtanyoe_app/pages/mainpage/home_screen.dart';
-import 'package:darahtanyoe_app/pages/mainpage/main_navigasi_screen.dart';
-import 'package:darahtanyoe_app/pages/mainpage/transaksi.dart';
 import 'package:flutter/material.dart';
+import 'package:darahtanyoe_app/pages/mainpage/main_screen.dart';
 
 import 'service/auth_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await AuthService.init(); // Inisialisasi Hive
+  await AuthService.init();
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+  static final GlobalKey<MainScreenState> mainScreenKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +22,7 @@ class MyApp extends StatelessWidget {
         fontFamily: 'DM Sans',
         useMaterial3: true,
       ),
-      home: MainScreen(), // Ganti ke SplashScreen dulu
+home: MainScreen(key: MyApp.mainScreenKey),
     );
   }
 }

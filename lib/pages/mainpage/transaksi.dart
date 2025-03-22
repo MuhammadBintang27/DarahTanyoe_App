@@ -17,6 +17,7 @@ class TransactionBlood extends StatefulWidget {
 
 class _TransactionBloodState extends State<TransactionBlood> {
   // Track which tab is selected
+  
   bool isRequestTab = true;
   bool isLoading = true;
   
@@ -79,6 +80,7 @@ class _TransactionBloodState extends State<TransactionBlood> {
 
   @override
   Widget build(BuildContext context) {
+    
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(kToolbarHeight),
