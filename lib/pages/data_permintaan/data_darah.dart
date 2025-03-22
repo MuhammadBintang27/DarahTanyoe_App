@@ -13,8 +13,7 @@ class DataDarah extends StatefulWidget {
 }
 
 class _DataDarahState extends State<DataDarah> {
-  String? selectedGolonganDarah;
-  String? selectedRhesus;
+  String? selectedTipeDarah;
   final TextEditingController jumlahKantongController = TextEditingController();
   final TextEditingController deskripsiController = TextEditingController();
 
@@ -103,8 +102,7 @@ class _DataDarahState extends State<DataDarah> {
                     nama: widget.nama,
                     usia: widget.usia,
                     nomorHP: widget.nomorHP,
-                    golDarah: selectedGolonganDarah ?? "",
-                    rhesus: selectedRhesus ?? "",
+                    golDarah: selectedTipeDarah ?? "",
                     jumlahKantong: jumlahKantongController.text,
                     deskripsi: deskripsiController.text,
                   ),
@@ -176,14 +174,9 @@ class _DataDarahState extends State<DataDarah> {
               ),
             ),
             SizedBox(height: 16),
-            _dropdownField("Golongan Darah", selectedGolonganDarah, ["A", "B", "AB", "O"], (value) {
+            _dropdownField("Golongan Darah", selectedTipeDarah, ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"], (value) {
               setState(() {
-                selectedGolonganDarah = value;
-              });
-            }),
-            _dropdownField("Rhesus", selectedRhesus, ["Positif (+)", "Negatif (-)"], (value) {
-              setState(() {
-                selectedRhesus = value;
+                selectedTipeDarah = value;
               });
             }),
             _inputField("Jumlah Kebutuhan Kantong", "Masukkan jumlah kantong", jumlahKantongController, suffixInside: "Kantong"),
@@ -202,46 +195,44 @@ class _DataDarahState extends State<DataDarah> {
     );
   }
 
-Widget _inputField(String label, String hint, TextEditingController controller, {String? suffixInside, int maxLines = 1}) {
-  return Padding(
-    padding: EdgeInsets.only(bottom: 16),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey[700]),
-        ),
-        SizedBox(height: 4),
-        TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          maxLines: maxLines,
-          decoration: InputDecoration(
-            hintText: hint,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            suffixIcon: suffixInside != null
-                ? Padding(
-                    padding: EdgeInsets.only(right: 15), // Padding tambahan ke kanan
-                    child: Container(
-                      alignment: Alignment.centerRight,
-                      width: 65, // Lebar yang cukup untuk teks
-                      child: Text(
-                        suffixInside,
-                        style: TextStyle(color: Colors.black54, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  )
-                : null,
+  Widget _inputField(String label, String hint, TextEditingController controller, {String? suffixInside, int maxLines = 1}) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey[700]),
           ),
-        ),
-      ],
-    ),
-  );
-}
-
-
+          SizedBox(height: 4),
+          TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            maxLines: maxLines,
+            decoration: InputDecoration(
+              hintText: hint,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              suffixIcon: suffixInside != null
+                  ? Padding(
+                      padding: EdgeInsets.only(right: 15),
+                      child: Container(
+                        alignment: Alignment.centerRight,
+                        width: 65,
+                        child: Text(
+                          suffixInside,
+                          style: TextStyle(color: Colors.black54, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    )
+                  : null,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

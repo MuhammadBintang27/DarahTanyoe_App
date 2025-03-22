@@ -39,7 +39,7 @@ class _MyTextFieldState extends State<MyTextField> {
   void initState() {
     super.initState();
     _controller = widget.controller ?? TextEditingController(text: widget.initialValue ?? '');
-    _selectedDropdownValue = widget.initialValue ?? (widget.dropdownItems?.isNotEmpty == true ? widget.dropdownItems!.first : null);
+    _selectedDropdownValue = widget.initialValue;
     _selectedDate = widget.initialValue;
   }
 
@@ -99,18 +99,25 @@ class _MyTextFieldState extends State<MyTextField> {
                   child: DropdownButton<String>(
                     isExpanded: true,
                     value: _selectedDropdownValue,
-                    dropdownColor: Colors.black,
+                    hint: Text(
+                      widget.hintText,
+                      style: GoogleFonts.dmSans(color: Colors.white70),
+                    ),
                     icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
-                    style: GoogleFonts.dmSans(color: Colors.white),
+                    style: GoogleFonts.dmSans(color: Colors.white), // Pastikan teks tetap putih
+                    dropdownColor: Colors.black87.withOpacity(0.9), // Warna dropdown lebih lembut
                     items: widget.dropdownItems?.map((String item) {
                       return DropdownMenuItem<String>(
                         value: item,
-                        child: Text(item, style: GoogleFonts.dmSans(color: Colors.white)),
+                        child: Text(
+                          item,
+                          style: GoogleFonts.dmSans(color: Colors.white), // Teks tetap putih setelah dipilih
+                        ),
                       );
                     }).toList(),
                     onChanged: (value) {
                       setState(() {
-                        _selectedDropdownValue = value!;
+                        _selectedDropdownValue = value;
                       });
                       widget.onChanged?.call(value!);
                     },

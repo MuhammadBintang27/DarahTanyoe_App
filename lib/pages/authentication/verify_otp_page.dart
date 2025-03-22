@@ -17,6 +17,7 @@ class VerifyOtpPage extends StatefulWidget {
 class _VerifyOtpPageState extends State<VerifyOtpPage> {
   final TextEditingController _otpController = TextEditingController();
   final AuthService _authService = AuthService();
+  late String phoneNumber;
   bool _isLoading = false;
   int _countdown = 60;
   bool _canResend = false;
@@ -25,7 +26,8 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
   void initState() {
     super.initState();
     _startCountdown();
-
+    // Pastikan phoneNumber aman untuk digunakan
+  phoneNumber = _authService.registrationData['phoneNumber'];
     _authService.loadingCallback = (isLoading) {
       setState(() {
         _isLoading = isLoading;
@@ -159,7 +161,7 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
                         showCursor: true,
                         onCompleted: (pin) {
                           if (!_isLoading) {
-                            _authService.verifyOTP(pin);
+                            _authService.verifyOTP(pin, phoneNumber, context);
                           }
                         },
                       ),

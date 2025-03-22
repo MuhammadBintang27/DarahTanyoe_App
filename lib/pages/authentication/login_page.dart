@@ -15,7 +15,7 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController _phoneController =
-      TextEditingController(text: '+62 ');
+      TextEditingController(text: '+62');
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
   final AuthService _authService = AuthService();
@@ -142,6 +142,7 @@ class _LoginPageState extends State<LoginPage> {
                         text: _isLoading ? '' : 'Lanjut',
                         onPressed: () async {
                           if (_formKey.currentState!.validate()) {
+                            _authService.registrationData['phoneNumber'] = _phoneController.text;
                             _authService.sendOTP(_phoneController.text);
                           }
                         },
