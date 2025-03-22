@@ -1,5 +1,7 @@
 # DarahTanyoe: Ekosistem Cerdas untuk Donor Darah yang Transparan dan Real-Time
 
+<p align="center"><a href="https://github.com/MuhammadBintang27/DarahTanyoe_App" target="_blank"><img src="https://github.com/MuhammadBintang27/DarahTanyoe_App/blob/main/assets/logo/Logo DarahTanyoe.png?raw=true" width="400" alt="Logo S.A.K.U"></a></p>
+
 ## Deskripsi
 DarahTanyoe adalah platform inovatif berbasis mobile dan web yang menghubungkan Resipien , Pendonor, dan Intuisi Medis dalam satu ekosistem digital. Dengan fitur real-time monitoring stok darah dan pencocokan otomatis antara pemohon dan pendonor, aplikasi ini bertujuan untuk meningkatkan transparansi dan efisiensi dalam sistem donor darah.
 
