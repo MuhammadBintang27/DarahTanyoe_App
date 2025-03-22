@@ -1,6 +1,13 @@
+
+
+import 'package:darahtanyoe_app/pages/authentication/login_page.dart';
+import 'package:darahtanyoe_app/pages/authentication/splash_screen.dart';
+import 'package:darahtanyoe_app/pages/mainpage/home_screen.dart';
+import 'package:darahtanyoe_app/pages/mainpage/transaksi.dart';
+import 'package:darahtanyoe_app/pages/notifikasi/Notifikasi.dart';
+import 'package:darahtanyoe_app/pages/detail_permintaan/detail_permintaan_darah.dart';
 import 'package:flutter/material.dart';
 import 'package:darahtanyoe_app/pages/mainpage/main_screen.dart';
-
 import 'service/auth_service.dart';
 
 void main() async {
@@ -22,6 +29,7 @@ class MyApp extends StatelessWidget {
         fontFamily: 'DM Sans',
         useMaterial3: true,
       ),
+
 home: MainScreen(key: MyApp.mainScreenKey),
     );
   }

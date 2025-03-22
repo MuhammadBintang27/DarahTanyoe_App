@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:darahtanyoe_app/pages/notifikasi/Notifikasi.dart';
 import 'jadwal_lokasi.dart';
 
 class DataDarah extends StatefulWidget {
@@ -24,7 +25,8 @@ class _DataDarahState extends State<DataDarah> {
     super.dispose();
   }
 
-  Widget _dropdownField(String label, String? selectedValue, List<String> options, ValueChanged<String?> onChanged) {
+  Widget _dropdownField(String label, String? selectedValue,
+      List<String> options, ValueChanged<String?> onChanged) {
     return Padding(
       padding: EdgeInsets.only(bottom: 16),
       child: Column(
@@ -32,7 +34,10 @@ class _DataDarahState extends State<DataDarah> {
         children: [
           Text(
             label,
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey[700]),
+            style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[700]),
           ),
           SizedBox(height: 4),
           Container(
@@ -69,7 +74,8 @@ class _DataDarahState extends State<DataDarah> {
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Color(0xFFE9B824),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30)),
               padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
             ),
             onPressed: () => Navigator.pop(context),
@@ -78,9 +84,11 @@ class _DataDarahState extends State<DataDarah> {
               children: [
                 Align(
                   alignment: Alignment.centerLeft,
-                  child: Text("<", style: TextStyle(color: Colors.white, fontSize: 16)),
+                  child: Text("<",
+                      style: TextStyle(color: Colors.white, fontSize: 16)),
                 ),
-                Text("Kembali", style: TextStyle(color: Colors.white, fontSize: 16)),
+                Text("Kembali",
+                    style: TextStyle(color: Colors.white, fontSize: 16)),
               ],
             ),
           ),
@@ -91,7 +99,8 @@ class _DataDarahState extends State<DataDarah> {
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Color(0xFF476EB6),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30)),
               padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
             ),
             onPressed: () {
@@ -114,9 +123,11 @@ class _DataDarahState extends State<DataDarah> {
               children: [
                 Align(
                   alignment: Alignment.centerRight,
-                  child: Text(">", style: TextStyle(color: Colors.white, fontSize: 16)),
+                  child: Text(">",
+                      style: TextStyle(color: Colors.white, fontSize: 16)),
                 ),
-                Text("Lanjut", style: TextStyle(color: Colors.white, fontSize: 16)),
+                Text("Lanjut",
+                    style: TextStyle(color: Colors.white, fontSize: 16)),
               ],
             ),
           ),
@@ -130,7 +141,8 @@ class _DataDarahState extends State<DataDarah> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFFAB4545),
-        title: Text("Data Permintaan Darah", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: Text("Data Permintaan Darah",
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         centerTitle: true,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
@@ -139,10 +151,19 @@ class _DataDarahState extends State<DataDarah> {
         actions: [
           Padding(
             padding: EdgeInsets.only(right: 12),
-            child: Image.asset(
-              'assets/images/icon_notif.png',
-              width: 60,  
-              height: 60, 
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const NotificationPage()),
+                );
+              },
+              child: Image.asset(
+                'assets/images/icon_notif.png',
+                width: 60,
+                height: 60,
+              ),
             ),
           ),
         ],
@@ -174,13 +195,18 @@ class _DataDarahState extends State<DataDarah> {
               ),
             ),
             SizedBox(height: 16),
-            _dropdownField("Golongan Darah", selectedTipeDarah, ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"], (value) {
+            _dropdownField("Golongan Darah", selectedTipeDarah,
+                ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"], (value) {
               setState(() {
                 selectedTipeDarah = value;
               });
             }),
-            _inputField("Jumlah Kebutuhan Kantong", "Masukkan jumlah kantong", jumlahKantongController, suffixInside: "Kantong"),
-            _inputField("Deskripsi Kebutuhan", "Masukkan deskripsi kebutuhan", deskripsiController, maxLines: 5),
+            _inputField("Jumlah Kebutuhan Kantong", "Masukkan jumlah kantong",
+                jumlahKantongController,
+                suffixInside: "Kantong"),
+            _inputField("Deskripsi Kebutuhan", "Masukkan deskripsi kebutuhan",
+                deskripsiController,
+                maxLines: 5),
             Spacer(),
             _navigationButtons(context),
             SizedBox(height: 20),
@@ -195,7 +221,9 @@ class _DataDarahState extends State<DataDarah> {
     );
   }
 
-  Widget _inputField(String label, String hint, TextEditingController controller, {String? suffixInside, int maxLines = 1}) {
+  Widget _inputField(
+      String label, String hint, TextEditingController controller,
+      {String? suffixInside, int maxLines = 1}) {
     return Padding(
       padding: EdgeInsets.only(bottom: 16),
       child: Column(
@@ -203,7 +231,10 @@ class _DataDarahState extends State<DataDarah> {
         children: [
           Text(
             label,
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey[700]),
+            style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[700]),
           ),
           SizedBox(height: 4),
           TextField(
@@ -224,7 +255,9 @@ class _DataDarahState extends State<DataDarah> {
                         width: 65,
                         child: Text(
                           suffixInside,
-                          style: TextStyle(color: Colors.black54, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                              color: Colors.black54,
+                              fontWeight: FontWeight.bold),
                         ),
                       ),
                     )
