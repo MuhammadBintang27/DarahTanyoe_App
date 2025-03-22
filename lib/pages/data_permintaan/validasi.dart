@@ -229,7 +229,6 @@ class _ValidasiState extends State<Validasi> {
       widget.usia.isEmpty ||
       widget.nomorHP.isEmpty ||
       widget.golDarah.isEmpty ||
-      widget.rhesus.isEmpty ||
       widget.jumlahKantong.isEmpty ||
       widget.deskripsi.isEmpty ||
       widget.lokasi.isEmpty ||
@@ -271,7 +270,6 @@ class _ValidasiState extends State<Validasi> {
       patientAge: widget.usia,
       phoneNumber: widget.nomorHP,
       bloodType: widget.golDarah,
-      rhesus: widget.rhesus,
       bloodBagsNeeded: widget.jumlahKantong,
       description: widget.deskripsi,
       donationLocation: widget.lokasi,

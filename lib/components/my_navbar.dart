@@ -12,39 +12,13 @@ import 'package:darahtanyoe_app/pages/mainpage/peta_darah.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
   final int selectedIndex;
+  final Function(int) onItemTapped;
 
   const CustomBottomNavBar({
     Key? key,
     required this.selectedIndex,
+    required this.onItemTapped,
   }) : super(key: key);
-
-  void _navigateToPage(BuildContext context, int index) {
-    Widget nextPage;
-    switch (index) {
-      case 0:
-        nextPage = HomeScreen();
-        break;
-      case 1:
-        nextPage = LoginPage();
-        break;
-      case 2:
-        nextPage = BloodMap();
-        break;
-      case 3:
-        nextPage = TransactionBlood();
-        break;
-      case 4:
-        nextPage = BloodInfo();
-        break;
-      default:
-        return;
-    }
-
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => nextPage),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -87,7 +61,7 @@ class CustomBottomNavBar extends StatelessWidget {
     final isSelected = selectedIndex == index;
 
     return GestureDetector(
-      onTap: () => _navigateToPage(context, index),
+      onTap: () => onItemTapped(index), // Gunakan callback untuk update index
       child: Container(
         width: 72,
         height: 72,

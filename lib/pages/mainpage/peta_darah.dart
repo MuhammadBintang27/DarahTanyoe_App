@@ -211,7 +211,6 @@ class _BloodMapState extends State<BloodMap> {
           ),
         ),
       ),
-      bottomNavigationBar: const CustomBottomNavBar(selectedIndex: 0),
-    );
+  );
   }
 }
