@@ -29,20 +29,20 @@ dev_dependencies:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/images/Logo_DarahTanyoe.png"
+  image_path: "assets/images/logo_aplikasi.png"
   min_sdk_android: 21
   web:
     generate: true
-    image_path: "assets/images/Logo_DarahTanyoe.png"
+    image_path: "assets/images/logo_aplikasi.png"
     background_color: "#FFFFFF"
     theme_color: "#FFFFFF"
   windows:
     generate: true
-    image_path: "assets/images/Logo_DarahTanyoe.png"
+    image_path: "assets/images/logo_aplikasi.png"
     icon_size: 48
   macos:
     generate: true
-    image_path: "assets/images/Logo_DarahTanyoe.png"
+    image_path: "assets/images/logo_aplikasi.png"
 
 flutter:
   uses-material-design: true
