@@ -6,8 +6,8 @@ DarahTanyoe adalah platform inovatif berbasis mobile dan web yang menghubungkan 
 Aplikasi ini didesain untuk menjawab tantangan distribusi darah yang selama ini tidak optimal, sering kali mengandalkan pencarian manual melalui media sosial atau grup WhatsApp. Dengan teknologi yang mendukung pencocokan otomatis dan notifikasi berbasis tingkat urgensi, DarahTanyoe memastikan bahwa donor dan penerima darah dapat terhubung lebih cepat dan akurat.
 
 ## Fitur Utama
+- **Permintaan Donor Darah**: Memungkinkan Resipien/Keluarga melakukan permintaan darah.
 - **Dashboard Real-Time**: Menampilkan ketersediaan stok darah di rumah sakit dan PMI terdekat.
-- **Pencocokan Otomatis**: Menghubungkan pendonor dan pasien berdasarkan golongan darah dan lokasi.
 - **Notifikasi Darurat**: Sistem otomatis yang mengirimkan pemberitahuan kepada pendonor terdekat.
 - **Validasi dan Verifikasi**: RS/PMI memverifikasi setiap permintaan untuk memastikan keakuratan dan keamanan.
 - **Reward System**: Pendonor mendapatkan poin yang dapat ditukar dengan berbagai keuntungan.
