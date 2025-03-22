@@ -1,4 +1,4 @@
-# DarahTanyoe: Ekosistem Cerdas Berbasis AI untuk Donor Darah yang Transparan dan Real-Time
+# DarahTanyoe: Ekosistem Cerdas untuk Donor Darah yang Transparan dan Real-Time
 
 ## Deskripsi
 DarahTanyoe adalah platform inovatif berbasis mobile dan web yang menghubungkan pasien, pendonor, rumah sakit, dan PMI dalam satu ekosistem digital. Dengan fitur real-time monitoring stok darah dan pencocokan otomatis antara pemohon dan pendonor, aplikasi ini bertujuan untuk meningkatkan transparansi dan efisiensi dalam sistem donor darah.
