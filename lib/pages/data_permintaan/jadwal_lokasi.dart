@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../components/dropdown_api.dart';
 import 'validasi.dart';
 
 class JadwalLokasi extends StatefulWidget {
@@ -25,6 +26,10 @@ class JadwalLokasi extends StatefulWidget {
 class _JadwalLokasiState extends State<JadwalLokasi> {
   final TextEditingController lokasiController = TextEditingController();
   final TextEditingController tanggalController = TextEditingController();
+  final TextEditingController idLokasiController = TextEditingController();
+  void handleDropdownChange(String? value) {
+    print("Selected Value: $value");
+  }
 
   @override
   void dispose() {
@@ -52,8 +57,8 @@ class _JadwalLokasiState extends State<JadwalLokasi> {
             padding: EdgeInsets.only(right: 12),
             child: Image.asset(
               'assets/images/icon_notif.png',
-              width: 60,  
-              height: 60, 
+              width: 60,
+              height: 60,
             ),
           ),
         ],
@@ -64,92 +69,58 @@ class _JadwalLokasiState extends State<JadwalLokasi> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Image.asset(
-              'assets/images/alur_permintaan_3.png',
-              width: double.infinity,
-              fit: BoxFit.contain,
-            ),
             SizedBox(height: 20),
-            Stack(
-              children: [
-                Container(
-                  height: 350,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.grey),
-                  ),
-                ),
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.5),
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+
+            // Dropdown tanpa container pembungkus
+            Material(
+              color: Colors.transparent,
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.grey),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 4,
+                      offset: Offset(0, 2),
                     ),
-                    alignment: Alignment.centerLeft,
-                    child: Container(
-                      padding: EdgeInsets.only(left: 16), // Tambahkan padding kiri 16px
-                      child: Text(
-                        'Lokasi Pendonoran',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: DropdownApi(
+                        apiUrl:
+                            'https://400e-103-47-133-149.ngrok-free.app/partners',
+                        hintText: 'Pilih Lokasi',
+                        onChanged: (Lokasi? selected) {
+                          if (selected != null) {
+                            lokasiController.text = selected.name;
+                            idLokasiController.text = selected.id;
+                            print("Lokasi dipilih: ${selected.name}");
+                            print("ID Lokasi: ${selected.id}");
+                          }
+                        },
                       ),
                     ),
-                  ),
-                ),
-                // Input Lokasi dalam Box Hitam Transparan dengan Ikon Search
-                Positioned(
-                  left: 10,
-                  right: 10,
-                  bottom: 10,
-                  child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.2), // Warna hitam dengan opacity 0.2
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.grey),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 4,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
+                    SizedBox(width: 8),
+                    CircleAvatar(
+                      backgroundColor: Colors.red,
+                      radius: 18,
+                      child: Icon(Icons.search, color: Colors.white, size: 20),
                     ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: lokasiController,
-                            decoration: InputDecoration(
-                              hintText: "Cari RS / PMI",
-                              hintStyle: TextStyle(color: Colors.white), // Warna hint agar lebih terlihat
-                              border: InputBorder.none,
-                            ),
-                            style: TextStyle(color: Colors.white), // Warna teks input putih agar kontras
-                          ),
-                        ),
-                        SizedBox(width: 8), // Spasi antara input dan ikon
-                        CircleAvatar(
-                          backgroundColor: Colors.red, // Warna ikon search
-                          radius: 18,
-                          child: Icon(Icons.search, color: Colors.white, size: 20),
-                        ),
-                      ],
-                    ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
+
             SizedBox(height: 20),
+
+            // Jadwal Berakhir
             _datePickerField(),
+
             Spacer(),
             _navigationButtons(context),
             SizedBox(height: 20),
@@ -164,11 +135,16 @@ class _JadwalLokasiState extends State<JadwalLokasi> {
     );
   }
 
-  Widget _inputField(String label, String hint, TextEditingController controller) {
+  Widget _inputField(
+      String label, String hint, TextEditingController controller) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey[700])),
+        Text(label,
+            style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[700])),
         SizedBox(height: 4),
         TextField(
           controller: controller,
@@ -182,68 +158,71 @@ class _JadwalLokasiState extends State<JadwalLokasi> {
     );
   }
 
-Widget _datePickerField() {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        "Jadwal Berakhir Permintaan",
-        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey[700]),
-      ),
-      SizedBox(height: 4),
-      GestureDetector(
-        onTap: () async {
-          // Memilih tanggal
-          DateTime? pickedDate = await showDatePicker(
-            context: context,
-            initialDate: DateTime.now(),
-            firstDate: DateTime.now(),
-            lastDate: DateTime(2100),
-          );
-
-          // Memilih jam dan menit jika tanggal dipilih
-          if (pickedDate != null) {
-            TimeOfDay? pickedTime = await showTimePicker(
+  Widget _datePickerField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Jadwal Berakhir Permintaan",
+          style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[700]),
+        ),
+        SizedBox(height: 4),
+        GestureDetector(
+          onTap: () async {
+            // Memilih tanggal
+            DateTime? pickedDate = await showDatePicker(
               context: context,
-              initialTime: TimeOfDay(hour: pickedDate.hour, minute: pickedDate.minute),
+              initialDate: DateTime.now(),
+              firstDate: DateTime.now(),
+              lastDate: DateTime(2100),
             );
 
-            // Jika jam dan menit dipilih
-            if (pickedTime != null) {
-              setState(() {
-                // Menyusun tanggal, jam, dan menit dalam format yang diinginkan
-                tanggalController.text =
-                    "${pickedDate.day}-${pickedDate.month}-${pickedDate.year} ${pickedTime.hour}:${pickedTime.minute.toString().padLeft(2, '0')}";
-              });
+            // Memilih jam dan menit jika tanggal dipilih
+            if (pickedDate != null) {
+              TimeOfDay? pickedTime = await showTimePicker(
+                context: context,
+                initialTime:
+                    TimeOfDay(hour: pickedDate.hour, minute: pickedDate.minute),
+              );
+
+              // Jika jam dan menit dipilih
+              if (pickedTime != null) {
+                setState(() {
+                  // Menyusun tanggal, jam, dan menit dalam format yang diinginkan
+                  tanggalController.text =
+                      "${pickedDate.day}-${pickedDate.month}-${pickedDate.year} ${pickedTime.hour}:${pickedTime.minute.toString().padLeft(2, '0')}";
+                });
+              }
             }
-          }
-        },
-        child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                tanggalController.text.isEmpty
-                    ? "Jadwal Berakhir Permintaan"
-                    : tanggalController.text,
-                style: TextStyle(fontSize: 14, color: Colors.black87),
-              ),
-              Icon(Icons.calendar_today, size: 18, color: Colors.grey[600]),
-            ],
+          },
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  tanggalController.text.isEmpty
+                      ? "Jadwal Berakhir Permintaan"
+                      : tanggalController.text,
+                  style: TextStyle(fontSize: 14, color: Colors.black87),
+                ),
+                Icon(Icons.calendar_today, size: 18, color: Colors.grey[600]),
+              ],
+            ),
           ),
         ),
-      ),
-    ],
-  );
-}
+      ],
+    );
+  }
 
-
-    Widget _navigationButtons(BuildContext context) {
+  Widget _navigationButtons(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -252,7 +231,8 @@ Widget _datePickerField() {
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Color(0xFFE9B824),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30)),
               padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
             ),
             onPressed: () => Navigator.pop(context),
@@ -261,9 +241,11 @@ Widget _datePickerField() {
               children: [
                 Align(
                   alignment: Alignment.centerLeft,
-                  child: Text("<", style: TextStyle(color: Colors.white, fontSize: 16)),
+                  child: Text("<",
+                      style: TextStyle(color: Colors.white, fontSize: 16)),
                 ),
-                Text("Kembali", style: TextStyle(color: Colors.white, fontSize: 16)),
+                Text("Kembali",
+                    style: TextStyle(color: Colors.white, fontSize: 16)),
               ],
             ),
           ),
@@ -274,7 +256,8 @@ Widget _datePickerField() {
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Color(0xFF476EB6),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30)),
               padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
             ),
             onPressed: () {
@@ -282,14 +265,15 @@ Widget _datePickerField() {
                 context,
                 MaterialPageRoute(
                   builder: (context) => Validasi(
-                  nama: widget.nama,
-                  usia: widget.usia,
-                  nomorHP: widget.nomorHP,
-                  golDarah: widget.golDarah,
-                  lokasi: lokasiController.text,
-                  tanggal: tanggalController.text,
-                  jumlahKantong: widget.jumlahKantong,
-                  deskripsi: widget.deskripsi,
+                    nama: widget.nama,
+                    usia: widget.usia,
+                    nomorHP: widget.nomorHP,
+                    golDarah: widget.golDarah,
+                    lokasi: lokasiController.text,
+                    tanggal: tanggalController.text,
+                    jumlahKantong: widget.jumlahKantong,
+                    idLokasi: idLokasiController.text,
+                    deskripsi: widget.deskripsi,
                   ),
                 ),
               );
@@ -299,9 +283,11 @@ Widget _datePickerField() {
               children: [
                 Align(
                   alignment: Alignment.centerRight,
-                  child: Text(">", style: TextStyle(color: Colors.white, fontSize: 16)),
+                  child: Text(">",
+                      style: TextStyle(color: Colors.white, fontSize: 16)),
                 ),
-                Text("Lanjut", style: TextStyle(color: Colors.white, fontSize: 16)),
+                Text("Lanjut",
+                    style: TextStyle(color: Colors.white, fontSize: 16)),
               ],
             ),
           ),

@@ -1,10 +1,9 @@
 import 'package:darahtanyoe_app/components/copyright.dart';
 import 'package:darahtanyoe_app/components/my_button.dart';
-import 'package:darahtanyoe_app/pages/mainpage/main_navigasi_screen.dart';
+import 'package:darahtanyoe_app/pages/mainpage/main_screen.dart';
 import 'package:flutter/material.dart';
 import '../../components/my_textfield.dart';
 import '../../service/auth_service.dart';
-import '../mainpage/home_screen.dart';
 
 class BloodInfo extends StatefulWidget {
   const BloodInfo({Key? key}) : super(key: key);

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../mainpage/home_screen.dart';
-import '../mainpage/transaksi.dart';
+import '../../main.dart';
+
 import '../../models/permintaan_darah_model.dart';
 import '../../service/permintaan_darah_service.dart';
 
@@ -13,6 +13,7 @@ class Validasi extends StatefulWidget {
   final String jumlahKantong;
   final String deskripsi;
   final String lokasi;
+  final String idLokasi;
   final String tanggal;
 
   const Validasi({
@@ -25,6 +26,7 @@ class Validasi extends StatefulWidget {
     required this.deskripsi,
     required this.lokasi,
     required this.tanggal,
+    required this.idLokasi,
   }) : super(key: key);
 
   @override
@@ -108,9 +110,7 @@ class _ValidasiState extends State<Validasi> {
             _buildLabeledField("Usia Pasien", "${widget.usia} Tahun"),
           ),
           _buildLabeledField("Nomor Handphone (WhatsApp)", widget.nomorHP),
-          
           _buildLabeledField("Golongan Darah", widget.golDarah),
-        
           _buildLabeledField("Jumlah Kebutuhan Kantong", widget.jumlahKantong),
           _buildLabeledField("Deskripsi Kebutuhan", widget.deskripsi,
               maxLines: 3),
@@ -224,162 +224,156 @@ class _ValidasiState extends State<Validasi> {
   }
 
   void _validasiSebelumLanjut() {
+    if (widget.nama.isEmpty ||
+        widget.usia.isEmpty ||
+        widget.nomorHP.isEmpty ||
+        widget.golDarah.isEmpty ||
+        widget.jumlahKantong.isEmpty ||
+        widget.deskripsi.isEmpty ||
+        widget.idLokasi.isEmpty ||
+        widget.tanggal.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Harap lengkapi semua data!"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } else {
+      // Menampilkan dialog loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return Dialog(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(width: 20),
+                  const Text("Menyimpan permintaan..."),
+                ],
+              ),
+            ),
+          );
+        },
+      );
 
-  if (widget.nama.isEmpty ||
-      widget.usia.isEmpty ||
-      widget.nomorHP.isEmpty ||
-      widget.golDarah.isEmpty ||
-      widget.jumlahKantong.isEmpty ||
-      widget.deskripsi.isEmpty ||
-      widget.lokasi.isEmpty ||
-      widget.tanggal.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Harap lengkapi semua data!"),
-        backgroundColor: Colors.red,
-      ),
-    );
-  } else {
-    // Menampilkan dialog loading
+      // Membuat model permintaan darah
+      final String uniqueCode = PermintaanDarahService.generateUniqueCode();
+      final DateTime now = DateTime.now();
+
+      final permintaan = PermintaanDarahModel(
+        patientName: widget.nama,
+        patientAge: widget.usia,
+        phoneNumber: widget.nomorHP,
+        bloodType: widget.golDarah,
+        bloodBagsNeeded: widget.jumlahKantong,
+        description: widget.deskripsi,
+        partner_id: widget.idLokasi,
+        expiry_date: widget.tanggal,
+        uniqueCode: uniqueCode,
+        bloodBagsFulfilled: 0,
+        status: PermintaanDarahModel.STATUS_PENDING,
+      );
+
+      // Menyimpan permintaan
+      PermintaanDarahService.simpanPermintaan(permintaan).then((success) {
+        Navigator.pop(context); // Tutup dialog loading
+
+        if (success) {
+          // Tampilkan dialog sukses
+          showCustomDialog(context, permintaan);
+        } else {
+          // Tampilkan pesan error
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Gagal menyimpan permintaan. Silakan coba lagi."),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      });
+    }
+  }
+
+  void showCustomDialog(BuildContext context, PermintaanDarahModel permintaan) {
     showDialog(
       context: context,
-      barrierDismissible: false,
       builder: (BuildContext context) {
         return Dialog(
-          child: Padding(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: Container(
             padding: const EdgeInsets.all(20),
-            child: Row(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const CircularProgressIndicator(),
-                const SizedBox(width: 20),
-                const Text("Menyimpan permintaan..."),
+                const Icon(Icons.check_circle, size: 80, color: Colors.green),
+                const SizedBox(height: 10),
+                const Text(
+                  "Permintaan Anda Berhasil",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  "Kode Permintaan: ${permintaan.uniqueCode}",
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  "Pengajuan Anda sedang diproses. Mohon tunggu konfirmasi dari pihak RS/PMI sebelum mendatangi idLokasi pendonoran.",
+                  style: TextStyle(fontSize: 14),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.amber,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 12, horizontal: 20),
+                  ),
+                  onPressed: () {
+                    Navigator.popUntil(context, (route) => route.isFirst);
+                    MyApp.mainScreenKey.currentState
+                        ?.changeTab(2, code: permintaan.uniqueCode);
+                  },
+                  child: const Text("Lihat Permintaan",
+                      style: TextStyle(color: Colors.black)),
+                ),
+                const SizedBox(height: 10),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey[800],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 12, horizontal: 20),
+                  ),
+                  onPressed: () {
+                    Navigator.popUntil(context, (route) => route.isFirst);
+                    MyApp.mainScreenKey.currentState?.changeTab(0);
+                  },
+                  child: const Text("Kembali ke Beranda",
+                      style: TextStyle(color: Colors.white)),
+                ),
               ],
             ),
           ),
         );
       },
     );
-
-    // Membuat model permintaan darah
-    final String uniqueCode = PermintaanDarahService.generateUniqueCode();
-    final DateTime now = DateTime.now();
-    
-    final permintaan = PermintaanDarahModel(
-      patientName: widget.nama,
-      patientAge: widget.usia,
-      phoneNumber: widget.nomorHP,
-      bloodType: widget.golDarah,
-      bloodBagsNeeded: widget.jumlahKantong,
-      description: widget.deskripsi,
-      partner_id: widget.lokasi,
-      expiry_date: widget.tanggal,
-      uniqueCode: uniqueCode,
-      bloodBagsFulfilled: 0,
-      status: PermintaanDarahModel.STATUS_PENDING,
-    );
-
-    // Menyimpan permintaan
-    PermintaanDarahService.simpanPermintaan(permintaan).then((success) {
-      Navigator.pop(context); // Tutup dialog loading
-      
-      if (success) {
-        // Tampilkan dialog sukses
-        showCustomDialog(context, permintaan);
-      } else {
-        // Tampilkan pesan error
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Gagal menyimpan permintaan. Silakan coba lagi."),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    });
   }
-}
-
-  void showCustomDialog(BuildContext context, PermintaanDarahModel permintaan) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.check_circle, size: 80, color: Colors.green),
-              const SizedBox(height: 10),
-              const Text(
-                "Permintaan Anda Berhasil",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 10),
-              Text(
-                "Kode Permintaan: ${permintaan.uniqueCode}",
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 10),
-              const Text(
-                "Pengajuan Anda sedang diproses. Mohon TUNGGU KONFIRMASI dari pihak RS/PMI terkait sebelum mendatangi lokasi pendonoran.",
-                style: TextStyle(fontSize: 14),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.amber,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-                ),
-                onPressed: () {
-                  Navigator.of(context).pop(); // Tutup dialog
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => TransactionBlood(uniqueCode: permintaan.uniqueCode),
-                    ),
-                  );
-                },
-                child: const Text("Lihat Permintaan", style: TextStyle(color: Colors.black)),
-              ),
-              const SizedBox(height: 10),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey[800],
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-                ),
-                onPressed: () {
-                  Navigator.of(context).pop(); // Tutup dialog
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => HomeScreen(),
-                    ),
-                  );
-                },
-                child: const Text("Kembali ke Beranda", style: TextStyle(color: Colors.white)),
-              ),
-            ],
-          ),
-        ),
-      );
-    },
-  );
-}
 }
