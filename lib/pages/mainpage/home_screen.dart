@@ -4,7 +4,6 @@ import 'package:darahtanyoe_app/widget/header_widget.dart';
 import 'package:flutter/material.dart';
 
 import '../../components/article_slider.dart';
-import '../../components/my_navbar.dart';
 
 class HomeScreen extends StatefulWidget {
   @override

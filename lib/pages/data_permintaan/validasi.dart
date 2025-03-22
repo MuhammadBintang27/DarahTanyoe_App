@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../main.dart';
-import '../mainpage/home_screen.dart';
-import '../mainpage/transaksi.dart';
+
 import '../../models/permintaan_darah_model.dart';
 import '../../service/permintaan_darah_service.dart';
 
@@ -14,6 +13,7 @@ class Validasi extends StatefulWidget {
   final String jumlahKantong;
   final String deskripsi;
   final String lokasi;
+  final String idLokasi;
   final String tanggal;
 
   const Validasi({
@@ -26,6 +26,7 @@ class Validasi extends StatefulWidget {
     required this.deskripsi,
     required this.lokasi,
     required this.tanggal,
+    required this.idLokasi,
   }) : super(key: key);
 
   @override
@@ -229,7 +230,7 @@ class _ValidasiState extends State<Validasi> {
         widget.golDarah.isEmpty ||
         widget.jumlahKantong.isEmpty ||
         widget.deskripsi.isEmpty ||
-        widget.lokasi.isEmpty ||
+        widget.idLokasi.isEmpty ||
         widget.tanggal.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -270,7 +271,7 @@ class _ValidasiState extends State<Validasi> {
         bloodType: widget.golDarah,
         bloodBagsNeeded: widget.jumlahKantong,
         description: widget.deskripsi,
-        partner_id: widget.lokasi,
+        partner_id: widget.idLokasi,
         expiry_date: widget.tanggal,
         uniqueCode: uniqueCode,
         bloodBagsFulfilled: 0,
@@ -329,7 +330,7 @@ class _ValidasiState extends State<Validasi> {
                 ),
                 const SizedBox(height: 10),
                 const Text(
-                  "Pengajuan Anda sedang diproses. Mohon tunggu konfirmasi dari pihak RS/PMI sebelum mendatangi lokasi pendonoran.",
+                  "Pengajuan Anda sedang diproses. Mohon tunggu konfirmasi dari pihak RS/PMI sebelum mendatangi idLokasi pendonoran.",
                   style: TextStyle(fontSize: 14),
                   textAlign: TextAlign.center,
                 ),
