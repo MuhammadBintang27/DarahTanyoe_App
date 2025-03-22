@@ -17,6 +17,9 @@ dependencies:
   geolocator: ^13.0.3
   google_maps_flutter: ^2.11.0
   geocoding: ^3.0.0
+  shared_preferences: ^2.5.2
+  path_provider: ^2.1.1
+
 
 dev_dependencies:
   flutter_test:
@@ -36,6 +39,7 @@ flutter:
   assets:
     - assets/images/
     - assets/logo/
+    - assets/data/
 
 
   # An image asset can refer to one or more resolution-specific "variants", see
