@@ -48,7 +48,7 @@ class PermintaanDarahService {
 
       // Konversi objek ke JSON
       Map<String, dynamic> data = {
-        "requester_id": "87a286ba-1dcd-4f63-ae5a-5433e190b3c8",
+        "requester_id": "a4d16fb8-4cf1-4f6e-ae61-e777782987f8",
         "partner_id": permintaan.partner_id,
         "blood_type": permintaan.bloodType,
         "quantity": permintaan.bloodBagsNeeded,
