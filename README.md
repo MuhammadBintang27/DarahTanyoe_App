@@ -14,7 +14,7 @@ Aplikasi ini didesain untuk menjawab tantangan distribusi darah yang selama ini 
 - **Validasi dan Verifikasi**: RS/PMI memverifikasi setiap permintaan untuk memastikan keakuratan dan keamanan.
 - **Reward System**: Pendonor mendapatkan poin yang dapat ditukar dengan berbagai keuntungan.
 
-## 📱 Tampilan Mobile
+## Tampilan Mobile
 
 <table align="center">
   <tr>
