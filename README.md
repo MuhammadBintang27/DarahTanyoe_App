@@ -100,21 +100,7 @@ git clone https://github.com/user/darahtanyoe.git
 cd darahtanyoe
 ```
 
-### **2. Backend Setup**
-```sh
-cd backend
-npm install
-npm start
-```
-
-### **3. Frontend Setup**
-```sh
-cd frontend
-npm install
-npm run dev
-```
-
-### **4. Mobile App Setup**
+### **2. Mobile App Setup**
 ```sh
 cd mobile
 flutter pub get
