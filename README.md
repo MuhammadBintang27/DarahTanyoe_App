@@ -9,7 +9,7 @@ Aplikasi ini didesain untuk menjawab tantangan distribusi darah yang selama ini 
 
 ## Fitur Utama
 - **Permintaan Donor Darah**: Resipien/Keluarga dapat mengajukan permintaan donor darah.
-- **Dashboard Real-Time**: Menampilkan ketersediaan stok darah di rumah sakit dan PMI terdekat.
+- **Dashboard Real-Time**: Menampilkan ketersediaan stok darah di rumah sakit dan PMI terdekat untuk transparansi.
 - **Notifikasi Darurat**: Sistem otomatis yang mengirimkan pemberitahuan kepada pendonor terdekat.
 - **Validasi dan Verifikasi**: RS/PMI memverifikasi setiap permintaan untuk memastikan keakuratan dan keamanan.
 - **Reward System**: Pendonor mendapatkan poin yang dapat ditukar dengan berbagai keuntungan.
