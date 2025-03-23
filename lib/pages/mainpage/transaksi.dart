@@ -1,8 +1,12 @@
+import 'dart:convert';
+
 import 'package:darahtanyoe_app/widget/header_widget.dart';
 import '../../models/permintaan_darah_model.dart';
 import '../../service/permintaan_darah_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
+
 // Tambahkan import untuk BloodDonationDetailScreen
 import '../detail_permintaan/detail_permintaan_darah.dart'; // Sesuaikan dengan lokasi file yang benar
 
@@ -29,43 +33,62 @@ class _TransactionBloodState extends State<TransactionBlood> {
     super.initState();
     _loadPermintaan();
   }
-  
-  Future<void> _loadPermintaan() async {
-    setState(() {
-      isLoading = true;
-    });
-    
+  static Future<List<PermintaanDarahModel>> getAllPermintaan(String userId) async {
+    final url = Uri.parse('https://3a3c-103-47-133-149.ngrok-free.app/bloodReq/$userId');
+
     try {
-      List<PermintaanDarahModel> data = await PermintaanDarahService.getAllPermintaan();
-      
+      final response = await http.get(url);
+      print(response.body);
+      if (response.statusCode == 200) {
+        List<dynamic> jsonData = json.decode(response.body);
+        print(jsonData);
+        return jsonData.map((item) => PermintaanDarahModel.fromJson(item)).toList();
+      } else {
+        throw Exception('Gagal mengambil data: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Terjadi kesalahan: $e');
+    }
+  }
+
+  Future<void> _loadPermintaan() async {
+  setState(() {
+    isLoading = true;
+  });
+
+  try {
+    String userId = "87a286ba-1dcd-4f63-ae5a-5433e190b3c8"; // Gantilah dengan userId yang sesuai
+    List<PermintaanDarahModel> data = await getAllPermintaan(userId);
+
+    if (mounted) {
       setState(() {
         permintaanList = data;
         isLoading = false;
       });
-      
+
       // Jika ada kode unik yang diberikan, scroll ke permintaan tersebut
-      if (widget.uniqueCode != null && mounted) {
-        // Implementasi scroll ke item spesifik jika diperlukan
-        // Bisa digunakan untuk menyoroti permintaan tertentu
+      if (widget.uniqueCode != null) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _highlightRequest(widget.uniqueCode!);
         });
       }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          isLoading = false;
-        });
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Gagal memuat data: $e"),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+    }
+  } catch (e) {
+    if (mounted) {
+      setState(() {
+        isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Gagal memuat data: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
+}
+
   
   void _highlightRequest(String uniqueCode) {
     // Implementasi untuk menyoroti permintaan dengan uniqueCode tertentu

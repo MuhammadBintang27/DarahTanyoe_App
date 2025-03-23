@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:darahtanyoe_app/pages/notifikasi/Notifikasi.dart';
+import '../mainpage/transaksi.dart';
 import 'dart:async';
 
 // Enum untuk status donasi
 enum DonationStatusType {
-  pending,      // Menunggu konfirmasi
-  confirmed,    // Dikonfirmasi, silahkan datang ke lokasi
-  countdown,    // Menampilkan sisa waktu permintaan
-  rejected,     // Permintaan ditolak
-  completed,    // Permintaan selesai
+  pending, // Menunggu konfirmasi
+  confirmed, // Dikonfirmasi, silahkan datang ke lokasi
+  countdown, // Menampilkan sisa waktu permintaan
+  rejected, // Permintaan ditolak
+  completed, // Permintaan selesai
 }
 
 // Model untuk data pasien
@@ -21,7 +23,7 @@ class PatientDonationData {
   final String description;
   final String partner_id;
   final String expiry_date;
-  
+
   PatientDonationData({
     required this.patientName,
     required this.patientAge,
@@ -32,9 +34,7 @@ class PatientDonationData {
     required this.partner_id,
     required this.expiry_date,
   });
-  
-  
-  
+
   // Factory method untuk membuat contoh data (untuk pengujian)
   factory PatientDonationData.sample() {
     return PatientDonationData(
@@ -57,7 +57,7 @@ class DonationStatus {
   final DonationStatusType status;
   final VoidCallback? onCancelRequest;
   final DateTime? remainingTime;
-  
+
   DonationStatus({
     this.uniqueCode = '',
     required this.filledBags,
@@ -65,27 +65,29 @@ class DonationStatus {
     this.onCancelRequest,
     this.remainingTime,
   });
-  
+
   // Factory method untuk membuat contoh data (untuk pengujian)
   factory DonationStatus.sample() {
     return DonationStatus(
       uniqueCode: '',
       filledBags: 2,
       status: DonationStatusType.pending,
-      remainingTime: DateTime.now().add(const Duration(days: 1, hours: 12, minutes: 32, seconds: 6)),
+      remainingTime: DateTime.now()
+          .add(const Duration(days: 1, hours: 12, minutes: 32, seconds: 6)),
     );
   }
-  
+
   // Sample untuk status countdown
   factory DonationStatus.countdown() {
     return DonationStatus(
       uniqueCode: 'DON123456',
       filledBags: 2,
       status: DonationStatusType.countdown,
-      remainingTime: DateTime.now().add(const Duration(days: 1, hours: 12, minutes: 32, seconds: 6)),
+      remainingTime: DateTime.now()
+          .add(const Duration(days: 1, hours: 12, minutes: 32, seconds: 6)),
     );
   }
-  
+
   // Sample untuk status confirmed
   factory DonationStatus.confirmed() {
     return DonationStatus(
@@ -94,7 +96,7 @@ class DonationStatus {
       status: DonationStatusType.confirmed,
     );
   }
-  
+
   // Sample untuk status rejected
   factory DonationStatus.rejected() {
     return DonationStatus(
@@ -103,7 +105,7 @@ class DonationStatus {
       status: DonationStatusType.rejected,
     );
   }
-  
+
   // Sample untuk status completed
   factory DonationStatus.completed() {
     return DonationStatus(
@@ -115,82 +117,81 @@ class DonationStatus {
 }
 
 class BloodDonationDetailScreen extends StatefulWidget {
-  
   BloodDonationDetailScreen({
     super.key,
     this.onBackPressed,
     this.onNotificationPressed,
     PatientDonationData? patientData,
     DonationStatus? donationStatus,
-  }) : 
-    patientData = patientData ?? PatientDonationData.sample(),
-    donationStatus = donationStatus ?? DonationStatus.sample();
+  })  : patientData = patientData ?? PatientDonationData.sample(),
+        donationStatus = donationStatus ?? DonationStatus.sample();
 
   final VoidCallback? onBackPressed;
   final VoidCallback? onNotificationPressed;
-  
+
   // Model untuk data pasien
   final PatientDonationData patientData;
-  
+
   // Model untuk status donasi
   final DonationStatus donationStatus;
 
   @override
-  State<BloodDonationDetailScreen> createState() => _BloodDonationDetailScreenState();
+  State<BloodDonationDetailScreen> createState() =>
+      _BloodDonationDetailScreenState();
 }
 
 class _BloodDonationDetailScreenState extends State<BloodDonationDetailScreen> {
   String remainingTimeText = "00:00:00"; // Default value
   Timer? _timer;
-  
- @override
+
+  @override
   void initState() {
     super.initState();
-    
+
     // Tambahkan logging
     print('Current status: ${widget.donationStatus.status}');
     print('Remaining time: ${widget.donationStatus.remainingTime}');
-    
+
     // Pastikan kondisi ini terpenuhi
-    if (widget.donationStatus.status == DonationStatusType.countdown && 
+    if (widget.donationStatus.status == DonationStatusType.countdown &&
         widget.donationStatus.remainingTime != null) {
       print('Starting countdown timer');
       _startCountdownTimer();
     }
   }
-  
+
   @override
   void dispose() {
     _timer?.cancel();
     super.dispose();
   }
-  
+
   void _startCountdownTimer() {
     print('Countdown timer started');
     _updateRemainingTime(); // Panggil segera
-    
+
     // Timer yang update setiap detik
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       print('Updating timer'); // Debug log
       _updateRemainingTime();
     });
   }
-  
+
   void _updateRemainingTime() {
     // Pastikan remainingTime tidak null
     if (widget.donationStatus.remainingTime == null) {
       print('Remaining time is null');
       return;
     }
-    
+
     final now = DateTime.now();
     final remaining = widget.donationStatus.remainingTime!.difference(now);
-    
+
     // Debug informasi
     print('Now: $now');
     print('Remaining time: ${widget.donationStatus.remainingTime}');
     print('Difference: $remaining');
-    
+
     if (remaining.isNegative) {
       setState(() {
         remainingTimeText = "Waktu habis";
@@ -202,11 +203,12 @@ class _BloodDonationDetailScreenState extends State<BloodDonationDetailScreen> {
       final hours = remaining.inHours;
       final minutes = remaining.inMinutes.remainder(60);
       final seconds = remaining.inSeconds.remainder(60);
-      
+
       setState(() {
-        remainingTimeText = "${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}";
+        remainingTimeText =
+            "${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}";
       });
-      
+
       print('Remaining time text: $remainingTimeText');
     }
   }
@@ -236,12 +238,16 @@ class _BloodDonationDetailScreenState extends State<BloodDonationDetailScreen> {
                   child: Row(
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.arrow_back, color: Colors.white),
-                        onPressed: widget.onBackPressed ??
-                            () {
-                              Navigator.of(context).pop();
-                            },
-                      ),
+                          icon:
+                              const Icon(Icons.arrow_back, color: Colors.white),
+                          onPressed: widget.onBackPressed ??
+                              () {
+                                Navigator.of(context).pushReplacement(
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          const TransactionBlood()),
+                                );
+                              }),
                       const Expanded(
                         child: Center(
                           child: Padding(
@@ -260,7 +266,15 @@ class _BloodDonationDetailScreenState extends State<BloodDonationDetailScreen> {
                       Padding(
                         padding: const EdgeInsets.only(right: 8.0),
                         child: GestureDetector(
-                          onTap: widget.onNotificationPressed,
+                          onTap: () {
+                            // Navigasi ke NotificationPage saat ikon notifikasi ditekan
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      const NotificationPage()),
+                            );
+                          },
                           child: Container(
                             width: 40,
                             height: 40,
@@ -291,7 +305,7 @@ class _BloodDonationDetailScreenState extends State<BloodDonationDetailScreen> {
                     ),
                   ),
                   child: Container(
-                    color: Colors.white.withOpacity(0.75),
+                    color: Colors.white.withOpacity(0.8),
                     padding: const EdgeInsets.only(top: 30),
                     child: SingleChildScrollView(
                       physics: const BouncingScrollPhysics(),
@@ -330,7 +344,8 @@ class _BloodDonationDetailScreenState extends State<BloodDonationDetailScreen> {
                                     Expanded(
                                       child: _buildInfoCard(
                                         title: 'Usia Pasien',
-                                        value: '${widget.patientData.patientAge} tahun',
+                                        value:
+                                            '${widget.patientData.patientAge} tahun',
                                         icon: Icons.calendar_today,
                                       ),
                                     ),
@@ -357,7 +372,6 @@ class _BloodDonationDetailScreenState extends State<BloodDonationDetailScreen> {
                                       ),
                                     ),
                                     const SizedBox(width: 16),
-                                    
                                   ],
                                 ),
                                 const SizedBox(height: 20),
@@ -365,7 +379,8 @@ class _BloodDonationDetailScreenState extends State<BloodDonationDetailScreen> {
                                 // Baris 4: Kantong Darah Dibutuhkan
                                 _buildInfoCard(
                                   title: 'Jumlah Kebutuhan Kantong',
-                                  value: '${widget.patientData.bloodBagsNeeded} Kantong',
+                                  value:
+                                      '${widget.patientData.bloodBagsNeeded} Kantong',
                                   icon: Icons.shopping_bag,
                                 ),
                                 const SizedBox(height: 20),
@@ -455,7 +470,8 @@ class _BloodDonationDetailScreenState extends State<BloodDonationDetailScreen> {
                                         style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.bold,
-                                          color: widget.donationStatus.uniqueCode.isEmpty
+                                          color: widget.donationStatus
+                                                  .uniqueCode.isEmpty
                                               ? Colors.grey
                                               : const Color(0xFF333333),
                                         ),
@@ -524,8 +540,10 @@ class _BloodDonationDetailScreenState extends State<BloodDonationDetailScreen> {
                           const SizedBox(height: 16),
 
                           // Tombol Batalkan (hanya jika status belum selesai/ditolak)
-                          if (widget.donationStatus.status != DonationStatusType.completed && 
-                              widget.donationStatus.status != DonationStatusType.rejected)
+                          if (widget.donationStatus.status !=
+                                  DonationStatusType.completed &&
+                              widget.donationStatus.status !=
+                                  DonationStatusType.rejected)
                             SizedBox(
                               width: double.infinity,
                               child: ElevatedButton(
@@ -550,7 +568,9 @@ class _BloodDonationDetailScreenState extends State<BloodDonationDetailScreen> {
                                             onPressed: () {
                                               Navigator.of(context).pop();
                                               // Tambahkan logika pembatalan di sini
-                                              widget.donationStatus.onCancelRequest?.call();
+                                              widget.donationStatus
+                                                  .onCancelRequest
+                                                  ?.call();
                                             },
                                             style: TextButton.styleFrom(
                                               foregroundColor: Colors.red,
@@ -669,7 +689,7 @@ class _BloodDonationDetailScreenState extends State<BloodDonationDetailScreen> {
             ],
           ),
         );
-      
+
       case DonationStatusType.countdown:
         return Container(
           width: double.infinity,
@@ -702,7 +722,7 @@ class _BloodDonationDetailScreenState extends State<BloodDonationDetailScreen> {
             ],
           ),
         );
-      
+
       case DonationStatusType.confirmed:
         return Container(
           width: double.infinity,
@@ -733,7 +753,7 @@ class _BloodDonationDetailScreenState extends State<BloodDonationDetailScreen> {
             ],
           ),
         );
-      
+
       case DonationStatusType.rejected:
         return Container(
           width: double.infinity,
@@ -764,7 +784,7 @@ class _BloodDonationDetailScreenState extends State<BloodDonationDetailScreen> {
             ],
           ),
         );
-      
+
       case DonationStatusType.completed:
         return Container(
           width: double.infinity,
@@ -795,7 +815,7 @@ class _BloodDonationDetailScreenState extends State<BloodDonationDetailScreen> {
             ],
           ),
         );
-      
+
       default:
         return const SizedBox.shrink();
     }
@@ -858,7 +878,7 @@ class _BloodDonationDetailScreenState extends State<BloodDonationDetailScreen> {
 class FirebaseService {
   // Mendapatkan data pasien dari Firestore
   Future<PatientDonationData> getPatientData(String donationId) async {
-  // Di sini implementasikan kode untuk mengambil data dari Firebase
+    // Di sini implementasikan kode untuk mengambil data dari Firebase
     // Contoh:
     // final docSnapshot = await FirebaseFirestore.instance.collection('donations').doc(donationId).get();
     // if (docSnapshot.exists) {
@@ -875,11 +895,11 @@ class FirebaseService {
     //     expiry_date: data['expiry_date']?.toDate() ?? DateTime.now().add(const Duration(days: 1)),
     //   );
     // }
-    
+
     // Contoh data sementara (untuk pengujian)
     return PatientDonationData.sample();
   }
-  
+
   // Mendapatkan status donasi dari Firestore
   Future<DonationStatus> getDonationStatus(String donationId) async {
     // Di sini implementasikan kode untuk mengambil status dari Firebase
@@ -889,7 +909,7 @@ class FirebaseService {
     //   final data = docSnapshot.data()!;
     //   final statusString = data['status'] ?? 'pending';
     //   final status = _convertStatusFromString(statusString);
-      
+
     //   return DonationStatus(
     //     uniqueCode: data['uniqueCode'] ?? '',
     //     filledBags: data['filledBags'] ?? 0,
@@ -904,11 +924,11 @@ class FirebaseService {
     //     },
     //   );
     // }
-    
+
     // Contoh data sementara (untuk pengujian)
     return DonationStatus.sample();
   }
-  
+
   // Konversi string status menjadi enum
   DonationStatusType _convertStatusFromString(String status) {
     switch (status) {
@@ -924,7 +944,7 @@ class FirebaseService {
         return DonationStatusType.pending;
     }
   }
-  
+
   // Metode untuk membatalkan permintaan darah
   Future<void> cancelDonationRequest(String donationId) async {
     // Di sini implementasikan kode untuk membatalkan permintaan
@@ -933,10 +953,10 @@ class FirebaseService {
     //   'status': 'cancelled',
     //   'cancelledAt': FieldValue.serverTimestamp(),
     // });
-    
+
     print('Donation request $donationId cancelled');
   }
-  
+
   // Metode untuk streaming perubahan status
   // Stream<DonationStatus> streamDonationStatus(String donationId) {
   //   return FirebaseFirestore.instance
@@ -947,11 +967,11 @@ class FirebaseService {
   //       if (!snapshot.exists) {
   //         return DonationStatus.sample();
   //       }
-  //       
+  //
   //       final data = snapshot.data()!;
   //       final statusString = data['status'] ?? 'pending';
   //       final status = _convertStatusFromString(statusString);
-  //       
+  //
   //       return DonationStatus(
   //         uniqueCode: data['uniqueCode'] ?? '',
   //         filledBags: data['filledBags'] ?? 0,
@@ -968,7 +988,7 @@ class FirebaseService {
 // Contoh penggunaan dalam screen lain untuk memanggil detail screen
 class UsageExample extends StatelessWidget {
   const UsageExample({super.key});
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -979,27 +999,32 @@ class UsageExample extends StatelessWidget {
           children: [
             // Contoh beberapa tombol untuk menampilkan berbagai status
             ElevatedButton(
-              onPressed: () => _showDonationDetail(context, DonationStatusType.pending),
+              onPressed: () =>
+                  _showDonationDetail(context, DonationStatusType.pending),
               child: const Text('Tampilkan Status Menunggu Konfirmasi'),
             ),
             const SizedBox(height: 12),
             ElevatedButton(
-              onPressed: () => _showDonationDetail(context, DonationStatusType.countdown),
+              onPressed: () =>
+                  _showDonationDetail(context, DonationStatusType.countdown),
               child: const Text('Tampilkan Status Countdown'),
             ),
             const SizedBox(height: 12),
             ElevatedButton(
-              onPressed: () => _showDonationDetail(context, DonationStatusType.confirmed),
+              onPressed: () =>
+                  _showDonationDetail(context, DonationStatusType.confirmed),
               child: const Text('Tampilkan Status Dikonfirmasi'),
             ),
             const SizedBox(height: 12),
             ElevatedButton(
-              onPressed: () => _showDonationDetail(context, DonationStatusType.rejected),
+              onPressed: () =>
+                  _showDonationDetail(context, DonationStatusType.rejected),
               child: const Text('Tampilkan Status Ditolak'),
             ),
             const SizedBox(height: 12),
             ElevatedButton(
-              onPressed: () => _showDonationDetail(context, DonationStatusType.completed),
+              onPressed: () =>
+                  _showDonationDetail(context, DonationStatusType.completed),
               child: const Text('Tampilkan Status Selesai'),
             ),
             const SizedBox(height: 20),
@@ -1014,9 +1039,10 @@ class UsageExample extends StatelessWidget {
       ),
     );
   }
-  
+
   // Menampilkan detail dengan status tertentu (untuk contoh/pengujian)
-  void _showDonationDetail(BuildContext context, DonationStatusType statusType) {
+  void _showDonationDetail(
+      BuildContext context, DonationStatusType statusType) {
     // Data pasien
     final patientData = PatientDonationData(
       patientName: 'Budi Santoso',
@@ -1028,15 +1054,15 @@ class UsageExample extends StatelessWidget {
       partner_id: 'RSUD Zainul Abidin',
       expiry_date: "2023-08-31",
     );
-    
+
     // Status donasi yang berbeda berdasarkan parameter
     late DonationStatus donationStatus;
-    
+
     switch (statusType) {
       case DonationStatusType.pending:
         donationStatus = DonationStatus(
           uniqueCode: '', // Kode unik kosong saat masih pending
-          filledBags: 0, 
+          filledBags: 0,
           status: DonationStatusType.pending,
           onCancelRequest: () {
             Navigator.pop(context);
@@ -1046,13 +1072,14 @@ class UsageExample extends StatelessWidget {
           },
         );
         break;
-        
+
       case DonationStatusType.countdown:
         donationStatus = DonationStatus(
           uniqueCode: '',
           filledBags: 2,
           status: DonationStatusType.countdown,
-          remainingTime: DateTime.now().add(const Duration(days: 1, hours: 12, minutes: 32)),
+          remainingTime: DateTime.now()
+              .add(const Duration(days: 1, hours: 12, minutes: 32)),
           onCancelRequest: () {
             Navigator.pop(context);
             ScaffoldMessenger.of(context).showSnackBar(
@@ -1061,7 +1088,7 @@ class UsageExample extends StatelessWidget {
           },
         );
         break;
-        
+
       case DonationStatusType.confirmed:
         donationStatus = DonationStatus(
           uniqueCode: 'ACG834',
@@ -1075,7 +1102,7 @@ class UsageExample extends StatelessWidget {
           },
         );
         break;
-        
+
       case DonationStatusType.rejected:
         donationStatus = DonationStatus(
           uniqueCode: 'ACG834',
@@ -1083,7 +1110,7 @@ class UsageExample extends StatelessWidget {
           status: DonationStatusType.rejected,
         );
         break;
-        
+
       case DonationStatusType.completed:
         donationStatus = DonationStatus(
           uniqueCode: 'ACG834',
@@ -1092,7 +1119,7 @@ class UsageExample extends StatelessWidget {
         );
         break;
     }
-    
+
     // Navigasi ke halaman detail
     Navigator.push(
       context,
@@ -1104,15 +1131,15 @@ class UsageExample extends StatelessWidget {
       ),
     );
   }
-  
+
   // Memuat data dari Firebase (uncomment jika sudah menggunakan Firebase)
   // void _loadFromFirebase(BuildContext context, String donationId) async {
   //   final firebaseService = FirebaseService();
-  //   
+  //
   //   try {
   //     final patientData = await firebaseService.getPatientData(donationId);
   //     final donationStatus = await firebaseService.getDonationStatus(donationId);
-  //     
+  //
   //     Navigator.push(
   //       context,
   //       MaterialPageRoute(
