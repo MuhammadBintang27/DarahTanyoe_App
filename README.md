@@ -18,24 +18,24 @@ Aplikasi ini didesain untuk menjawab tantangan distribusi darah yang selama ini 
 
 <table align="center">
   <tr>
-    <td align="center"><img src="assets/screenshots/Hero.png" width="300"></td>
-    <td align="center"><img src="assets/screenshots/Register - Informasi Darah.png" width="300"></td>
+    <td align="center"><img src="assets/screenshots/mobile/Hero.png" width="300"></td>
+    <td align="center"><img src="assets/screenshots/mobile/Register - Informasi Darah.png" width="300"></td>
   </tr>
   <tr>
     <td align="center">🔥 Hero</td>
     <td align="center">📝 Register</td>
   </tr>
   <tr>
-    <td align="center"><img src="assets/screenshots/Home.png" width="300"></td>
-    <td align="center"><img src="assets/screenshots/Notifikasi.png" width="300"></td>
+    <td align="center"><img src="assets/screenshots/mobile/Home.png" width="300"></td>
+    <td align="center"><img src="assets/screenshots/mobile/Notifikasi.png" width="300"></td>
   </tr>
   <tr>
     <td align="center">🏠 Home</td>
     <td align="center">🔔 Notifikasi</td>
   </tr>
   <tr>
-    <td align="center"><img src="assets/screenshots/Detail Permintaan Darah.png" width="300"></td>
-    <td align="center"><img src="assets/screenshots/Data Diri Pendonor.png" width="300"></td>
+    <td align="center"><img src="assets/screenshots/mobile/Detail Permintaan Darah.png" width="300"></td>
+    <td align="center"><img src="assets/screenshots/mobile/Data Diri Pendonor.png" width="300"></td>
   </tr>
   <tr>
     <td align="center">🩸 Permintaan Darah</td>
@@ -43,6 +43,26 @@ Aplikasi ini didesain untuk menjawab tantangan distribusi darah yang selama ini 
   </tr>
 </table>
 
+# Tampilan Web
+
+<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; text-align: center;">
+    <div>
+        <img src="assets/screenshots/web/Dashboard.png" width="400">
+        <p>📊 Dashboard</p>
+    </div>
+    <div>
+        <img src="assets/screenshots/web/PopUp Permintaan Darah.png" width="400">
+        <p>🩸 Pop Up Permintaan Darah</p>
+    </div>
+    <div>
+        <img src="assets/screenshots/web/PopUp Update Stok Darah.png" width="400">
+        <p>📦 Pop Up Update Stok Darah</p>
+    </div>
+    <div>
+        <img src="assets/screenshots/web/Event Page.png" width="400">
+        <p>📅 Event Page</p>
+    </div>
+</div>
 
 ## Teknologi yang Digunakan
 ### **Mobile App Development**
