@@ -51,11 +51,11 @@ Aplikasi ini didesain untuk menjawab tantangan distribusi darah yang selama ini 
         <p>📊 Dashboard</p>
     </div>
     <div>
-        <img src="assets/screenshots/web/PopUp Permintaan Darah.png" width="400">
+        <img src="assets/screenshots/web/Pop Up Permintaan Darah.png" width="400">
         <p>🩸 Pop Up Permintaan Darah</p>
     </div>
     <div>
-        <img src="assets/screenshots/web/PopUp Update Stok Darah.png" width="400">
+        <img src="assets/screenshots/web/Pop Up Update Stok Darah.png" width="400">
         <p>📦 Pop Up Update Stok Darah</p>
     </div>
     <div>
