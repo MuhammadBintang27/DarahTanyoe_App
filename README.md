@@ -43,26 +43,26 @@ Aplikasi ini didesain untuk menjawab tantangan distribusi darah yang selama ini 
   </tr>
 </table>
 
-# Tampilan Web
+## Tampilan Web
 
-<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; text-align: center;">
-    <div>
-        <img src="assets/screenshots/web/Dashboard.png" width="400">
-        <p>📊 Dashboard</p>
-    </div>
-    <div>
-        <img src="assets/screenshots/web/Pop Up Permintaan Darah.png" width="400">
-        <p>🩸 Pop Up Permintaan Darah</p>
-    </div>
-    <div>
-        <img src="assets/screenshots/web/Pop Up Update Stok Darah.png" width="400">
-        <p>📦 Pop Up Update Stok Darah</p>
-    </div>
-    <div>
-        <img src="assets/screenshots/web/Event Page.png" width="400">
-        <p>📅 Event Page</p>
-    </div>
-</div>
+<table align="center">
+  <tr>
+    <td align="center"><img src="assets/screenshots/web/Dashboard.png" width="400"></td>
+    <td align="center"><img src="assets/screenshots/web/Pop Up Permintaan Darah.png" width="400"></td>
+  </tr>
+  <tr>
+    <td align="center">📊 Dashboard</td>
+    <td align="center">🩸 Pop Up Permintaan Darah</td>
+  </tr>
+  <tr>
+    <td align="center"><img src="assets/screenshots/web/Pop Up Update Stok Darah.png" width="400"></td>
+    <td align="center"><img src="assets/screenshots/web/Event Page.png" width="400"></td>
+  </tr>
+  <tr>
+    <td align="center">📦 Pop Up Update Stok Darah</td>
+    <td align="center">📅 Event Page</td>
+  </tr>
+</table>
 
 ## Teknologi yang Digunakan
 ### **Mobile App Development**
