@@ -14,6 +14,35 @@ Aplikasi ini didesain untuk menjawab tantangan distribusi darah yang selama ini 
 - **Validasi dan Verifikasi**: RS/PMI memverifikasi setiap permintaan untuk memastikan keakuratan dan keamanan.
 - **Reward System**: Pendonor mendapatkan poin yang dapat ditukar dengan berbagai keuntungan.
 
+## 📱 Tampilan Mobile
+
+<table>
+  <tr>
+    <td><img src="assets/screenshots/Hero.png" width="300"></td>
+    <td><img src="assets/screenshots/Register - Informasi Darah.png" width="300"></td>
+  </tr>
+  <tr>
+    <td align="center">🔥 Hero</td>
+    <td align="center">📝 Register</td>
+  </tr>
+  <tr>
+    <td><img src="assets/screenshots/Home.png" width="300"></td>
+    <td><img src="assets/screenshots/Nontifikasi.png" width="300"></td>
+  </tr>
+  <tr>
+    <td align="center">🏠 Home</td>
+    <td align="center">🔔 Notifikasi</td>
+  </tr>
+  <tr>
+    <td><img src="assets/screenshots/Detail Permintaan Darah.png" width="300"></td>
+    <td><img src="assets/screenshots/Data Diri Pendonor.png" width="300"></td>
+  </tr>
+  <tr>
+    <td align="center">🩸 Permintaan Darah</td>
+    <td align="center">✅ Pendaftaran Donor</td>
+  </tr>
+</table>
+
 ## Teknologi yang Digunakan
 ### **Mobile App Development**
 - **Flutter (Dart)**: Framework untuk aplikasi mobile cross-platform (Android & iOS).
