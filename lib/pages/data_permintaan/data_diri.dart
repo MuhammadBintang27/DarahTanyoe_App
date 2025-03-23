@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:darahtanyoe_app/pages/notifikasi/Notifikasi.dart';
 import 'data_darah.dart';
 
 class DataDiri extends StatefulWidget {
@@ -19,7 +20,9 @@ class _DataDiriState extends State<DataDiri> {
     super.dispose();
   }
 
-  Widget _inputField(String label, String hint, TextEditingController controller, {String? suffixInside}) {
+  Widget _inputField(
+      String label, String hint, TextEditingController controller,
+      {String? suffixInside}) {
     return Padding(
       padding: EdgeInsets.only(bottom: 16),
       child: Column(
@@ -27,7 +30,10 @@ class _DataDiriState extends State<DataDiri> {
         children: [
           Text(
             label,
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey[700]),
+            style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[700]),
           ),
           SizedBox(height: 4),
           TextField(
@@ -41,7 +47,8 @@ class _DataDiriState extends State<DataDiri> {
               suffixIcon: suffixInside != null
                   ? Padding(
                       padding: EdgeInsets.only(right: 12, top: 12),
-                      child: Text(suffixInside, style: TextStyle(color: Colors.black54)),
+                      child: Text(suffixInside,
+                          style: TextStyle(color: Colors.black54)),
                     )
                   : null,
             ),
@@ -59,7 +66,10 @@ class _DataDiriState extends State<DataDiri> {
         children: [
           Text(
             'Nomor Handphone (WhatsApp)',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey[700]),
+            style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[700]),
           ),
           SizedBox(height: 4),
           TextField(
@@ -99,10 +109,19 @@ class _DataDiriState extends State<DataDiri> {
         actions: [
           Padding(
             padding: EdgeInsets.only(right: 12),
-            child: Image.asset(
-              'assets/images/icon_notif.png',
-              width: 60,  
-              height: 60, 
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const NotificationPage()),
+                );
+              },
+              child: Image.asset(
+                'assets/images/icon_notif.png',
+                width: 60,
+                height: 60,
+              ),
             ),
           ),
         ],
@@ -134,11 +153,12 @@ class _DataDiriState extends State<DataDiri> {
               ),
             ),
             SizedBox(height: 20),
-            _inputField("Nama Lengkap Pasien", "Nama Lengkap Pasien", nameController),
-            _inputField("Usia Pasien", "Usia Pasien", usiaController, suffixInside: "Tahun"),
+            _inputField(
+                "Nama Lengkap Pasien", "Nama Lengkap Pasien", nameController),
+            _inputField("Usia Pasien", "Usia Pasien", usiaController,
+                suffixInside: "Tahun"),
             _phoneField(),
             Spacer(),
-            
             Align(
               alignment: Alignment.bottomRight,
               child: Padding(
@@ -148,8 +168,10 @@ class _DataDiriState extends State<DataDiri> {
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xFF476EB6),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                      padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30)),
+                      padding:
+                          EdgeInsets.symmetric(vertical: 16, horizontal: 24),
                     ),
                     onPressed: () {
                       Navigator.push(
@@ -168,17 +190,19 @@ class _DataDiriState extends State<DataDiri> {
                       children: [
                         Align(
                           alignment: Alignment.centerRight,
-                          child: Text(">", style: TextStyle(color: Colors.white, fontSize: 16)),
+                          child: Text(">",
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 16)),
                         ),
-                        Text("Lanjut", style: TextStyle(color: Colors.white, fontSize: 16)),
+                        Text("Lanjut",
+                            style:
+                                TextStyle(color: Colors.white, fontSize: 16)),
                       ],
                     ),
                   ),
                 ),
               ),
             ),
-
-
             SizedBox(height: 20),
             Text(
               '© 2025 Beyond. Hak Cipta Dilindungi.',
