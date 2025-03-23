@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../components/dropdown_api.dart';
 import 'package:darahtanyoe_app/pages/notifikasi/Notifikasi.dart';
 import 'validasi.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class JadwalLokasi extends StatefulWidget {
   final String nama;
@@ -103,7 +104,7 @@ class _JadwalLokasiState extends State<JadwalLokasi> {
                     Expanded(
                       child: DropdownApi(
                         apiUrl:
-                            'https://400e-103-47-133-149.ngrok-free.app/partners',
+                            'https://3a3c-103-47-133-149.ngrok-free.app/partners',
                         hintText: 'Pilih Lokasi',
                         onChanged: (Lokasi? selected) {
                           if (selected != null) {

@@ -49,9 +49,9 @@ Widget build(BuildContext context) {
     : _selectedIndex == 1
         ? LoginPage()
         : _selectedIndex == 2
-            ? TransactionBlood(uniqueCode: _uniqueCode)
+            ? BloodMap()
             : _selectedIndex == 3
-                ? BloodMap()
+                ? TransactionBlood(uniqueCode: _uniqueCode)
                 : BloodInfo(),
 
     bottomNavigationBar: CustomBottomNavBar(
