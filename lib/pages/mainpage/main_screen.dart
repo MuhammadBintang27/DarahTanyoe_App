@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:darahtanyoe_app/pages/mainpage/home_screen.dart';
 import 'package:darahtanyoe_app/pages/authentication/login_page.dart';
 import 'package:darahtanyoe_app/pages/mainpage/peta_darah.dart';
+import 'package:darahtanyoe_app/pages/mainpage/permintaan_darah_terdekat.dart';
 import 'package:darahtanyoe_app/pages/mainpage/transaksi.dart';
 import 'package:darahtanyoe_app/pages/authentication/blood_info.dart';
 
@@ -47,7 +48,7 @@ Widget build(BuildContext context) {
     body: _selectedIndex == 0
     ? HomeScreen()
     : _selectedIndex == 1
-        ? LoginPage()
+        ? NearestBloodDonation()
         : _selectedIndex == 2
             ? TransactionBlood(uniqueCode: _uniqueCode)
             : _selectedIndex == 3
