@@ -17,11 +17,13 @@ class BloodMap extends StatefulWidget {
 }
 
 class _BloodMapState extends State<BloodMap> {
+  String selectedDistance = "<2KM";
   String selectedBloodType = "A+";
   LatLng? userLocation;
   MapController mapController = MapController();
   TextEditingController searchController = TextEditingController();
 
+  final List<String> distanceOptions = ["<2KM", "<5KM", "<10KM"];
   final List<String> bloodTypeOptions = [
     "A+",
     "A-",
@@ -145,6 +147,53 @@ class _BloodMapState extends State<BloodMap> {
                     padding: const EdgeInsets.symmetric(horizontal: 20.0),
                     child: Row(
                       children: [
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 5.0, vertical: 2.0),
+                            decoration: BoxDecoration(
+                              color: Color(0xFFA9A9A9).withOpacity(0.21),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: Colors.grey[400]!),
+                            ),
+                            child: Row(
+                              children: [
+                                Text("Jarak RS/PMI",
+                                    style: TextStyle(
+                                        color: Colors.black87,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold)),
+                                SizedBox(width: 8),
+                                Container(
+                                  height: 20,
+                                  width: 1,
+                                  color: Colors.grey[400],
+                                ),
+                                SizedBox(width: 8),
+                                Expanded(
+                                  child: DropdownButtonHideUnderline(
+                                    child: DropdownButton<String>(
+                                      isExpanded: true,
+                                      value: selectedDistance,
+                                      items:
+                                          distanceOptions.map((String value) {
+                                        return DropdownMenuItem<String>(
+                                          value: value,
+                                          child: Text(value),
+                                        );
+                                      }).toList(),
+                                      onChanged: (String? newValue) {
+                                        setState(() {
+                                          selectedDistance = newValue!;
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                         const SizedBox(width: 10.0),
                         Expanded(
                           child: Container(
