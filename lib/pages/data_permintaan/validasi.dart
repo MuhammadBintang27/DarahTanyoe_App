@@ -4,6 +4,7 @@ import '../../main.dart';
 
 import '../../models/permintaan_darah_model.dart';
 import '../../service/permintaan_darah_service.dart';
+import 'package:darahtanyoe_app/pages/notifikasi/Notifikasi.dart';
 
 class Validasi extends StatefulWidget {
   final String nama;
@@ -51,10 +52,19 @@ class _ValidasiState extends State<Validasi> {
         actions: [
           Padding(
             padding: EdgeInsets.only(right: 12),
-            child: Image.asset(
-              'assets/images/icon_notif.png',
-              width: 60,
-              height: 60,
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const NotificationPage()),
+                );
+              },
+              child: Image.asset(
+                'assets/images/icon_notif.png',
+                width: 60,
+                height: 60,
+              ),
             ),
           ),
         ],
@@ -231,6 +241,7 @@ class _ValidasiState extends State<Validasi> {
         widget.jumlahKantong.isEmpty ||
         widget.deskripsi.isEmpty ||
         widget.idLokasi.isEmpty ||
+        widget.lokasi.isEmpty ||
         widget.tanggal.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -303,8 +314,9 @@ class _ValidasiState extends State<Validasi> {
       context: context,
       builder: (BuildContext context) {
         return Dialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           child: Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -330,7 +342,7 @@ class _ValidasiState extends State<Validasi> {
                 ),
                 const SizedBox(height: 10),
                 const Text(
-                  "Pengajuan Anda sedang diproses. Mohon tunggu konfirmasi dari pihak RS/PMI sebelum mendatangi idLokasi pendonoran.",
+                  "Pengajuan Anda sedang diproses. Mohon TUNGGU KONFIRMASI dari pihak RS/PMI terkait sebelum mendatangi idLokasi pendonoran.",
                   style: TextStyle(fontSize: 14),
                   textAlign: TextAlign.center,
                 ),

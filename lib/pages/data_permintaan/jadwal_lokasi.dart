@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../components/dropdown_api.dart';
+import 'package:darahtanyoe_app/pages/notifikasi/Notifikasi.dart';
 import 'validasi.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -56,10 +57,19 @@ class _JadwalLokasiState extends State<JadwalLokasi> {
         actions: [
           Padding(
             padding: EdgeInsets.only(right: 12),
-            child: Image.asset(
-              'assets/images/icon_notif.png',
-              width: 60,
-              height: 60,
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const NotificationPage()),
+                );
+              },
+              child: Image.asset(
+                'assets/images/icon_notif.png',
+                width: 60,
+                height: 60,
+              ),
             ),
           ),
         ],

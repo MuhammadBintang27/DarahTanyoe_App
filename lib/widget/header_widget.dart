@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:darahtanyoe_app/pages/notifikasi/Notifikasi.dart'; // Sesuaikan dengan path yang benar
 
 class HeaderWidget extends StatelessWidget {
   const HeaderWidget({Key? key}) : super(key: key);
@@ -17,13 +18,21 @@ class HeaderWidget extends StatelessWidget {
               width: 200,
             ),
           ),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.amber,
-              shape: BoxShape.circle,
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const  NotificationPage()),
+              );
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.amber,
+                shape: BoxShape.circle,
+              ),
+              padding: EdgeInsets.all(8),
+              child: Icon(Icons.notifications, color: Colors.white),
             ),
-            padding: EdgeInsets.all(8),
-            child: Icon(Icons.notifications, color: Colors.white),
           ),
         ],
       ),
