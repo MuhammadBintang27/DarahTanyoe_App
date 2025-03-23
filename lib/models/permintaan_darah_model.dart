@@ -88,9 +88,9 @@ class PermintaanDarahModel {
   }
 
   // Konstanta untuk status
-  static const String STATUS_PENDING = "Pending";
-  static const String STATUS_WAITING = "Waiting";
-  static const String STATUS_ACCEPTED = "Accepted";
-  static const String STATUS_COMPLETED = "Completed";
-  static const String STATUS_CANCELLED = "Cancelled";
+  static const String STATUS_PENDING = "pending";
+  static const String STATUS_WAITING = "waiting";
+  static const String STATUS_ACCEPTED = "accepted";
+  static const String STATUS_COMPLETED = "completed";
+  static const String STATUS_CANCELLED = "cancelled";
 }

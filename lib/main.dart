@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
         fontFamily: 'DM Sans',
         useMaterial3: true,
       ),
-home: MainScreen(key: MyApp.mainScreenKey),
+      home: MainScreen(key: MyApp.mainScreenKey),
     );
   }
 }
