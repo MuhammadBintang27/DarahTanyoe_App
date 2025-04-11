@@ -1,6 +1,8 @@
+import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 
 enum InputType { text, dropdown, date }
 
@@ -13,9 +15,10 @@ class MyTextField extends StatefulWidget {
   final List<String>? dropdownItems;
   final Function(String)? onChanged;
   final String? Function(String?)? validator;
+  final bool isAuth;
 
   const MyTextField({
-    Key? key,
+    super.key,
     required this.hintText,
     this.initialValue,
     this.keyboardType = TextInputType.text,
@@ -24,7 +27,8 @@ class MyTextField extends StatefulWidget {
     this.dropdownItems,
     this.onChanged,
     this.validator,
-  }) : super(key: key);
+    this.isAuth = true,
+  });
 
   @override
   State<MyTextField> createState() => _MyTextFieldState();
@@ -38,7 +42,8 @@ class _MyTextFieldState extends State<MyTextField> {
   @override
   void initState() {
     super.initState();
-    _controller = widget.controller ?? TextEditingController(text: widget.initialValue ?? '');
+    _controller = widget.controller ??
+        TextEditingController(text: widget.initialValue ?? '');
     _selectedDropdownValue = widget.initialValue;
     _selectedDate = widget.initialValue;
   }
@@ -73,72 +78,82 @@ class _MyTextFieldState extends State<MyTextField> {
 
   @override
   Widget build(BuildContext context) {
+    final Color textColor = widget.isAuth ? Colors.white : AppTheme.neutral_01;
+    final Color borderColor =
+    widget.isAuth ? Colors.white : AppTheme.neutral_01.withOpacity(0.53);
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white, width: 1),
+        color: widget.isAuth ? textColor.withOpacity(0.11) : Colors.white60,
+        boxShadow: widget.isAuth == false
+            ? [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.10),
+            blurRadius: 4,
+            offset: const Offset(0, 4),
+          )
+        ] : [],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor, width: 0.5),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: widget.inputType == InputType.text
           ? TextFormField(
-              controller: _controller,
-              style: GoogleFonts.dmSans(color: Colors.white),
-              decoration: InputDecoration(
-                hintText: widget.hintText,
-                hintStyle: GoogleFonts.dmSans(color: Colors.white70),
-                border: InputBorder.none,
-              ),
-              keyboardType: widget.keyboardType,
-              onChanged: widget.onChanged,
-              validator: widget.validator,
-            )
+        controller: _controller,
+        style: GoogleFonts.dmSans(color: textColor),
+        decoration: InputDecoration(
+          hintText: widget.hintText,
+          hintStyle: GoogleFonts.dmSans(color: textColor.withOpacity(0.4)),
+          border: InputBorder.none,
+        ),
+        keyboardType: widget.keyboardType,
+        onChanged: widget.onChanged,
+        validator: widget.validator,
+      )
           : widget.inputType == InputType.dropdown
-              ? DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    isExpanded: true,
-                    value: _selectedDropdownValue,
-                    hint: Text(
-                      widget.hintText,
-                      style: GoogleFonts.dmSans(color: Colors.white70),
-                    ),
-                    icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
-                    style: GoogleFonts.dmSans(color: Colors.white), // Pastikan teks tetap putih
-                    dropdownColor: Colors.black87.withOpacity(0.9), // Warna dropdown lebih lembut
-                    items: widget.dropdownItems?.map((String item) {
-                      return DropdownMenuItem<String>(
-                        value: item,
-                        child: Text(
-                          item,
-                          style: GoogleFonts.dmSans(color: Colors.white), // Teks tetap putih setelah dipilih
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedDropdownValue = value;
-                      });
-                      widget.onChanged?.call(value!);
-                    },
-                  ),
-                )
-              : GestureDetector(
-                  onTap: _pickDate,
-                  child: AbsorbPointer(
-                    child: TextFormField(
-                      controller: _controller,
-                      style: GoogleFonts.dmSans(color: Colors.white),
-                      decoration: InputDecoration(
-                        hintText: widget.hintText,
-                        hintStyle: GoogleFonts.dmSans(color: Colors.white70),
-                        border: InputBorder.none,
-                        suffixIcon: const Icon(Icons.calendar_today, color: Colors.white),
-                      ),
-                      validator: widget.validator,
-                    ),
-                  ),
-                ),
+          ? DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          isExpanded: true,
+          value: _selectedDropdownValue,
+          hint: Text(
+            widget.hintText,
+            style: GoogleFonts.dmSans(color: textColor.withOpacity(0.4)),
+          ),
+          icon: Icon(Icons.arrow_drop_down, color: textColor),
+          style: GoogleFonts.dmSans(color: textColor),
+          dropdownColor: Colors.black87.withOpacity(0.9),
+          items: widget.dropdownItems?.map((String item) {
+            return DropdownMenuItem<String>(
+              value: item,
+              child: Text(item, style: GoogleFonts.dmSans(color: textColor)),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _selectedDropdownValue = value;
+            });
+            widget.onChanged?.call(value!);
+          },
+        ),
+      )
+          : GestureDetector(
+        onTap: _pickDate,
+        child: AbsorbPointer(
+          child: TextFormField(
+            controller: _controller,
+            style: GoogleFonts.dmSans(color: textColor),
+            decoration: InputDecoration(
+              hintText: widget.hintText,
+              hintStyle:
+              GoogleFonts.dmSans(color: textColor.withOpacity(0.7)),
+              border: InputBorder.none,
+              suffixIcon: Icon(Icons.calendar_today, color: textColor),
+            ),
+            validator: widget.validator,
+          ),
+        ),
+      ),
     );
   }
 }

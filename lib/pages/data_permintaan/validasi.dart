@@ -1,4 +1,9 @@
+import 'package:darahtanyoe_app/components/AppBarWithLogo.dart';
+import 'package:darahtanyoe_app/components/background_widget.dart';
+import 'package:darahtanyoe_app/components/kembali_button.dart';
+import 'package:darahtanyoe_app/pages/mainpage/main_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../main.dart';
 
@@ -18,7 +23,7 @@ class Validasi extends StatefulWidget {
   final String tanggal;
 
   const Validasi({
-    Key? key,
+    super.key,
     required this.nama,
     required this.usia,
     required this.nomorHP,
@@ -28,7 +33,7 @@ class Validasi extends StatefulWidget {
     required this.lokasi,
     required this.tanggal,
     required this.idLokasi,
-  }) : super(key: key);
+  });
 
   @override
   _ValidasiState createState() => _ValidasiState();
@@ -38,61 +43,40 @@ class _ValidasiState extends State<Validasi> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFAB4545),
-        title: const Text(
-          "Data Permintaan Darah",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        appBar: AppBarWithLogo(
+          title: 'Data Permintaan Darah',
+          onBackPressed: () {
+            Navigator.pop(context);
+          },
         ),
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: [
-          Padding(
-            padding: EdgeInsets.only(right: 12),
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const NotificationPage()),
-                );
-              },
-              child: Image.asset(
-                'assets/images/icon_notif.png',
-                width: 60,
-                height: 60,
-              ),
+        body: BackgroundWidget(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: ListView(
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(
+                      top: 20), // Sesuaikan nilai sesuai kebutuhan
+                  child: Image.asset(
+                    'assets/images/alur_permintaan_4.png',
+                    width: double.infinity,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                _buildInfoCard(),
+                const SizedBox(height: 20),
+                _navigationButtons(context),
+                SizedBox(height: 20),
+                Text(
+                  '© 2025 Beyond. Hak Cipta Dilindungi.',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
           ),
-        ],
-      ),
-      backgroundColor: Colors.white,
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: ListView(
-          children: [
-            Image.asset(
-              'assets/images/alur_permintaan_4.png',
-              width: double.infinity,
-              fit: BoxFit.contain,
-            ),
-            const SizedBox(height: 20),
-            _buildInfoCard(),
-            const SizedBox(height: 20),
-            _navigationButtons(context),
-            SizedBox(height: 20),
-            Text(
-              '© 2025 Beyond. Hak Cipta Dilindungi.',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
+        ));
   }
 
   Widget _buildInfoCard() {
@@ -179,28 +163,9 @@ class _ValidasiState extends State<Validasi> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         SizedBox(
-          width: MediaQuery.of(context).size.width / 2.5,
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFE9B824),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-            ),
+          width: MediaQuery.of(context).size.width / 2.5, // Samakan ukuran
+          child: KembaliButton(
             onPressed: () => Navigator.pop(context),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text("<",
-                      style: TextStyle(color: Colors.white, fontSize: 16)),
-                ),
-                Text("Kembali",
-                    style: TextStyle(color: Colors.white, fontSize: 16)),
-              ],
-            ),
           ),
         ),
         const SizedBox(width: 16),
@@ -243,11 +208,46 @@ class _ValidasiState extends State<Validasi> {
         widget.idLokasi.isEmpty ||
         widget.lokasi.isEmpty ||
         widget.tanggal.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Harap lengkapi semua data!"),
-          backgroundColor: Colors.red,
-        ),
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: Column(
+              children: [
+                Icon(Icons.error, color: Colors.red, size: 50),
+                const SizedBox(height: 10),
+                const Text(
+                  "Data Tidak Lengkap",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            content: const Text(
+              "Harap lengkapi semua data sebelum melanjutkan!",
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              Center(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text("OK", style: TextStyle(color: Colors.white)),
+                ),
+              ),
+            ],
+          );
+        },
       );
     } else {
       // Menampilkan dialog loading
@@ -280,7 +280,7 @@ class _ValidasiState extends State<Validasi> {
         patientAge: widget.usia,
         phoneNumber: widget.nomorHP,
         bloodType: widget.golDarah,
-        bloodBagsNeeded: widget.jumlahKantong,
+        bloodBagsNeeded: int.tryParse(widget.jumlahKantong) ?? 0,
         description: widget.deskripsi,
         partner_id: widget.idLokasi,
         expiry_date: widget.tanggal,
@@ -357,11 +357,18 @@ class _ValidasiState extends State<Validasi> {
                         vertical: 12, horizontal: 20),
                   ),
                   onPressed: () {
-                    Navigator.popUntil(context, (route) => route.isFirst);
-                    MyApp.mainScreenKey.currentState
-                        ?.changeTab(2, code: permintaan.uniqueCode);
+                    Navigator.of(context).pop();
+                    SharedPreferences.getInstance().then((prefs) {
+                      prefs.setString('transaksiTab', "minta");
+                      prefs.setInt('selectedIndex', 3);
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (context) => MainScreen()),
+                            (route) => false,
+                      );
+                    });
                   },
-                  child: const Text("Lihat Permintaan",
+                  child: const Text("Lihat Daftar Permintaan",
                       style: TextStyle(color: Colors.black)),
                 ),
                 const SizedBox(height: 10),
