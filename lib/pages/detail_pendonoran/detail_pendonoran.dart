@@ -37,284 +37,306 @@ class _DetailPendonoranDarahState extends State<DetailPendonoranDarah> {
         },
       ),
       body: BackgroundWidget(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 30.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.10),
-                        blurRadius: 4,
-                        offset: const Offset(0, 4),
-                      )
-                    ]
-                ),
-                child: DottedBorder(
-                  borderType: BorderType.RRect,
-                  radius: const Radius.circular(20),
-                  dashPattern: [16, 12],
-                  color: AppTheme.neutral_01.withOpacity(0.26),
-                  strokeWidth: 2,
-                  child: Container(
+        child: Stack(
+          children: [
+            // Scrollable content
+            SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 30.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Color(0xFFE1CCCC),
-                          Colors.white70,
-                        ],
-                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.10),
+                          blurRadius: 4,
+                          offset: const Offset(0, 4),
+                        )
+                      ],
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min, // tingginya mengikuti konten
-                        children: [
-                          Row(
-                            children: [
-                              _buildInfoCard(
-                                title: 'Nama Pendonor',
-                                value: widget.pendonoran.fullName,
-                                expandedHeight: 65,
-                              ),
+                    child: DottedBorder(
+                      borderType: BorderType.RRect,
+                      radius: const Radius.circular(20),
+                      dashPattern: [16, 12],
+                      color: AppTheme.neutral_01.withOpacity(0.26),
+                      strokeWidth: 2,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Color(0xFFE1CCCC),
+                              Colors.white70,
                             ],
                           ),
-                          const SizedBox(height: 10),
-                          Row(
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              _buildInfoCard(
-                                title: 'Nomor Handphone (WhatsApp)',
-                                value: widget.pendonoran.phoneNumber,
-                                expandedHeight: 65,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          Row(
-                            children: [
-                              _buildInfoCard(
-                                title: 'Golongan Darah',
-                                value: widget.pendonoran.bloodRequest.bloodType,
-                                expandedHeight: 65,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          Row(
-                            children: [
-                              _buildInfoCard(
-                                title: 'Riwayat Penyakit',
-                                value: widget.pendonoran.healthNotes,
-                                expandedHeight: 65,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          Row(
-                            children: [
-                              _buildInfoCard(
-                                title: 'Lokasi\nPendonoran',
-                                value: widget.pendonoran.bloodRequest.partner.name,
-                                expandedHeight: 100,
-                              ),
-                              const SizedBox(width: 10),
-                              _buildInfoCard(
-                                title: 'Pendonoran\nSebelum',
-                                value: formatDateTime(widget.pendonoran.bloodRequest.expiryDate),
-                                fontSize: 12,
-                                expandedHeight: 100,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                width: double.infinity,
-                child: IntrinsicHeight( // <--- Tambahkan ini
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch, // <--- Penting agar anak ikut tinggi
-                    children: [
-                      // Kolom kiri
-                      Expanded(
-                        child: DottedBorder(
-                          borderType: BorderType.RRect,
-                          radius: const Radius.circular(12),
-                          dashPattern: [8, 4],
-                          color: AppTheme.brand_04.withOpacity(0.4),
-                          strokeWidth: 1.5,
-                          child: Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Color(0xFFCFD3DE),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.10),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 4),
-                                  )
-                                ],
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: SizedBox(
-                              width: double.infinity,
-                              height: double.infinity,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                              Row(
                                 children: [
-                                  Text(
-                                    "Kode Unik",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.black54,
-                                      fontFamily: 'DM Sans',
-                                      fontSize: 20,
-                                    ),
-                                  ),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    widget.pendonoran.uniqueCode,
-                                    style: TextStyle(
-                                      color: Colors.black54,
-                                      fontWeight: FontWeight.normal,
-                                      fontFamily: 'DM Sans',
-                                      fontSize: 22,
-                                    ),
+                                  _buildInfoCard(
+                                    title: 'Nama Pendonor',
+                                    value: widget.pendonoran.fullName,
+                                    expandedHeight: 65,
                                   ),
                                 ],
                               ),
-                            ),
+                              const SizedBox(height: 10),
+                              Row(
+                                children: [
+                                  _buildInfoCard(
+                                    title: 'Nomor Handphone (WhatsApp)',
+                                    value: widget.pendonoran.phoneNumber,
+                                    expandedHeight: 65,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              Row(
+                                children: [
+                                  _buildInfoCard(
+                                    title: 'Golongan Darah',
+                                    value: widget.pendonoran.bloodRequest.bloodType,
+                                    expandedHeight: 65,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              Row(
+                                children: [
+                                  _buildInfoCard(
+                                    title: 'Riwayat Penyakit',
+                                    value: widget.pendonoran.healthNotes,
+                                    expandedHeight: 65,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              Row(
+                                children: [
+                                  _buildInfoCard(
+                                    title: 'Lokasi\nPendonoran',
+                                    value: widget.pendonoran.bloodRequest.partner.name,
+                                    expandedHeight: 100,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  _buildInfoCard(
+                                    title: 'Pendonoran\nSebelum',
+                                    value: formatDateTime(widget.pendonoran.bloodRequest.expiryDate),
+                                    fontSize: 12,
+                                    expandedHeight: 100,
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                      const SizedBox(width: 16),
-                      // Kolom kanan
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            final latitude = widget.pendonoran.bloodRequest.partner.latitude;
-                            final longitude = widget.pendonoran.bloodRequest.partner.longitude;
-                            final googleMapsUrl = Uri.parse('https://www.google.com/maps/search/?api=1&query=$latitude,$longitude');
-                            launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
-                          },
-                          child: DottedBorder(
-                            borderType: BorderType.RRect,
-                            radius: const Radius.circular(12),
-                            dashPattern: [8, 4],
-                            color: AppTheme.brand_04.withOpacity(0.4),
-                            strokeWidth: 1.5,
-                            child: Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFCFD3DE),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.10),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 4),
-                                  )
-                                ],
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: SizedBox(
-                                width: double.infinity,
-                                height: double.infinity,
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.location_on,
-                                      color: AppTheme.brand_04,
-                                      size: 40,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text.rich(
-                                        TextSpan(
-                                          style: const TextStyle(
-                                            fontFamily: 'DM Sans',
-                                            fontSize: 12,
-                                            color: Colors.black54,
-                                          ),
-                                          children: const [
-                                            TextSpan(text: 'Lihat lokasi pendonoran pada '),
-                                            TextSpan(
-                                              text: 'Google Maps',
-                                              style: TextStyle(fontWeight: FontWeight.bold),
-                                            ),
-                                          ],
-                                        ),
-                                        softWrap: true,
-                                        overflow: TextOverflow.visible,
-                                      ),
-                                    ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    width: double.infinity,
+                    child: IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(
+                            child: DottedBorder(
+                              borderType: BorderType.RRect,
+                              radius: const Radius.circular(12),
+                              dashPattern: [8, 4],
+                              color: AppTheme.brand_04.withOpacity(0.4),
+                              strokeWidth: 1.5,
+                              child: Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Color(0xFFCFD3DE),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.10),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 4),
+                                    )
                                   ],
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: SizedBox(
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Kode Unik",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black54,
+                                          fontFamily: 'DM Sans',
+                                          fontSize: 20,
+                                        ),
+                                      ),
+                                      SizedBox(height: 4),
+                                      Text(
+                                        widget.pendonoran.uniqueCode,
+                                        style: TextStyle(
+                                          color: Colors.black54,
+                                          fontWeight: FontWeight.normal,
+                                          fontFamily: 'DM Sans',
+                                          fontSize: 22,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
                           ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                final latitude = widget.pendonoran.bloodRequest.partner.latitude;
+                                final longitude = widget.pendonoran.bloodRequest.partner.longitude;
+                                final googleMapsUrl = Uri.parse('https://www.google.com/maps/search/?api=1&query=$latitude,$longitude');
+                                launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
+                              },
+                              child: DottedBorder(
+                                borderType: BorderType.RRect,
+                                radius: const Radius.circular(12),
+                                dashPattern: [8, 4],
+                                color: AppTheme.brand_04.withOpacity(0.4),
+                                strokeWidth: 1.5,
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFCFD3DE),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.10),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 4),
+                                      )
+                                    ],
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: SizedBox(
+                                    width: double.infinity,
+                                    height: double.infinity,
+                                    child: Row(
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.location_on,
+                                          color: AppTheme.brand_04,
+                                          size: 40,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text.rich(
+                                            TextSpan(
+                                              style: const TextStyle(
+                                                fontFamily: 'DM Sans',
+                                                fontSize: 12,
+                                                color: Colors.black54,
+                                              ),
+                                              children: const [
+                                                TextSpan(text: 'Lihat lokasi pendonoran pada '),
+                                                TextSpan(
+                                                  text: 'Google Maps',
+                                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                                ),
+                                              ],
+                                            ),
+                                            softWrap: true,
+                                            overflow: TextOverflow.visible,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  widget.pendonoran.status == 'on_progress'
+                      ? Text.rich(
+                    TextSpan(
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppTheme.brand_01,
+                        fontFamily: 'DM Sans',
+                      ),
+                      children: const [
+                        TextSpan(text: 'Akan ada '),
+                        TextSpan(
+                          text: 'pemeriksaan kesehatan',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        TextSpan(text: ' di lokasi pendonoran, pastikan diri anda dalam '),
+                        TextSpan(
+                          text: 'kondisi fit dan siap donor!',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  )
+                      : const SizedBox.shrink(),
+                  // Padding to prevent content from being hidden by the footer
+                  SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.25, // Dynamic padding
+                  ),
+                ],
+              ),
+            ),
+            // Fixed footer at the absolute bottom
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                color: Colors.transparent, // Solid background to avoid content bleed
+                child: Column(
+                  mainAxisSize: MainAxisSize.min, // Minimize vertical space
+                  children: [
+                    Divider(
+                      color: Colors.black26,
+                      thickness: 1,
+                      height: 1, // Minimize divider height
+                    ),
+                    const SizedBox(height: 26),
+                    _footerByStatus(
+                      status: widget.pendonoran.status,
+                      expiryDate: widget.pendonoran.bloodRequest.expiryDate,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 22.0, bottom: 22.0), // Tight padding
+                      child: Text(
+                        '© 2025 Beyond. Hak Cipta Dilindungi.',
+                        style: TextStyle(
+                          color: AppTheme.neutral_01.withOpacity(0.4),
+                          fontSize: 12,
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              widget.pendonoran.status == 'on_progress'
-                  ? Text.rich(
-                TextSpan(
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppTheme.brand_01,
-                    fontFamily: 'DM Sans',
-                  ),
-                  children: const [
-                    TextSpan(text: 'Akan ada '),
-                    TextSpan(
-                      text: 'pemeriksaan kesehatan',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    TextSpan(text: ' di lokasi pendonoran, pastikan diri anda dalam '),
-                    TextSpan(
-                      text: 'kondisi fit dan siap donor!',
-                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
-              ) : const SizedBox.shrink(),
-              const SizedBox(height: 20),
-              Divider(
-                color: Colors.black26,
-                thickness: 1,
               ),
-              const SizedBox(height: 12),
-              _footerByStatus(
-                status: widget.pendonoran.status,
-                expiryDate: widget.pendonoran.bloodRequest.expiryDate,
-              ),
-              const SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                child: Text(
-                  '© 2025 Beyond. Hak Cipta Dilindungi.',
-                  style: TextStyle(
-                    color: AppTheme.neutral_01.withOpacity(0.4),
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

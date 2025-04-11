@@ -15,14 +15,12 @@ class DataPemintaanDarah extends StatefulWidget {
 }
 
 class _DataPemintaanDarahState extends State<DataPemintaanDarah> {
-  // Controllers untuk semua input field
   final TextEditingController nameController = TextEditingController();
   final TextEditingController usiaController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController jumlahKantongController = TextEditingController();
   final TextEditingController deskripsiController = TextEditingController();
 
-  // State untuk dropdown
   String? selectedTipeDarah;
   bool isLoading = false;
 
@@ -36,7 +34,6 @@ class _DataPemintaanDarahState extends State<DataPemintaanDarah> {
     super.dispose();
   }
 
-  // Auto fill function from secure storage
   Future<void> _autoFillUserData() async {
     setState(() {
       isLoading = true;
@@ -44,22 +41,16 @@ class _DataPemintaanDarahState extends State<DataPemintaanDarah> {
 
     try {
       final user = await AuthService().getCurrentUser();
-
       setState(() {
-        // Fill data from user info
         nameController.text = user?['full_name'] ?? '';
         usiaController.text = user?['age']?.toString() ?? '';
-
-        // Format phone number to remove +62 prefix if present
         String phoneNumber = user?['phone_number'] ?? '';
         if (phoneNumber.startsWith('62')) {
-          phoneNumber = phoneNumber.substring(2); // Remove '62' prefix
+          phoneNumber = phoneNumber.substring(2);
         } else if (phoneNumber.startsWith('+62')) {
-          phoneNumber = phoneNumber.substring(3); // Remove '+62' prefix
+          phoneNumber = phoneNumber.substring(3);
         }
         phoneController.text = phoneNumber;
-
-        // Set blood type if available
         if (user?['blood_type'] != null) {
           selectedTipeDarah = user?['blood_type'];
         }
@@ -76,22 +67,40 @@ class _DataPemintaanDarahState extends State<DataPemintaanDarah> {
   }
 
   Widget _inputField(
-      String label, String hint, TextEditingController controller,
-      {String? suffixInside,
+      String label,
+      String hint,
+      TextEditingController controller, {
+        String? suffixInside,
         int maxLines = 1,
         TextInputType keyboardType = TextInputType.text,
-        List<TextInputFormatter>? inputFormatters}) {
+        List<TextInputFormatter>? inputFormatters,
+        bool isRequired = false, // New parameter for required fields
+      }) {
     return Padding(
       padding: EdgeInsets.only(bottom: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.neutral_01),
+          Row(
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.neutral_01,
+                ),
+              ),
+              if (isRequired) // Add red asterisk if required
+                Text(
+                  ' *',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+            ],
           ),
           SizedBox(height: 4),
           Container(
@@ -130,24 +139,38 @@ class _DataPemintaanDarahState extends State<DataPemintaanDarah> {
                     : null,
               ),
             ),
-          )
+          ),
         ],
       ),
     );
   }
 
-  Widget _phoneField() {
+  Widget _phoneField({bool isRequired = false}) {
     return Padding(
       padding: EdgeInsets.only(bottom: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Nomor Handphone (WhatsApp)',
-            style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.neutral_01),
+          Row(
+            children: [
+              Text(
+                'Nomor Handphone (WhatsApp)',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.neutral_01,
+                ),
+              ),
+              if (isRequired)
+                Text(
+                  ' *',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+            ],
           ),
           SizedBox(height: 4),
           Container(
@@ -181,25 +204,44 @@ class _DataPemintaanDarahState extends State<DataPemintaanDarah> {
                 ),
               ),
             ),
-          )
+          ),
         ],
       ),
     );
   }
 
-  Widget _dropdownField(String label, String? selectedValue,
-      List<String> options, ValueChanged<String?> onChanged) {
+  Widget _dropdownField(
+      String label,
+      String? selectedValue,
+      List<String> options,
+      ValueChanged<String?> onChanged, {
+        bool isRequired = false,
+      }) {
     return Padding(
       padding: EdgeInsets.only(bottom: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.neutral_01),
+          Row(
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.neutral_01,
+                ),
+              ),
+              if (isRequired)
+                Text(
+                  ' *',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+            ],
           ),
           SizedBox(height: 4),
           Container(
@@ -221,9 +263,7 @@ class _DataPemintaanDarahState extends State<DataPemintaanDarah> {
               isExpanded: true,
               hint: Text(
                 "Pilih $label",
-                style: TextStyle(
-                  color: AppTheme.neutral_01.withOpacity(0.4),
-                ),
+                style: TextStyle(color: AppTheme.neutral_01.withOpacity(0.4)),
               ),
               underline: SizedBox(),
               onChanged: onChanged,
@@ -275,13 +315,11 @@ class _DataPemintaanDarahState extends State<DataPemintaanDarah> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Semua form dalam ScrollView
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Bagian Data Diri
                       Padding(
                         padding: EdgeInsets.only(top: 10),
                         child: Image.asset(
@@ -291,7 +329,6 @@ class _DataPemintaanDarahState extends State<DataPemintaanDarah> {
                         ),
                       ),
                       SizedBox(height: 4),
-                      // Auto-fill button
                       Container(
                         width: double.infinity,
                         height: 48,
@@ -329,23 +366,33 @@ class _DataPemintaanDarahState extends State<DataPemintaanDarah> {
                         ),
                       ),
                       SizedBox(height: 8),
-                      _inputField("Nama Lengkap Pasien", "Nama Lengkap Pasien", nameController),
                       _inputField(
-                          "Usia Pasien",
-                          "Usia Pasien",
-                          usiaController,
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                          suffixInside: "Tahun"),
-                      _phoneField(),
-
-                      // Bagian Data Darah
-                      _dropdownField("Golongan Darah", selectedTipeDarah,
-                          ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"], (value) {
-                            setState(() {
-                              selectedTipeDarah = value;
-                            });
-                          }),
+                        "Nama Lengkap Pasien",
+                        "Nama Lengkap Pasien",
+                        nameController,
+                        isRequired: true, // Mark as required
+                      ),
+                      _inputField(
+                        "Usia Pasien",
+                        "Usia Pasien",
+                        usiaController,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        suffixInside: "Tahun",
+                        isRequired: true, // Mark as required
+                      ),
+                      _phoneField(isRequired: true), // Mark as required
+                      _dropdownField(
+                        "Golongan Darah",
+                        selectedTipeDarah,
+                        ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
+                            (value) {
+                          setState(() {
+                            selectedTipeDarah = value;
+                          });
+                        },
+                        isRequired: true, // Mark as required
+                      ),
                       _inputField(
                         "Jumlah Kebutuhan Kantong",
                         "Masukkan jumlah kantong",
@@ -353,56 +400,65 @@ class _DataPemintaanDarahState extends State<DataPemintaanDarah> {
                         keyboardType: TextInputType.number,
                         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                         suffixInside: "Kantong",
+                        isRequired: true, // Mark as required
                       ),
-                      _inputField("Deskripsi Kebutuhan", "Masukkan deskripsi kebutuhan",
-                          deskripsiController,
-                          maxLines: 5, keyboardType: TextInputType.text),
+                      _inputField(
+                        "Deskripsi Kebutuhan",
+                        "Masukkan deskripsi kebutuhan",
+                        deskripsiController,
+                        maxLines: 5,
+                        keyboardType: TextInputType.text,
+                        isRequired: false, // Not required
+                      ),
+                      SizedBox(height: 10),
+                      Align(
+                        alignment: Alignment.bottomRight,
+                        child: LanjutButton(
+                          onPressed: () {
+                            if (nameController.text.isEmpty ||
+                                usiaController.text.isEmpty ||
+                                phoneController.text.isEmpty ||
+                                selectedTipeDarah == null ||
+                                jumlahKantongController.text.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Mohon lengkapi semua data yang diperlukan'),
+                                  backgroundColor: Colors.red,
+                                  duration: Duration(seconds: 3),
+                                ),
+                              );
+                              return;
+                            }
+                            print('Nama: ${nameController.text}, Usia: ${usiaController.text}, No HP: 62${phoneController.text}, '
+                                'Tipe Darah: $selectedTipeDarah, Jumlah Kantong: ${jumlahKantongController.text}, '
+                                'Deskripsi: ${deskripsiController.text}');
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => JadwalLokasi(
+                                  nama: nameController.text,
+                                  usia: usiaController.text,
+                                  nomorHP: "62${phoneController.text}",
+                                  golDarah: selectedTipeDarah ?? "",
+                                  jumlahKantong: jumlahKantongController.text,
+                                  deskripsi: deskripsiController.text,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                      Center(
+                        child: Text(
+                          '© 2025 Beyond. Hak Cipta Dilindungi.',
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
+                          textAlign: TextAlign.center,
+                        ),
+                      )
                     ],
                   ),
                 ),
-              ),
-
-              // Button navigation section & footer
-              SizedBox(height: 10),
-              Align(
-                alignment: Alignment.bottomRight,
-                child: LanjutButton(
-                  onPressed: () {
-                    // Validasi semua data sebelum lanjut
-                    if (nameController.text.isEmpty ||
-                        usiaController.text.isEmpty ||
-                        phoneController.text.isEmpty ||
-                        selectedTipeDarah == null ||
-                        jumlahKantongController.text.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Mohon lengkapi semua data yang diperlukan')),
-                      );
-                      return;
-                    }
-                    print('Nama: ${nameController.text}, Usia: ${usiaController.text}, No HP: 62${phoneController.text}, '
-                        'Tipe Darah: $selectedTipeDarah, Jumlah Kantong: ${jumlahKantongController.text}, '
-                        'Deskripsi: ${deskripsiController.text}');
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => JadwalLokasi(
-                          nama: nameController.text,
-                          usia: usiaController.text,
-                          nomorHP: "62${phoneController.text}",
-                          golDarah: selectedTipeDarah ?? "",
-                          jumlahKantong: jumlahKantongController.text,
-                          deskripsi: deskripsiController.text,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              SizedBox(height: 20),
-              Text(
-                '© 2025 Beyond. Hak Cipta Dilindungi.',
-                style: TextStyle(fontSize: 12, color: Colors.grey),
-                textAlign: TextAlign.center,
               ),
             ],
           ),

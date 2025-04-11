@@ -59,6 +59,48 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
     return List.generate(6, (index) => chars[rand.nextInt(chars.length)]).join();
   }
 
+  Future<void> _autoFillUserData() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final userDataString = await _storage.read(key: 'userData');
+      if (userDataString == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Data pengguna tidak ditemukan. Silakan login kembali.')),
+        );
+        return;
+      }
+
+      final userData = jsonDecode(userDataString);
+      setState(() {
+        _nameController.text = userData['full_name'] ?? '';
+        String phoneNumber = userData['phone_number'] ?? '';
+        if (phoneNumber.startsWith('62')) {
+          phoneNumber = phoneNumber.substring(2);
+        } else if (phoneNumber.startsWith('+62')) {
+          phoneNumber = phoneNumber.substring(3);
+        }
+        _phoneController.text = phoneNumber;
+        String? healthNotes = userData['health_notes'];
+        if (healthNotes != null && _riwayatPenyakitOptions.contains(healthNotes)) {
+          _selectedRiwayatPenyakit = healthNotes;
+        } else {
+          _selectedRiwayatPenyakit = 'Lainnya'; // Fallback if health_notes doesn't match options
+        }
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal memuat data pengguna: ${e.toString()}')),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
@@ -163,8 +205,7 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 12, horizontal: 20),
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
                   ),
                   onPressed: () {
                     Navigator.of(context).pop();
@@ -178,8 +219,7 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
                       );
                     });
                   },
-                  child: const Text("Lihat Daftar Pendonoran",
-                      style: TextStyle(color: Colors.black)),
+                  child: const Text("Lihat Daftar Pendonoran", style: TextStyle(color: Colors.black)),
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
@@ -188,14 +228,12 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 12, horizontal: 20),
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
                   ),
                   onPressed: () {
                     Navigator.popUntil(context, (route) => route.isFirst);
                   },
-                  child: const Text("Kembali ke Beranda",
-                      style: TextStyle(color: Colors.white)),
+                  child: const Text("Kembali ke Beranda", style: TextStyle(color: Colors.white)),
                 ),
               ],
             ),
@@ -219,7 +257,7 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 30.0),
           child: Column(
             children: [
-              // This is your scrollable content
+              // Scrollable content
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
@@ -240,12 +278,21 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
                         ),
                         child: Material(
                           color: Colors.transparent,
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(18),
                           child: InkWell(
-                            onTap: _submitForm,
-                            borderRadius: BorderRadius.circular(20),
+                            onTap: _isLoading ? null : _autoFillUserData, // Auto-fill on tap
+                            borderRadius: BorderRadius.circular(18),
                             child: Center(
-                              child: Text(
+                              child: _isLoading
+                                  ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 3,
+                                ),
+                              )
+                                  : Text(
                                 'Isi dengan data anda saat ini',
                                 style: GoogleFonts.dmSans(
                                   color: Colors.white,
@@ -415,7 +462,7 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
                                 },
                               ),
                             ),
-                            // Add some extra bottom padding to ensure better spacing
+                            // Extra bottom padding for spacing
                             const SizedBox(height: 32),
                           ],
                         ),
@@ -443,7 +490,7 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
                   color: Colors.transparent,
                   borderRadius: BorderRadius.circular(20),
                   child: InkWell(
-                    onTap: _submitForm,
+                    onTap: _isLoading ? null : _submitForm,
                     borderRadius: BorderRadius.circular(20),
                     child: Center(
                       child: _isLoading

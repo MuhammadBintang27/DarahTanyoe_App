@@ -55,7 +55,7 @@ class PermintaanDarahService {
         "patient_name": permintaan.patientName,
         "patient_age": permintaan.patientAge,
         "status": PermintaanDarahModel.STATUS_PENDING,
-        "unique_code": generateUniqueCode(),
+        "unique_code": "",
         "blood_bags_fulfilled": 0,
         "expiry_date": permintaan.expiry_date,
         "phone_number": permintaan.phoneNumber
@@ -132,10 +132,10 @@ class PermintaanDarahService {
   }
 
   // Generate kode unik
-  static String generateUniqueCode() {
-    final uuid = Uuid();
-    return 'BLD-${uuid.v4().substring(0, 8).toUpperCase()}';
-  }
+  // static String generateUniqueCode() {
+  //   final uuid = Uuid();
+  //   return 'BLD-${uuid.v4().substring(0, 8).toUpperCase()}';
+  // }
 
   // Debugging - print data di console
   static void _printDebugData() {

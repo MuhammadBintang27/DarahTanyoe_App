@@ -6,6 +6,7 @@ import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 import '../../components/dropdown_api.dart';
 import 'dart:convert';
@@ -46,6 +47,12 @@ class _JadwalLokasiState extends State<JadwalLokasi> {
   List<Map<String, dynamic>> _searchResults = [];
   int _selectedIndex = -1;
 
+  final TextEditingController lokasiController = TextEditingController();
+  final TextEditingController tanggalController = TextEditingController();
+  final TextEditingController tanggalDatabaseController = TextEditingController();
+  final TextEditingController idLokasiController = TextEditingController();
+  final String baseUrl = dotenv.env['BASE_URL'] ?? 'https://default-url.com';
+
   @override
   void initState() {
     super.initState();
@@ -63,14 +70,12 @@ class _JadwalLokasiState extends State<JadwalLokasi> {
 
     setState(() {
       _searchResults = results;
-      _selectedIndex = -1; // Reset selection on search
+      _selectedIndex = -1;
     });
   }
 
   Future<void> _fetchBloodStock() async {
-    final String baseUrl = dotenv.env['BASE_URL'] ?? 'https://default-url.com';
     final url = Uri.parse("$baseUrl/partners/");
-
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
@@ -128,15 +133,11 @@ class _JadwalLokasiState extends State<JadwalLokasi> {
     mapController.move(userLocation!, 13.0);
   }
 
-  final TextEditingController lokasiController = TextEditingController();
-  final TextEditingController tanggalController = TextEditingController();
-  final TextEditingController idLokasiController = TextEditingController();
-  final String baseUrl = dotenv.env['BASE_URL'] ?? 'https://default-url.com';
-
   @override
   void dispose() {
     lokasiController.dispose();
     tanggalController.dispose();
+    tanggalDatabaseController.dispose();
     searchController.dispose();
     super.dispose();
   }
@@ -151,12 +152,11 @@ class _JadwalLokasiState extends State<JadwalLokasi> {
         },
       ),
       body: BackgroundWidget(
-        child: SingleChildScrollView( // Wrap entire content in SingleChildScrollView
+        child: SingleChildScrollView(
           child: Padding(
             padding: EdgeInsets.all(16),
             child: Column(
               children: [
-                // Bagian Data Diri
                 Padding(
                   padding: EdgeInsets.only(top: 10),
                   child: Image.asset(
@@ -166,16 +166,12 @@ class _JadwalLokasiState extends State<JadwalLokasi> {
                   ),
                 ),
                 SizedBox(height: 4),
-                Column( // Removed Expanded, now just a Column
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     SizedBox(height: 20),
-                    /// Row untuk Golongan Darah & Search Lokasi
-                    // Padding(
-                    // padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     Row(
                       children: [
-                        /// Golongan Darah (30%)
                         Flexible(
                           flex: 4,
                           child: Container(
@@ -244,7 +240,6 @@ class _JadwalLokasiState extends State<JadwalLokasi> {
                           ),
                         ),
                         const SizedBox(width: 10.0),
-                        /// Inputan Search Lokasi (70%)
                         Flexible(
                           flex: 6,
                           child: Container(
@@ -306,12 +301,10 @@ class _JadwalLokasiState extends State<JadwalLokasi> {
                         ),
                       ],
                     ),
-                    // ),
                     const SizedBox(height: 26.0),
                     SizedBox(
                       height: 400,
-                      child:
-                      Container(
+                      child: Container(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
@@ -346,9 +339,7 @@ class _JadwalLokasiState extends State<JadwalLokasi> {
                                           Wrap(
                                             spacing: 15.0,
                                             runSpacing: 15.0,
-                                            children: (_searchResults.isEmpty
-                                                ? _bloodStockData
-                                                : _searchResults)
+                                            children: (_searchResults.isEmpty ? _bloodStockData : _searchResults)
                                                 .asMap()
                                                 .entries
                                                 .map<Widget>((entry) {
@@ -365,13 +356,13 @@ class _JadwalLokasiState extends State<JadwalLokasi> {
                                               return GestureDetector(
                                                 onTap: () {
                                                   setState(() {
-                                                    _selectedIndex = isSelected ? -1 : index; // Toggle selection
-                                                    if (!isSelected) { // Only set values when selecting (not deselecting)
-                                                      idLokasiController.text = hospital['id'].toString(); // Set ID
-                                                      lokasiController.text = hospital['name']; // Set name
+                                                    _selectedIndex = isSelected ? -1 : index;
+                                                    if (!isSelected) {
+                                                      idLokasiController.text = hospital['id'].toString();
+                                                      lokasiController.text = hospital['name'];
                                                     } else {
-                                                      idLokasiController.text = ''; // Clear when deselected
-                                                      lokasiController.text = ''; // Clear when deselected
+                                                      idLokasiController.text = '';
+                                                      lokasiController.text = '';
                                                     }
                                                   });
                                                   print("ID Rumah Sakit/PMI: ${hospital['id']}");
@@ -437,7 +428,7 @@ class _JadwalLokasiState extends State<JadwalLokasi> {
                                                           horizontal: 12,
                                                         ),
                                                         child: Text(
-                                                          "${hospital["quantity"] ?? selectedStock["quantity"]} Kantong",
+                                                          "Tersedia ${hospital["quantity"] ?? selectedStock["quantity"]} Kantong",
                                                           style: TextStyle(
                                                             color: Colors.black87,
                                                             fontSize: 14,
@@ -464,7 +455,7 @@ class _JadwalLokasiState extends State<JadwalLokasi> {
                     ),
                     SizedBox(height: 20),
                     _datePickerField(),
-                    SizedBox(height: 20), // Replace Spacer with SizedBox
+                    SizedBox(height: 20),
                     _navigationButtons(context),
                     SizedBox(height: 20),
                     Text(
@@ -504,56 +495,132 @@ class _JadwalLokasiState extends State<JadwalLokasi> {
   }
 
   Widget _datePickerField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "Jadwal Berakhir Permintaan",
-          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey[700]),
-        ),
-        SizedBox(height: 4),
-        GestureDetector(
-          onTap: () async {
-            DateTime? pickedDate = await showDatePicker(
-              context: context,
-              initialDate: DateTime.now(),
-              firstDate: DateTime.now(),
-              lastDate: DateTime(2100),
-            );
+    // Define the formatter for day names in Indonesian
+    final dayFormatter = DateFormat('EEEE', 'id_ID'); // Day name (e.g., "Senin")
+    final dateFormatter = DateFormat('d MMMM yyyy', 'id_ID'); // Date (e.g., "12 April 2025")
 
-            if (pickedDate != null) {
-              TimeOfDay? pickedTime = await showTimePicker(
+    // Calculate tomorrow's date as minimum allowed date
+    final DateTime tomorrow = DateTime.now().add(Duration(days: 1));
+
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                "Jadwal Berakhir Permintaan",
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.neutral_01,
+                ),
+              ),
+              Text(
+                ' *',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 4),
+          GestureDetector(
+            onTap: () async {
+              DateTime? pickedDate = await showDatePicker(
                 context: context,
-                initialTime: TimeOfDay(hour: pickedDate.hour, minute: pickedDate.minute),
+                initialDate: tomorrow, // Set initial date to tomorrow
+                firstDate: tomorrow, // Set minimum date to tomorrow
+                lastDate: DateTime(2100),
               );
 
-              if (pickedTime != null) {
-                setState(() {
-                  tanggalController.text =
-                  "${pickedDate.day}-${pickedDate.month}-${pickedDate.year} ${pickedTime.hour}:${pickedTime.minute.toString().padLeft(2, '0')}";
-                });
+              if (pickedDate != null) {
+                TimeOfDay? pickedTime = await showTimePicker(
+                  context: context,
+                  initialTime: TimeOfDay(hour: 12, minute: 0), // Set default time to noon
+                  builder: (BuildContext context, Widget? child) {
+                    return MediaQuery(
+                      data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+                      child: child!,
+                    );
+                  },
+                );
+
+                if (pickedTime != null) {
+                  setState(() {
+                    // Create a DateTime object that combines the date and time
+                    final combinedDateTime = DateTime(
+                      pickedDate.year,
+                      pickedDate.month,
+                      pickedDate.day,
+                      pickedTime.hour,
+                      pickedTime.minute,
+                    );
+
+                    // Format for display (Indonesian format)
+                    String dayName = dayFormatter.format(combinedDateTime);
+                    String datePart = dateFormatter.format(combinedDateTime);
+                    String timePart = "${pickedTime.hour}.${pickedTime.minute.toString().padLeft(2, '0')}";
+
+                    // Store the display format in the text controller for the UI
+                    tanggalController.text = "$dayName, $datePart, $timePart";
+
+                    // Store the database format in a separate variable
+                    String databaseFormat = "${pickedDate.day}-${pickedDate.month}-${pickedDate.year} ${pickedTime.hour}:${pickedTime.minute.toString().padLeft(2, '0')}";
+
+                    // You can store this in a separate controller or variable to use when sending to database
+                    tanggalDatabaseController.text = databaseFormat;
+                    // Or if you prefer to use a variable instead of a controller:
+                    // tanggalDatabaseValue = databaseFormat;
+                  });
+                }
               }
-            }
-          },
-          child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  tanggalController.text.isEmpty ? "Jadwal Berakhir Permintaan" : tanggalController.text,
-                  style: TextStyle(fontSize: 14, color: Colors.black87),
+            },
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.white60,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.10),
+                    blurRadius: 4,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: AppTheme.neutral_01.withOpacity(0.53),
+                  width: 0.5,
                 ),
-                Icon(Icons.calendar_today, size: 18, color: Colors.grey[600]),
-              ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    tanggalController.text.isEmpty
+                        ? "Jadwal Berakhir Permintaan"
+                        : tanggalController.text,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: tanggalController.text.isEmpty
+                          ? AppTheme.neutral_01.withOpacity(0.4)
+                          : AppTheme.neutral_01,
+                    ),
+                  ),
+                  Icon(
+                    Icons.calendar_today,
+                    size: 18,
+                    color: AppTheme.neutral_01.withOpacity(0.4),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -570,22 +637,37 @@ class _JadwalLokasiState extends State<JadwalLokasi> {
           width: MediaQuery.of(context).size.width / 2.5,
           child: LanjutButton(
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => Validasi(
-                    nama: widget.nama,
-                    usia: widget.usia,
-                    nomorHP: widget.nomorHP,
-                    golDarah: widget.golDarah,
-                    lokasi: lokasiController.text,
-                    tanggal: tanggalController.text,
-                    jumlahKantong: widget.jumlahKantong,
-                    idLokasi: idLokasiController.text,
-                    deskripsi: widget.deskripsi,
+              // Validation check
+              if (lokasiController.text.isEmpty || tanggalDatabaseController.text.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      "Harap isi Lokasi dan Jadwal Berakhir sebelum melanjutkan!",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    backgroundColor: Colors.red,
+                    duration: Duration(seconds: 3),
                   ),
-                ),
-              );
+                );
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => Validasi(
+                      nama: widget.nama,
+                      usia: widget.usia,
+                      nomorHP: widget.nomorHP,
+                      golDarah: widget.golDarah,
+                      lokasi: lokasiController.text,
+                      tanggal: tanggalController.text,
+                      tanggalDatabase: tanggalDatabaseController.text,
+                      jumlahKantong: widget.jumlahKantong,
+                      idLokasi: idLokasiController.text,
+                      deskripsi: widget.deskripsi,
+                    ),
+                  ),
+                );
+              }
             },
           ),
         ),

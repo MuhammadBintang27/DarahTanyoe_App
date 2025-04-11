@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:darahtanyoe_app/pages/mainpage/main_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'service/auth_service.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('id_ID', null);
   await dotenv.load(fileName: ".env");
   await AuthService.init();
   runApp(const MyApp());
