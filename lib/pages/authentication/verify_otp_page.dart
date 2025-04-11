@@ -1,5 +1,6 @@
 import 'package:darahtanyoe_app/components/copyright.dart';
 import 'package:darahtanyoe_app/pages/authentication/personal_info.dart';
+import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -8,7 +9,7 @@ import 'package:pinput/pinput.dart';
 import '../../service/auth_service.dart';
 
 class VerifyOtpPage extends StatefulWidget {
-  const VerifyOtpPage({Key? key}) : super(key: key);
+  const VerifyOtpPage({super.key});
 
   @override
   _VerifyOtpPageState createState() => _VerifyOtpPageState();
@@ -67,12 +68,15 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
       _countdown = 60;
     });
     _startCountdown();
+
     final phoneNumber = _authService.registrationData['phoneNumber'];
-    _authService.sendOTP(phoneNumber);
+    _authService.sendOTP(phoneNumber, context); // Tambahkan context
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Kode OTP telah dikirim ulang', style: GoogleFonts.dmSans())),
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -80,6 +84,7 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
           Container(
@@ -114,7 +119,7 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Color(0xFFCC5555),
+                      AppTheme.brand_01,
                       Color(0xFFCC8888),
                       Color(0xFFF8F0F0),
                     ],
@@ -124,9 +129,17 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
                     topLeft: Radius.circular(50),
                     topRight: Radius.circular(50),
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26, // Warna shadow
+                      blurRadius: 10, // Efek blur
+                      spreadRadius: 3, // Seberapa jauh shadow menyebar
+                      offset: Offset(0, -8), // Menggeser shadow ke atas
+                    ),
+                  ],
                 ),
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 30, vertical: 40),
+                const EdgeInsets.symmetric(horizontal: 30, vertical: 40),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -184,7 +197,7 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
                               ),
                               recognizer: _canResend
                                   ? (TapGestureRecognizer()
-                                    ..onTap = _resendOtp)
+                                ..onTap = _resendOtp)
                                   : null,
                             ),
                           ],
