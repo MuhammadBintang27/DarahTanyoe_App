@@ -1,7 +1,7 @@
-import 'package:darahtanyoe_app/pages/mainpage/main_screen.dart';
+import 'package:darahtanyoe_app/components/AppBarWithLogo.dart';
+import 'package:darahtanyoe_app/components/background_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:darahtanyoe_app/pages/mainpage/home_screen.dart';
 import 'dart:convert';
 import 'dart:async';
 import 'package:http/http.dart' as http;
@@ -82,7 +82,7 @@ class NotificationModel {
       iconBackgroundColor: getColorFromString(json['iconColor'] ?? 'red'),
       title: json['title'] ?? 'Notifikasi',
       subtitle:
-          json['subtitle'] ?? 'Ketuk untuk melihat informasi lebih lanjut',
+      json['subtitle'] ?? 'Ketuk untuk melihat informasi lebih lanjut',
       timeAgo: json['timeAgo'] ?? 'baru',
       isRead: json['isRead'] ?? false,
     );
@@ -199,11 +199,11 @@ class NotificationPage extends StatefulWidget {
   final bool useMockData;
 
   const NotificationPage({
-    Key? key,
+    super.key,
     this.onBackPressed,
     this.apiBaseUrl = 'https://api.yourdomain.com/v1', // Default API URL
     this.useMockData = false, // Set to true to use mock data directly
-  }) : super(key: key);
+  });
 
   @override
   State<NotificationPage> createState() => _NotificationPageState();
@@ -266,7 +266,7 @@ class _NotificationPageState extends State<NotificationPage> {
           _isLoading = false;
           _timedOut = true;
           _errorMessage =
-              'Permintaan melebihi batas waktu 5 detik. Ketuk tombol di bawah untuk mencoba lagi.';
+          'Permintaan melebihi batas waktu 5 detik. Ketuk tombol di bawah untuk mencoba lagi.';
         });
       }
     });
@@ -291,7 +291,7 @@ class _NotificationPageState extends State<NotificationPage> {
           _isLoading = false;
           _timedOut = true;
           _errorMessage =
-              'Permintaan melebihi batas waktu 5 detik. Ketuk tombol di bawah untuk mencoba lagi.';
+          'Permintaan melebihi batas waktu 5 detik. Ketuk tombol di bawah untuk mencoba lagi.';
         });
       }
     } catch (e) {
@@ -318,142 +318,66 @@ class _NotificationPageState extends State<NotificationPage> {
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.white,
       statusBarIconBrightness: Brightness.dark,
-      statusBarBrightness: Brightness.light, // For iOS
+      statusBarBrightness: Brightness.light, // Untuk iOS
     ));
 
     return Scaffold(
-      body: Stack(
-        children: [
-          // Main Content Area
-          Column(
+      appBar: AppBarWithLogo(
+        title: 'Notifikasi',
+        onBackPressed: () {
+          Navigator.pop(context);
+        },
+      ),
+      body: BackgroundWidget(
+        child: SafeArea(
+          child: Column(
             children: [
-              // Custom AppBar with absolute position
-              Container(
-                height: 80,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFAB4545),
-                ),
-                child: SafeArea(
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back, color: Colors.white),
-                        onPressed: () {
-                          // Navigasi ke MainScreen ketika tombol back ditekan
-                          Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(
-                                builder: (context) => MainScreen()),
-                          );
-                        },
-                      ),
-                      const Expanded(
-                        child: Center(
-                          child: Padding(
-                            padding: EdgeInsets.only(top: 0),
-                            child: Text(
-                              'Notifikasi',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      // Space untuk keseimbangan layout (tanpa tombol refresh di appbar)
-                      const SizedBox(width: 48),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Body content below the app bar
               Expanded(
                 child: Container(
-                  decoration: const BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage('assets/images/background.png'),
-                      fit: BoxFit.cover,
-                      opacity: 0.5,
-                    ),
-                  ),
-                  child: Container(
-                    color: Colors.white.withOpacity(0.6),
-                    padding: const EdgeInsets.only(top: 30),
-                    child: Column(
-                      children: [
-                        // User pill container
-                        Container(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          alignment: Alignment.center,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.grey.shade300),
-                            ),
+                  color: Colors.white.withOpacity(0.4), // Lebih transparan agar motif batik lebih terlihat
+                  padding: const EdgeInsets.only(top: 30),
+                  child: Column(
+                    children: [
+                      // User pill container
+                      // Container(
+                      //   padding: const EdgeInsets.symmetric(vertical: 8),
+                      //   alignment: Alignment.center,
+                      //   child: Container(
+                      //     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      //     decoration: BoxDecoration(
+                      //       color: Colors.white,
+                      //       borderRadius: BorderRadius.circular(20),
+                      //       border: Border.all(color: Colors.grey.shade300),
+                      //     ),
+                      //   ),
+                      // ),
+
+                      // Notification list atau loading indicator
+                      Expanded(
+                        child: _buildNotificationList(),
+                      ),
+
+                      // Footer copyright
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 24),
+                        alignment: Alignment.center,
+                        child: const Text(
+                          '© 2025 Beyond. Hak Cipta Dilindungi.',
+                          style: TextStyle(
+                            color: Color(0xFF8A8A8A),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
                           ),
                         ),
-
-                        // Notification list or loading indicator
-                        Expanded(
-                          child: _buildNotificationList(),
-                        ),
-
-                        // Footer copyright
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 24),
-                          alignment: Alignment.center,
-                          child: const Text(
-                            '© 2025 Beyond. Hak Cipta Dilindungi.',
-                            style: TextStyle(
-                              color: Color(0xFF8A8A8A),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ],
           ),
-
-          // Logo positioned between appBar and content
-          Positioned(
-            top: 80.0 - 15,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Image.asset(
-                  'assets/images/darah_tanyoe_logo.png',
-                  height: 25,
-                  fit: BoxFit.contain,
-                ),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -582,11 +506,11 @@ class _NotificationPageState extends State<NotificationPage> {
           decoration: BoxDecoration(
             color: const Color(0xFFF5F0DD), // Beige background color
             borderRadius:
-                BorderRadius.circular(18), // Slightly larger border radius
+            BorderRadius.circular(18), // Slightly larger border radius
             boxShadow: [
               BoxShadow(
                 color:
-                    Colors.black.withOpacity(0.08), // Slightly stronger shadow
+                Colors.black.withOpacity(0.08), // Slightly stronger shadow
                 blurRadius: 6,
                 offset: const Offset(0, 3),
               ),
@@ -645,7 +569,7 @@ class _NotificationPageState extends State<NotificationPage> {
                         horizontal: 18, vertical: 18),
                     child: Row(
                       crossAxisAlignment:
-                          CrossAxisAlignment.center, // Center items vertically
+                      CrossAxisAlignment.center, // Center items vertically
                       children: [
                         // Icon container
                         Container(
@@ -715,7 +639,7 @@ class _NotificationPageState extends State<NotificationPage> {
                                           id: item.id,
                                           icon: item.icon,
                                           iconBackgroundColor:
-                                              item.iconBackgroundColor,
+                                          item.iconBackgroundColor,
                                           title: item.title,
                                           subtitle: item.subtitle,
                                           timeAgo: item.timeAgo,
