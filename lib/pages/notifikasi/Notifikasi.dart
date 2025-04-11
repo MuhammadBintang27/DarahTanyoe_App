@@ -117,6 +117,7 @@ class NotificationService {
       // Start the HTTP request
       final request = http.get(Uri.parse('$baseUrl/notification/$userId'));
 
+
       // Set up a 5-second timeout
       final timeoutTimer = Timer(const Duration(seconds: 5), () {
         if (!completer.isCompleted) {
@@ -553,7 +554,7 @@ class _NotificationPageState extends State<NotificationPage> {
                 // Background image with low opacity
                 Positioned.fill(
                   child: Opacity(
-                    opacity: 0.2, // Very subtle background
+                    opacity: 0.1, // Very subtle background
                     child: Image.asset(
                       'assets/images/Hero.png',
                       fit: BoxFit.cover,

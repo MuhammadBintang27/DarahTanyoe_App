@@ -18,7 +18,8 @@ class AppBarWithLogo extends StatelessWidget implements PreferredSizeWidget {
       clipBehavior: Clip.none, // Memastikan elemen di luar AppBar tetap terlihat
       children: [
         Container(
-          height: 76, // Tinggi default AppBar
+          height: 96, // Tinggi default AppBar
+          padding: EdgeInsets.only(top: 40, bottom: 10),
           decoration: BoxDecoration(
             color: AppTheme.brand_01,
             boxShadow: [
@@ -82,37 +83,37 @@ class AppBarWithLogo extends StatelessWidget implements PreferredSizeWidget {
         ),
 
         // Logo di bawah AppBar
-        Positioned(
-          top: 60, // Sesuaikan dengan tinggi AppBar agar pas di bawahnya
-          left: 0,
-          right: 0,
-          child: Center(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.red.shade300), // Garis tepi merah
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Image.asset(
-                'assets/images/logo.png', // Pastikan path benar
-                height: 16, // Sesuaikan tinggi logo
-                fit: BoxFit.contain,
-              ),
-            ),
-          ),
-        ),
+        // Positioned(
+        //   top: 68, // Sesuaikan dengan tinggi AppBar agar pas di bawahnya
+        //   left: 0,
+        //   right: 0,
+        //   child: Center(
+        //     child: Container(
+        //       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+        //       decoration: BoxDecoration(
+        //         color: Colors.white,
+        //         borderRadius: BorderRadius.circular(20),
+        //         border: Border.all(color: Colors.red.shade300), // Garis tepi merah
+        //         boxShadow: [
+        //           BoxShadow(
+        //             color: Colors.black.withOpacity(0.1),
+        //             blurRadius: 4,
+        //             offset: const Offset(0, 2),
+        //           ),
+        //         ],
+        //       ),
+        //       child: Image.asset(
+        //         'assets/images/logo.png', // Pastikan path benar
+        //         height: 16, // Sesuaikan tinggi logo
+        //         fit: BoxFit.contain,
+        //       ),
+        //     ),
+        //   ),
+        // ),
       ],
     );
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(76);
+  Size get preferredSize => const Size.fromHeight(96);
 }
