@@ -1,17 +1,17 @@
 import 'dart:convert';
+import 'package:darahtanyoe_app/service/auth_service.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:uuid/uuid.dart';
 import '../models/permintaan_darah_model.dart';
 import 'package:http/http.dart' as http;
 
 class PermintaanDarahService {
   static const String ASSET_DATA_PATH = 'assets/data/permintaan_darah.json';
-
-  // List untuk menyimpan data di memory selama aplikasi berjalan
   static List<PermintaanDarahModel> _cachedData = [];
   static bool _isDataLoaded = false;
 
-  // Memuat data dari assets file (hanya sekali)
+  // Memuat data dari file assets hanya sekali
   static Future<void> _loadInitialData() async {
     if (_isDataLoaded) return;
 
@@ -21,34 +21,33 @@ class PermintaanDarahService {
 
       _cachedData =
           jsonList.map((item) => PermintaanDarahModel.fromJson(item)).toList();
-
       _isDataLoaded = true;
       print('Data loaded from assets: ${_cachedData.length} items');
     } catch (e) {
       print('Error loading data from assets: $e');
-      // Jika file tidak ditemukan atau error, mulai dengan list kosong
       _cachedData = [];
       _isDataLoaded = true;
     }
   }
 
-  // Membaca semua data
+  // Mengambil semua permintaan darah
   static Future<List<PermintaanDarahModel>> getAllPermintaan() async {
     await _loadInitialData();
-    return List.from(_cachedData); // Return copy of data
+    return List.from(_cachedData); // Mengembalikan salinan daftar
   }
 
-  // Menyimpan permintaan baru (hanya di memory)
+  // Menyimpan permintaan baru ke server dan cache
   static Future<bool> simpanPermintaan(PermintaanDarahModel permintaan) async {
-    const String url =
-        "https://3a3c-103-47-133-149.ngrok-free.app/bloodReq/create";
+    String baseUrl = dotenv.env['BASE_URL'] ?? 'https://default-url.com';
+    String url = "$baseUrl/bloodReq/create";
+    final user = await AuthService().getCurrentUser();
+    String userid = user?['id'];
 
     try {
       await _loadInitialData();
 
-      // Konversi objek ke JSON
       Map<String, dynamic> data = {
-        "requester_id": "a4d16fb8-4cf1-4f6e-ae61-e777782987f8",
+        "requester_id": userid,
         "partner_id": permintaan.partner_id,
         "blood_type": permintaan.bloodType,
         "quantity": permintaan.bloodBagsNeeded,
@@ -56,13 +55,12 @@ class PermintaanDarahService {
         "patient_name": permintaan.patientName,
         "patient_age": permintaan.patientAge,
         "status": PermintaanDarahModel.STATUS_PENDING,
-        "unique_code": "",
+        "unique_code": generateUniqueCode(),
         "blood_bags_fulfilled": 0,
         "expiry_date": permintaan.expiry_date,
         "phone_number": permintaan.phoneNumber
       };
 
-      // Kirim data ke server
       final response = await http.post(
         Uri.parse(url),
         headers: {"Content-Type": "application/json"},
@@ -71,7 +69,7 @@ class PermintaanDarahService {
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         print('Data berhasil dikirim ke server');
-        _cachedData.add(permintaan); // Simpan ke cache
+        _cachedData.add(permintaan);
         _printDebugData();
         return true;
       } else {
@@ -89,11 +87,10 @@ class PermintaanDarahService {
   static Future<PermintaanDarahModel?> getPermintaanByUniqueCode(
       String uniqueCode) async {
     await _loadInitialData();
-
     try {
       return _cachedData.firstWhere((item) => item.uniqueCode == uniqueCode);
     } catch (e) {
-      return null; // Tidak ditemukan
+      return null;
     }
   }
 
@@ -101,25 +98,20 @@ class PermintaanDarahService {
   static Future<bool> updatePermintaan(
       PermintaanDarahModel updatedPermintaan) async {
     await _loadInitialData();
-
     for (var i = 0; i < _cachedData.length; i++) {
       if (_cachedData[i].uniqueCode == updatedPermintaan.uniqueCode) {
         _cachedData[i] = updatedPermintaan;
-
         print('Data updated in memory: ${updatedPermintaan.uniqueCode}');
         _printDebugData();
-
         return true;
       }
     }
-
     return false;
   }
 
-  // Menghapus permintaan
+  // Menghapus permintaan dari cache
   static Future<bool> deletePermintaan(String uniqueCode) async {
     await _loadInitialData();
-
     int initialLength = _cachedData.length;
     _cachedData.removeWhere((item) => item.uniqueCode == uniqueCode);
 
@@ -132,21 +124,20 @@ class PermintaanDarahService {
     return success;
   }
 
-  // Reset data ke initial state dari assets
+  // Reset data ke kondisi awal dari assets
   static Future<void> resetToInitial() async {
     _isDataLoaded = false;
     await _loadInitialData();
     print('Data reset to initial state');
   }
 
-  // Menghasilkan kode unik
+  // Generate kode unik
   static String generateUniqueCode() {
     final uuid = Uuid();
-    String code = uuid.v4().substring(0, 8).toUpperCase();
-    return 'BLD-$code';
+    return 'BLD-${uuid.v4().substring(0, 8).toUpperCase()}';
   }
 
-  // Helper untuk debugging - print data ke console
+  // Debugging - print data di console
   static void _printDebugData() {
     print('=========== DATA PERMINTAAN DARAH ===========');
     for (var item in _cachedData) {
@@ -156,7 +147,7 @@ class PermintaanDarahService {
     print('============================================');
   }
 
-  // Export data untuk debugging (bisa digunakan untuk menyimpan ke assets)
+  // Export data sebagai JSON string
   static String exportDataAsJsonString() {
     final jsonList = _cachedData.map((item) => item.toJson()).toList();
     return JsonEncoder.withIndent('  ').convert(jsonList);
