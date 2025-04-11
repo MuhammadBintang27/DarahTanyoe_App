@@ -23,11 +23,11 @@ class DropdownApi extends StatefulWidget {
   final Function(Lokasi?) onChanged;
 
   const DropdownApi({
-    Key? key,
+    super.key,
     required this.apiUrl,
     required this.hintText,
     required this.onChanged,
-  }) : super(key: key);
+  });
 
   @override
   _DropdownApiState createState() => _DropdownApiState();
@@ -90,12 +90,12 @@ class _DropdownApiState extends State<DropdownApi> {
           onChanged: isLoading
               ? null
               : (Lokasi? newValue) {
-                  setState(() {
-                    selectedItem = newValue;
-                  });
-                  widget.onChanged(newValue);
-                  print('Selected: ${newValue?.id} - ${newValue?.name}');
-                },
+            setState(() {
+              selectedItem = newValue;
+            });
+            widget.onChanged(newValue);
+            print('Selected: ${newValue?.id} - ${newValue?.name}');
+          },
           items: options.map((Lokasi option) {
             return DropdownMenuItem<Lokasi>(
               value: option,

@@ -9,14 +9,14 @@ class ActionButton extends StatelessWidget {
   final bool isOutlined;
 
   const ActionButton({
-    Key? key,
+    super.key,
     required this.text,
     required this.color,
     required this.textColor,
     required this.icon,
     required this.onPressed,
     this.isOutlined = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -36,35 +36,35 @@ class ActionButton extends StatelessWidget {
         ),
         child: isOutlined
             ? OutlinedButton.icon(
-                onPressed: onPressed,
-                icon: Icon(icon, color: textColor),
-                label: Text(
-                  text,
-                  style: TextStyle(color: textColor),
-                ),
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: color),
-                  padding: EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-              )
+          onPressed: onPressed,
+          icon: Icon(icon, color: textColor),
+          label: Text(
+            text,
+            style: TextStyle(color: textColor),
+          ),
+          style: OutlinedButton.styleFrom(
+            side: BorderSide(color: color),
+            padding: EdgeInsets.symmetric(vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
+        )
             : ElevatedButton.icon(
-                onPressed: onPressed,
-                icon: Icon(icon, color: Colors.white),
-                label: Text(
-                  text,
-                  style: TextStyle(color: Colors.white),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: color,
-                  padding: EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-              ),
+          onPressed: onPressed,
+          icon: Icon(icon, color: Colors.white),
+          label: Text(
+            text,
+            style: TextStyle(color: Colors.white),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: color,
+            padding: EdgeInsets.symmetric(vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
+        ),
       ),
     );
   }

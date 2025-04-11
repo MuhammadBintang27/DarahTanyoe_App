@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ArticleSlider extends StatefulWidget {
   final List<ArticleData> articles;
 
   const ArticleSlider({
-    Key? key, 
+    super.key,
     required this.articles,
-  }) : super(key: key);
+  });
 
   @override
   State<ArticleSlider> createState() => _ArticleSliderState();
@@ -26,7 +27,7 @@ class _ArticleSliderState extends State<ArticleSlider> {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 20.0),
-      child: Container(
+      child: SizedBox(
         width: double.infinity,
         height: MediaQuery.of(context).size.height * 0.2,
         child: Stack(
@@ -44,7 +45,7 @@ class _ArticleSliderState extends State<ArticleSlider> {
                 return _buildArticleItem(widget.articles[index]);
               },
             ),
-            
+
             // Indikator halaman
             Positioned(
               bottom: 10,
@@ -54,7 +55,7 @@ class _ArticleSliderState extends State<ArticleSlider> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
                   widget.articles.length,
-                  (index) => _buildDotIndicator(index),
+                      (index) => _buildDotIndicator(index),
                 ),
               ),
             ),
@@ -66,11 +67,20 @@ class _ArticleSliderState extends State<ArticleSlider> {
 
   Widget _buildArticleItem(ArticleData article) {
     return GestureDetector(
-      onTap: () {
-        // Navigasi ke halaman artikel saat ditekan
-        // Navigator.push(context, MaterialPageRoute(builder: (context) => ArticleDetailPage(url: article.articleUrl)));
-        // Atau gunakan url_launcher untuk membuka URL
-        print('Membuka artikel: ${article.articleUrl}');
+      onTap: () async {
+        final Uri url = Uri.parse(article.articleUrl);
+
+        if (await canLaunchUrl(url)) {
+          final bool launched = await launchUrl(
+            url,
+            mode: LaunchMode.externalApplication,
+          );
+          if (!launched) {
+            print('Gagal meluncurkan URL');
+          }
+        } else {
+          print('Tidak bisa membuka URL: ${article.articleUrl}');
+        }
       },
       child: Container(
         width: double.infinity,
@@ -130,8 +140,8 @@ class _ArticleSliderState extends State<ArticleSlider> {
       margin: EdgeInsets.symmetric(horizontal: 4),
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: _currentPage == index 
-            ? Colors.white 
+        color: _currentPage == index
+            ? Colors.white
             : Colors.white.withOpacity(0.5),
       ),
     );
@@ -157,23 +167,23 @@ class ArticleData {
 Widget buildArticleSlider() {
   final List<ArticleData> articles = [
     ArticleData(
-    imageUrl: 'https://mysiloam-api.siloamhospitals.com/public-asset/website-cms/website-cms-16927582754302106.webp',
-    title: 'Ketahui Prosedur Donor Darah dan Manfaatnya bagi Tubuh',
-    preview: 'Perlu diketahui bahwa tidak semua orang bisa melakukan donor darah. Adapun beberapa syarat yang perlu dipenuhi untuk melakukan donor darah adalah sebagai berikut...',
-    articleUrl: 'https://www.siloamhospitals.com/informasi-siloam/artikel/mengenal-prosedur-donor-darah',
-  ),
-  ArticleData(
-    imageUrl: 'https://rsudcabangbungin.bekasikab.go.id/static/vendor/file/web/news_Masak-sih-DONOR-DARAH-banyak-manfaatnya--031009.jpeg',
-    title: 'Masak sih DONOR DARAH banyak manfaatnya',
-    preview: 'Selain bermanfaat untuk orang yang menerima, donor darah juga bermanfaat bagi sang pendonor darah. Lantas apa saja manfaat dari donor darah yang dapat kamu rasakan? Berikut ini manfaat positif dari kegiatan donor darah...',
-    articleUrl: 'https://rsudcabangbungin.bekasikab.go.id/home/lihat_detail/artikel/MasaksihDONORDARAHbanyakmanfaatnya115204',
-  ),
-  ArticleData(
-    imageUrl: 'https://cdns.klimg.com/merdeka.com/i/w/news/2022/10/12/1481116/540x270/manfaat-donor-darah-menurut-islam-bantu-selamatkan-nyawa-manusia.jpg',
-    title: 'Manfaat Donor Darah Menurut Islam, Bantu Selamatkan Nyawa Manusia',
-    preview: 'Menyumbangkan darah kepada orang lain yang membutuhkan termasuk suatu tindakan yang mulia. Dalam Surat Al Maidah ayat 2, Allah telah berfirman pada setiap umatnya untuk saling tolong menolong dan mengerjakan kebaikan dan takwa.....',
-    articleUrl: 'https://www.merdeka.com/jateng/manfaat-donor-darah-menurut-islam-bantu-selamatkan-nyawa-manusia-kln.html',
-  ),
+      imageUrl: 'https://mysiloam-api.siloamhospitals.com/public-asset/website-cms/website-cms-16927582754302106.webp',
+      title: 'Ketahui Prosedur Donor Darah dan Manfaatnya bagi Tubuh',
+      preview: 'Perlu diketahui bahwa tidak semua orang bisa melakukan donor darah. Adapun beberapa syarat yang perlu dipenuhi untuk melakukan donor darah adalah sebagai berikut...',
+      articleUrl: 'https://www.siloamhospitals.com/informasi-siloam/artikel/mengenal-prosedur-donor-darah',
+    ),
+    ArticleData(
+      imageUrl: 'https://rsudcabangbungin.bekasikab.go.id/static/vendor/file/web/news_Masak-sih-DONOR-DARAH-banyak-manfaatnya--031009.jpeg',
+      title: 'Masak sih DONOR DARAH banyak manfaatnya',
+      preview: 'Selain bermanfaat untuk orang yang menerima, donor darah juga bermanfaat bagi sang pendonor darah. Lantas apa saja manfaat dari donor darah yang dapat kamu rasakan? Berikut ini manfaat positif dari kegiatan donor darah...',
+      articleUrl: 'https://rsudcabangbungin.bekasikab.go.id/home/lihat_detail/artikel/MasaksihDONORDARAHbanyakmanfaatnya115204',
+    ),
+    ArticleData(
+      imageUrl: 'https://cdns.klimg.com/merdeka.com/i/w/news/2022/10/12/1481116/540x270/manfaat-donor-darah-menurut-islam-bantu-selamatkan-nyawa-manusia.jpg',
+      title: 'Manfaat Donor Darah Menurut Islam, Bantu Selamatkan Nyawa Manusia',
+      preview: 'Menyumbangkan darah kepada orang lain yang membutuhkan termasuk suatu tindakan yang mulia. Dalam Surat Al Maidah ayat 2, Allah telah berfirman pada setiap umatnya untuk saling tolong menolong dan mengerjakan kebaikan dan takwa.....',
+      articleUrl: 'https://www.merdeka.com/jateng/manfaat-donor-darah-menurut-islam-bantu-selamatkan-nyawa-manusia-kln.html',
+    ),
     // Tambahkan artikel lainnya sesuai kebutuhan
   ];
 
