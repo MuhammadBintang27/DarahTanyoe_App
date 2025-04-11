@@ -1,8 +1,9 @@
+import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:darahtanyoe_app/pages/notifikasi/Notifikasi.dart'; // Sesuaikan dengan path yang benar
 
 class HeaderWidget extends StatelessWidget {
-  const HeaderWidget({Key? key}) : super(key: key);
+  const HeaderWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -27,8 +28,18 @@ class HeaderWidget extends StatelessWidget {
             },
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.amber,
+                color: AppTheme.brand_02,
                 shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.brand_02
+                        .withOpacity(0.5), // Warna kuning lebih pekat
+                    spreadRadius:
+                    6, // Lebih luas agar efek bercahaya lebih terlihat
+                    blurRadius: 15, // Glow lebih soft
+                    offset: Offset(0, 0), // Efek merata
+                  ),
+                ],
               ),
               padding: EdgeInsets.all(8),
               child: Icon(Icons.notifications, color: Colors.white),
