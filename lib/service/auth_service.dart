@@ -424,70 +424,32 @@ class AuthService {
     registrationData.clear();
   }
   /// **✅ Logout** - WITH ANIMATION
-  Future<bool> logout(BuildContext context) async {
-    try {
-      // Aktifkan loading
-      loadingCallback?.call(true);
-
-      // Tampilkan animasi loading
-      AnimationService.showLoading(context);
-
-      // Hapus semua data dari SecureStorage
-      await storage.deleteAll();
-
-      // Reset data registrasi dari Hive
-      await resetRegistration();
-
-      // Callback sukses
-      successCallback?.call();
-
-      // Sembunyikan loading
-      AnimationService.hideLoading(context);
-
-      // Tampilkan animasi sukses dan navigasi WITH ANIMATION
-      await AnimationService.showSuccess(
-        context,
-        message: 'Berhasil logout!',
-        onComplete: () {
-          // Navigasi ke login screen dengan AnimationService
-          Navigator.of(context).pushAndRemoveUntil(
-            PageRouteBuilder(
-              pageBuilder: (context, animation, secondaryAnimation) =>
-                  LoginPage(),
-              transitionsBuilder:
-                  (context, animation, secondaryAnimation, child) {
-                return AnimationService.buildPageTransition(
-                  child: child,
-                  animation: animation,
-                  secondaryAnimation: secondaryAnimation,
-                );
-              },
-            ),
-                (route) => false,
-          );
-        },
-      );
-
-      return true;
-    } catch (e) {
-      // Callback error
-      errorCallback?.call(e.toString());
-
-      // Sembunyikan loading dan tampilkan error
-      AnimationService.hideLoading(context);
-      await AnimationService.showError(context, message: e.toString());
-
-      return false;
-    } finally {
-      // Matikan loading
-      loadingCallback?.call(false);
-      // Sembunyikan animasi loading jika ada context
-      if (context != null) {
-        AnimationService.hideLoading(context);
-      }
-
-    }
+  Future<void> logout(BuildContext context) async {
+  try {
+    // Clear all data from SecureStorage
+    await storage.deleteAll();
+    
+    // Reset registration data from Hive
+    await resetRegistration();
+    
+    // Navigate to the login page
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => LoginPage()),
+      (route) => false,
+    );
+  } catch (e) {
+    // Handle any errors during logout
+    debugPrint('Error during logout: ${e.toString()}');
+    
+    // Show error message to user
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Logout failed: ${e.toString()}'),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
+}
 
   /// **🔹 Check Login Status** - Tidak memerlukan context
   Future<bool> isLoggedIn() async {

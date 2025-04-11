@@ -5,87 +5,98 @@ import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'dart:async';
 import 'package:http/http.dart' as http;
+import '../../service/auth_service.dart'; // Import AuthService
 
 // Model class for notifications with fromJson constructor
 class NotificationModel {
   final String id;
-  final IconData icon;
-  final Color iconBackgroundColor;
+  final String userId;
   final String title;
-  final String subtitle;
-  final String timeAgo;
+  final String message;
+  final String type;
+  final String relatedTo;
+  final String? referenceId;
   final bool isRead;
-
+  final String createdAt;
+  
   NotificationModel({
     required this.id,
-    required this.icon,
-    required this.iconBackgroundColor,
+    required this.userId,
     required this.title,
-    required this.subtitle,
-    required this.timeAgo,
-    this.isRead = false,
+    required this.message,
+    required this.type,
+    required this.relatedTo,
+    this.referenceId,
+    required this.isRead,
+    required this.createdAt,
   });
 
   // Factory constructor to create a NotificationModel from JSON
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
-    // Map string icon names to IconData
-    IconData getIconFromString(String iconName) {
-      switch (iconName) {
-        case 'water_drop':
-          return Icons.water_drop_outlined;
-        case 'volunteer_activism':
-          return Icons.volunteer_activism_outlined;
-        case 'handshake':
-          return Icons.handshake_outlined;
-        case 'gift':
-          return Icons.card_giftcard_outlined;
-        case 'hourglass':
-          return Icons.hourglass_empty_outlined;
-        default:
-          return Icons.notifications_outlined;
-      }
-    }
-
-    // Map string color codes to actual Color objects
-    Color getColorFromString(String colorCode) {
-      try {
-        // If color is in hex format like #RRGGBB or 0xFFRRGGBB
-        if (colorCode.startsWith('#')) {
-          return Color(int.parse('0xFF${colorCode.substring(1)}'));
-        } else if (colorCode.startsWith('0x')) {
-          return Color(int.parse(colorCode));
-        } else {
-          // Handle named colors or fallback
-          switch (colorCode) {
-            case 'red':
-              return const Color(0xFF8A4250);
-            case 'green':
-              return const Color(0xFF6D7958);
-            case 'blue':
-              return const Color(0xFF41628A);
-            case 'teal':
-              return const Color(0xFF5A7D7C);
-            case 'brown':
-              return const Color(0xFF8C7D64);
-            default:
-              return const Color(0xFF8A4250); // Default color
-          }
-        }
-      } catch (e) {
-        return const Color(0xFF8A4250); // Default color on error
-      }
-    }
-
     return NotificationModel(
-      id: json['id'] ?? '0',
-      icon: getIconFromString(json['icon'] ?? 'notifications'),
-      iconBackgroundColor: getColorFromString(json['iconColor'] ?? 'red'),
+      id: json['id'] ?? '',
+      userId: json['user_id'] ?? '',
       title: json['title'] ?? 'Notifikasi',
-      subtitle:
-      json['subtitle'] ?? 'Ketuk untuk melihat informasi lebih lanjut',
-      timeAgo: json['timeAgo'] ?? 'baru',
-      isRead: json['isRead'] ?? false,
+      message: json['message'] ?? 'Ketuk untuk melihat informasi lebih lanjut',
+      type: json['type'] ?? 'app',
+      relatedTo: json['related_to'] ?? '',
+      referenceId: json['reference_id'],
+      isRead: json['is_read'] ?? false,
+      createdAt: json['created_at'] ?? '',
     );
+  }
+  
+  // Helper method to get appropriate icon based on notification type/relatedTo
+  IconData get icon {
+    switch (relatedTo) {
+      case 'request':
+        return Icons.water_drop_outlined;
+      case 'offer':
+        return Icons.volunteer_activism_outlined;
+      case 'donation':
+        return Icons.handshake_outlined;
+      case 'reminder':
+        return Icons.hourglass_empty_outlined;
+      case 'reward':
+        return Icons.card_giftcard_outlined;
+      default:
+        return Icons.notifications_outlined;
+    }
+  }
+  
+  // Get background color for icon based on related_to value
+  Color get iconBackgroundColor {
+    switch (relatedTo) {
+      case 'request':
+        return const Color(0xFF5A7D7C);
+      case 'offer':
+        return const Color(0xFF41628A);
+      case 'donation':
+        return const Color(0xFF6D7958);
+      case 'reminder':
+        return const Color(0xFF8C7D64);
+      case 'reward':
+        return const Color(0xFF8A4250);
+      default:
+        return const Color(0xFF8A4250);
+    }
+  }
+  
+  // Calculate time ago from created_at timestamp
+  String get timeAgo {
+    final now = DateTime.now();
+    final createdDateTime = DateTime.parse(createdAt);
+    final difference = now.difference(createdDateTime);
+    
+    if (difference.inDays > 0) {
+      return '${difference.inDays}h';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}j';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m';
+    } else {
+      return 'baru';
+    }
   }
 }
 
@@ -93,8 +104,9 @@ class NotificationModel {
 class NotificationService {
   // Base URL of your API
   final String baseUrl;
+  final String userId;
 
-  NotificationService({required this.baseUrl});
+  NotificationService({required this.baseUrl, required this.userId});
 
   // Method to fetch notifications from API with timeout
   Future<List<NotificationModel>> fetchNotifications() async {
@@ -103,7 +115,7 @@ class NotificationService {
       final completer = Completer<http.Response>();
 
       // Start the HTTP request
-      final request = http.get(Uri.parse('$baseUrl/notifications'));
+      final request = http.get(Uri.parse('$baseUrl/notification/$userId'));
 
       // Set up a 5-second timeout
       final timeoutTimer = Timer(const Duration(seconds: 5), () {
@@ -132,8 +144,16 @@ class NotificationService {
 
       if (response.statusCode == 200) {
         // Parse the JSON response
-        List<dynamic> data = json.decode(response.body);
-        return data.map((json) => NotificationModel.fromJson(json)).toList();
+        final jsonResponse = json.decode(response.body);
+        
+        // Check if the API response is successful
+        if (jsonResponse['status'] == 'SUCCESS' && jsonResponse['data'] != null) {
+          List<dynamic> data = jsonResponse['data'];
+          return data.map((item) => NotificationModel.fromJson(item)).toList();
+        } else {
+          // Handle API error response
+          throw Exception('API Error: ${jsonResponse['message'] ?? 'Unknown error'}');
+        }
       } else {
         // Handle API errors
         throw Exception('Failed to load notifications: ${response.statusCode}');
@@ -147,42 +167,11 @@ class NotificationService {
     }
   }
 
-  // Method to provide mock notifications when API is unavailable
-  List<NotificationModel> getMockNotifications() {
-    return [
-      NotificationModel(
-        id: '1',
-        icon: Icons.water_drop_outlined,
-        iconBackgroundColor: const Color(0xFF5A7D7C),
-        title: 'Ada permintaan darah di sekitar Anda.',
-        subtitle: 'Ketuk untuk melihat informasi lebih lanjut',
-        timeAgo: '2j',
-      ),
-      NotificationModel(
-        id: '2',
-        icon: Icons.volunteer_activism_outlined,
-        iconBackgroundColor: const Color(0xFF41628A),
-        title: 'Seseorang telah mendonorkan darah untuk Anda.',
-        subtitle: 'Ketuk untuk melihat informasi lebih lanjut',
-        timeAgo: '2j',
-      ),
-      NotificationModel(
-        id: '3',
-        icon: Icons.handshake_outlined,
-        iconBackgroundColor: const Color(0xFF6D7958),
-        title: 'Permintaan darah Anda telah terpenuhi.',
-        subtitle: 'Ketuk untuk melihat informasi lebih lanjut',
-        timeAgo: '5j',
-      ),
-      // Add more mock notifications as needed
-    ];
-  }
-
   // Method to mark a notification as read
   Future<bool> markAsRead(String notificationId) async {
     try {
       final response = await http.put(
-        Uri.parse('$baseUrl/notifications/$notificationId/read'),
+        Uri.parse('$baseUrl/$userId/read/$notificationId'),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -195,14 +184,10 @@ class NotificationService {
 
 class NotificationPage extends StatefulWidget {
   final VoidCallback? onBackPressed;
-  final String apiBaseUrl;
-  final bool useMockData;
-
+  
   const NotificationPage({
     super.key,
     this.onBackPressed,
-    this.apiBaseUrl = 'https://api.yourdomain.com/v1', // Default API URL
-    this.useMockData = false, // Set to true to use mock data directly
   });
 
   @override
@@ -210,25 +195,20 @@ class NotificationPage extends StatefulWidget {
 }
 
 class _NotificationPageState extends State<NotificationPage> {
-  late NotificationService _notificationService;
   List<NotificationModel> _notifications = [];
   bool _isLoading = true;
   String? _errorMessage;
   bool _timedOut = false;
   Timer? _loadingTimer;
+  
+  // Simpan future untuk mendapatkan user dalam state
+  late Future<Map<String, dynamic>?> _userFuture;
 
   @override
   void initState() {
     super.initState();
-    _notificationService = NotificationService(baseUrl: widget.apiBaseUrl);
-
-    if (widget.useMockData) {
-      // If mock data is requested, load it directly
-      _loadMockData();
-    } else {
-      // Otherwise, try to fetch from API
-      _loadNotifications();
-    }
+    // Inisialisasi future untuk mendapatkan user
+    _userFuture = AuthService().getCurrentUser();
   }
 
   @override
@@ -238,18 +218,14 @@ class _NotificationPageState extends State<NotificationPage> {
     super.dispose();
   }
 
-  // Load mock data directly
-  void _loadMockData() {
-    setState(() {
-      _notifications = _notificationService.getMockNotifications();
-      _isLoading = false;
-      _errorMessage = null;
-      _timedOut = false;
-    });
-  }
-
   // Load notifications from API with timeout
-  Future<void> _loadNotifications() async {
+  Future<void> _loadNotifications(String userId) async {
+    // Buat NotificationService untuk userId
+    final notificationService = NotificationService(
+      baseUrl: 'https://gtf-api.vercel.app',
+      userId: userId,
+    );
+    
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -261,21 +237,21 @@ class _NotificationPageState extends State<NotificationPage> {
 
     // Set a timer for 5 seconds
     _loadingTimer = Timer(const Duration(seconds: 5), () {
-      if (_isLoading) {
+      if (_isLoading && mounted) {
         setState(() {
           _isLoading = false;
           _timedOut = true;
           _errorMessage =
-          'Permintaan melebihi batas waktu 5 detik. Ketuk tombol di bawah untuk mencoba lagi.';
+              'Permintaan melebihi batas waktu 5 detik. Ketuk tombol di bawah untuk mencoba lagi.';
         });
       }
     });
 
     try {
-      final notifications = await _notificationService.fetchNotifications();
+      final notifications = await notificationService.fetchNotifications();
 
-      // Only update state if the loading timer hasn't fired yet
-      if (_loadingTimer != null && _loadingTimer!.isActive) {
+      // Only update state if the loading timer hasn't fired yet and widget still mounted
+      if (_loadingTimer != null && _loadingTimer!.isActive && mounted) {
         _loadingTimer!.cancel();
         setState(() {
           _notifications = notifications;
@@ -285,28 +261,23 @@ class _NotificationPageState extends State<NotificationPage> {
       }
     } on TimeoutException {
       // Handle timeout exception
-      if (_loadingTimer != null && _loadingTimer!.isActive) {
+      if (_loadingTimer != null && _loadingTimer!.isActive && mounted) {
         _loadingTimer!.cancel();
         setState(() {
           _isLoading = false;
           _timedOut = true;
           _errorMessage =
-          'Permintaan melebihi batas waktu 5 detik. Ketuk tombol di bawah untuk mencoba lagi.';
+              'Permintaan melebihi batas waktu 5 detik. Ketuk tombol di bawah untuk mencoba lagi.';
         });
       }
     } catch (e) {
       // Handle other errors
-      if (_loadingTimer != null && _loadingTimer!.isActive) {
+      if (_loadingTimer != null && _loadingTimer!.isActive && mounted) {
         _loadingTimer!.cancel();
         setState(() {
           _errorMessage = 'Gagal memuat notifikasi. Silakan coba lagi.';
           _isLoading = false;
           _timedOut = false;
-
-          // Use mock data in case of error during development
-          if (widget.useMockData) {
-            _notifications = _notificationService.getMockNotifications();
-          }
         });
       }
     }
@@ -330,52 +301,107 @@ class _NotificationPageState extends State<NotificationPage> {
       ),
       body: BackgroundWidget(
         child: SafeArea(
-          child: Column(
-            children: [
-              Expanded(
-                child: Container(
-                  color: Colors.white.withOpacity(0.4), // Lebih transparan agar motif batik lebih terlihat
-                  padding: const EdgeInsets.only(top: 30),
-                  child: Column(
-                    children: [
-                      // User pill container
-                      // Container(
-                      //   padding: const EdgeInsets.symmetric(vertical: 8),
-                      //   alignment: Alignment.center,
-                      //   child: Container(
-                      //     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                      //     decoration: BoxDecoration(
-                      //       color: Colors.white,
-                      //       borderRadius: BorderRadius.circular(20),
-                      //       border: Border.all(color: Colors.grey.shade300),
-                      //     ),
-                      //   ),
-                      // ),
+          child: FutureBuilder<Map<String, dynamic>?>(
+            future: _userFuture,
+            builder: (context, snapshot) {
+              // Jika data sedang dimuat
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFAB4545)),
+                  ),
+                );
+              }
+              
+              // Jika data sudah selesai dimuat dan data tersedia
+              if (snapshot.hasData && snapshot.data != null) {
+                // Ambil userId dari data pengguna
+                final String userId = snapshot.data!['id'] ?? '';
+                
+                // Jika ini adalah pertama kalinya userId tersedia, muat notifikasi
+                if (_isLoading && _notifications.isEmpty && userId.isNotEmpty) {
+                  // Gunakan Future.microtask untuk menghindari setState selama build
+                  Future.microtask(() => _loadNotifications(userId));
+                }
+                
+                return Column(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        color: Colors.white.withOpacity(0.4), // Lebih transparan agar motif batik lebih terlihat
+                        padding: const EdgeInsets.only(top: 30),
+                        child: Column(
+                          children: [
+                            // Notification list atau loading indicator
+                            Expanded(
+                              child: _buildNotificationList(userId),
+                            ),
 
-                      // Notification list atau loading indicator
-                      Expanded(
-                        child: _buildNotificationList(),
-                      ),
-
-                      // Footer copyright
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 24),
-                        alignment: Alignment.center,
-                        child: const Text(
-                          '© 2025 Beyond. Hak Cipta Dilindungi.',
-                          style: TextStyle(
-                            color: Color(0xFF8A8A8A),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                          ),
+                            // Footer copyright
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(vertical: 24),
+                              alignment: Alignment.center,
+                              child: const Text(
+                                '© 2025 Beyond. Hak Cipta Dilindungi.',
+                                style: TextStyle(
+                                  color: Color(0xFF8A8A8A),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
+                );
+              }
+              
+              // Jika terjadi error atau data tidak tersedia
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      color: Color(0xFFAB4545),
+                      size: 48,
+                    ),
+                    const SizedBox(height: 16),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 32),
+                      child: Text(
+                        'Gagal memuat data pengguna. Silakan coba lagi.',
+                        style: TextStyle(
+                          color: Color(0xFF666666),
+                          fontSize: 16,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          // Reload user future
+                          _userFuture = AuthService().getCurrentUser();
+                        });
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFAB4545),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                      child: const Text('Coba Lagi'),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+              );
+            },
           ),
         ),
       ),
@@ -383,7 +409,7 @@ class _NotificationPageState extends State<NotificationPage> {
   }
 
   // Build notification list with loading, error, and timeout states
-  Widget _buildNotificationList() {
+  Widget _buildNotificationList(String userId) {
     if (_isLoading) {
       return Center(
         child: Column(
@@ -437,7 +463,7 @@ class _NotificationPageState extends State<NotificationPage> {
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: _isLoading ? null : _loadNotifications,
+              onPressed: _isLoading ? null : () => _loadNotifications(userId),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFAB4545),
                 foregroundColor: Colors.white,
@@ -472,7 +498,7 @@ class _NotificationPageState extends State<NotificationPage> {
             ),
             const SizedBox(height: 24),
             OutlinedButton(
-              onPressed: _loadNotifications,
+              onPressed: () => _loadNotifications(userId),
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFFAB4545),
                 side: const BorderSide(color: Color(0xFFAB4545)),
@@ -492,12 +518,12 @@ class _NotificationPageState extends State<NotificationPage> {
       itemCount: _notifications.length,
       itemBuilder: (context, index) {
         final notification = _notifications[index];
-        return _buildNotificationItem(notification);
+        return _buildNotificationItem(notification, userId);
       },
     );
   }
 
-  Widget _buildNotificationItem(NotificationModel notification) {
+  Widget _buildNotificationItem(NotificationModel notification, String userId) {
     return Stack(
       children: [
         // Main notification card
@@ -506,11 +532,11 @@ class _NotificationPageState extends State<NotificationPage> {
           decoration: BoxDecoration(
             color: const Color(0xFFF5F0DD), // Beige background color
             borderRadius:
-            BorderRadius.circular(18), // Slightly larger border radius
+                BorderRadius.circular(18), // Slightly larger border radius
             boxShadow: [
               BoxShadow(
                 color:
-                Colors.black.withOpacity(0.08), // Slightly stronger shadow
+                    Colors.black.withOpacity(0.08), // Slightly stronger shadow
                 blurRadius: 6,
                 offset: const Offset(0, 3),
               ),
@@ -547,20 +573,28 @@ class _NotificationPageState extends State<NotificationPage> {
                         if (item.id == notification.id) {
                           return NotificationModel(
                             id: item.id,
-                            icon: item.icon,
-                            iconBackgroundColor: item.iconBackgroundColor,
+                            userId: item.userId,
                             title: item.title,
-                            subtitle: item.subtitle,
-                            timeAgo: item.timeAgo,
+                            message: item.message,
+                            type: item.type,
+                            relatedTo: item.relatedTo,
+                            referenceId: item.referenceId,
                             isRead: true,
+                            createdAt: item.createdAt,
                           );
                         }
                         return item;
                       }).toList();
                     });
 
-                    // In a real app, you would also call the API
-                    // _notificationService.markAsRead(notification.id);
+                    // Create a new service instance to mark as read
+                    final notificationService = NotificationService(
+                      baseUrl: 'https://gtf-api.vercel.app/notification',
+                      userId: userId,
+                    );
+                    
+                    // Call the API to mark as read
+                    notificationService.markAsRead(notification.id);
 
                     // Handle notification tap - navigate to detail page etc.
                   },
@@ -569,7 +603,7 @@ class _NotificationPageState extends State<NotificationPage> {
                         horizontal: 18, vertical: 18),
                     child: Row(
                       crossAxisAlignment:
-                      CrossAxisAlignment.center, // Center items vertically
+                          CrossAxisAlignment.center, // Center items vertically
                       children: [
                         // Icon container
                         Container(
@@ -600,7 +634,7 @@ class _NotificationPageState extends State<NotificationPage> {
                               ),
                               const SizedBox(height: 5), // More space
                               Text(
-                                notification.subtitle,
+                                notification.message,
                                 style: const TextStyle(
                                   fontSize: 13, // Slightly larger font
                                   color: Color(0xFF666666),
@@ -637,18 +671,28 @@ class _NotificationPageState extends State<NotificationPage> {
                                       if (item.id == notification.id) {
                                         return NotificationModel(
                                           id: item.id,
-                                          icon: item.icon,
-                                          iconBackgroundColor:
-                                          item.iconBackgroundColor,
+                                          userId: item.userId,
                                           title: item.title,
-                                          subtitle: item.subtitle,
-                                          timeAgo: item.timeAgo,
+                                          message: item.message,
+                                          type: item.type,
+                                          relatedTo: item.relatedTo,
+                                          referenceId: item.referenceId,
                                           isRead: true,
+                                          createdAt: item.createdAt,
                                         );
                                       }
                                       return item;
                                     }).toList();
                                   });
+                                  
+                                  // Create a new service instance for marking read
+                                  final notificationService = NotificationService(
+                                    baseUrl: 'https://gtf-api.vercel.app/notification',
+                                    userId: userId,
+                                  );
+                                  
+                                  // Call API to mark as read
+                                  notificationService.markAsRead(notification.id);
                                 }
                               },
                               itemBuilder: (context) => [
@@ -692,4 +736,3 @@ class _NotificationPageState extends State<NotificationPage> {
   }
 }
 
-// Example usage
