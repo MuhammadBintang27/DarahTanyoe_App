@@ -41,14 +41,14 @@ class ProfileScreen extends StatelessWidget {
                       if (!snapshot.hasData || snapshot.data == null) {
                         return const Center(
                           child: Text(
-                            'No user data available',
+                            'Data pengguna tidak tersedia',
                             style: TextStyle(fontFamily: 'DM Sans'),
                           ),
                         );
                       }
 
                       final userData = snapshot.data!;
-                      String formattedDate = 'Not available';
+                      String formattedDate = 'Tidak tersedia';
                       if (userData['last_donation_date'] != null) {
                         try {
                           final date = DateTime.parse(userData['last_donation_date']);
@@ -64,15 +64,31 @@ class ProfileScreen extends StatelessWidget {
                           children: [
                             const SizedBox(height: 20),
                             Center(
-                              child: CircleAvatar(
-                                radius: 60,
-                                backgroundImage: AssetImage('assets/images/profil.png'),
-                                backgroundColor: Colors.grey[200],
+                              child: Container(
+                                width: 120,
+                                height: 120,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[200],
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.grey.withOpacity(0.3),
+                                      spreadRadius: 1,
+                                      blurRadius: 5,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Icon(
+                                  Icons.person,
+                                  size: 70,
+                                  color: Colors.grey[400],
+                                ),
                               ),
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              userData['full_name'] ?? 'User',
+                              userData['full_name'] ?? 'Pengguna',
                               style: const TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
@@ -80,52 +96,61 @@ class ProfileScreen extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: Colors.red[100],
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                _formatUserType(userData['user_type'] ?? ''),
-                                style: TextStyle(
-                                  color: Colors.red[800],
-                                  fontWeight: FontWeight.w500,
-                                  fontFamily: 'DM Sans',
-                                ),
-                              ),
-                            ),
+                          
                             const SizedBox(height: 24),
-                            _buildInfoSection(context, 'Personal Information', [
-                              _buildInfoItem(context, 'Email', userData['email'] ?? 'Not available'),
-                              _buildInfoItem(context, 'Phone', userData['phone_number'] ?? 'Not available'),
-                              _buildInfoItem(context, 'Age', userData['age']?.toString() ?? 'Not available'),
-                              _buildInfoItem(context, 'Address', userData['address'] ?? 'Not available'),
+                            _buildInfoSection(context, 'Informasi Pribadi', [
+                              _buildInfoItem(context, 'Email', userData['email'] ?? 'Tidak tersedia'),
+                              _buildInfoItem(context, 'Telepon', userData['phone_number'] ?? 'Tidak tersedia'),
+                              _buildInfoItem(context, 'Usia', userData['age']?.toString() ?? 'Tidak tersedia'),
+                              _buildInfoItem(context, 'Alamat', userData['address'] ?? 'Tidak tersedia'),
                             ]),
                             const SizedBox(height: 16),
-                            _buildInfoSection(context, 'Donation Information', [
-                              _buildInfoItem(context, 'Blood Type', userData['blood_type'] ?? 'Not available'),
-                              _buildInfoItem(context, 'Last Donation', formattedDate),
-                              _buildInfoItem(context, 'Total Points', userData['total_points']?.toString() ?? '0'),
-                              _buildInfoItem(context, 'Health Notes', userData['health_notes'] ?? 'None'),
+                            _buildInfoSection(context, 'Informasi Donor', [
+                              _buildInfoItem(context, 'Golongan Darah', userData['blood_type'] ?? 'Tidak tersedia'),
+                              _buildInfoItem(context, 'Donor Terakhir', formattedDate),
+                              _buildInfoItem(context, 'Catatan Kesehatan', userData['health_notes'] ?? 'Tidak ada'),
                             ]),
                             const SizedBox(height: 24),
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 20),
-                              child: OutlinedButton(
-                                onPressed: () {},
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: AppTheme.brand_01,
-                                  side: BorderSide(color: AppTheme.brand_01),
-                                  minimumSize: const Size.fromHeight(50),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.grey.withOpacity(0.3),
+                                      spreadRadius: 1,
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 3),
+                                    ),
+                                  ],
                                 ),
-                                child: const Text(
-                                  'Edit Profile',
-                                  style: TextStyle(
-                                    fontFamily: 'DM Sans',
+                                child: Material(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(20),
+                                  elevation: 4,
+                                  shadowColor: Colors.grey.withOpacity(0.4),
+                                  child: InkWell(
+                                    onTap: () {},
+                                    borderRadius: BorderRadius.circular(20),
+                                    child: Container(
+                                      height: 50,
+                                      width: double.infinity,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(color: AppTheme.brand_01),
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          'Edit Profil',
+                                          style: TextStyle(
+                                            fontFamily: 'DM Sans',
+                                            color: AppTheme.brand_01,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
@@ -133,22 +158,41 @@ class ProfileScreen extends StatelessWidget {
                             const SizedBox(height: 16),
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 20),
-                              child: ElevatedButton(
-                                onPressed: () {
-                                  _showLogoutConfirmation(context);
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppTheme.brand_01,
-                                  foregroundColor: Colors.white,
-                                  minimumSize: const Size.fromHeight(50),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppTheme.brand_01.withOpacity(0.3),
+                                      spreadRadius: 1,
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 3),
+                                    ),
+                                  ],
                                 ),
-                                child: const Text(
-                                  'Logout',
-                                  style: TextStyle(
-                                    fontFamily: 'DM Sans',
+                                child: Material(
+                                  color: AppTheme.brand_01,
+                                  borderRadius: BorderRadius.circular(20),
+                                  elevation: 4,
+                                  shadowColor: AppTheme.brand_01.withOpacity(0.5),
+                                  child: InkWell(
+                                    onTap: () {
+                                      _showLogoutConfirmation(context);
+                                    },
+                                    borderRadius: BorderRadius.circular(20),
+                                    child: Container(
+                                      height: 50,
+                                      width: double.infinity,
+                                      alignment: Alignment.center,
+                                      child: const Text(
+                                        'Keluar',
+                                        style: TextStyle(
+                                          fontFamily: 'DM Sans',
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
@@ -174,14 +218,14 @@ class ProfileScreen extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        color: const Color.fromARGB(228, 255, 255, 255),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withOpacity(0.25),
             spreadRadius: 1,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -210,7 +254,7 @@ class ProfileScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 100,
+            width: 120,
             child: Text(
               label,
               style: TextStyle(
@@ -236,21 +280,38 @@ class ProfileScreen extends StatelessWidget {
   }
 
   String _formatUserType(String userType) {
-    if (userType.isEmpty) return 'User';
+    if (userType.isEmpty) return 'Pengguna';
+
+    // Pemetaan tipe pengguna dari bahasa Inggris ke Indonesia
+    final Map<String, String> userTypeMapping = {
+      'donor': 'Pendonor',
+      'recipient': 'Penerima',
+      'admin': 'Admin',
+      'blood_bank': 'Bank Darah',
+      'hospital': 'Rumah Sakit',
+      'user': 'Pengguna',
+    };
 
     final words = userType.split('_');
-    final capitalizedWords = words.map(
-      (word) => word.isEmpty ? '' : '${word[0].toUpperCase()}${word.substring(1)}',
-    );
-    return capitalizedWords.join(' ');
+    if (userTypeMapping.containsKey(userType)) {
+      return userTypeMapping[userType]!;
+    } else {
+      final capitalizedWords = words.map(
+        (word) => word.isEmpty ? '' : '${word[0].toUpperCase()}${word.substring(1)}',
+      );
+      return capitalizedWords.join(' ');
+    }
   }
 
   void _showLogoutConfirmation(BuildContext context) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
         title: const Text(
-          'Konfirmasi Logout',
+          'Konfirmasi Keluar',
           style: TextStyle(fontFamily: 'DM Sans'),
         ),
         content: const Text(
@@ -258,18 +319,38 @@ class ProfileScreen extends StatelessWidget {
           style: TextStyle(fontFamily: 'DM Sans'),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text(
-              'Batal',
-              style: TextStyle(fontFamily: 'DM Sans'),
+          Material(
+            borderRadius: BorderRadius.circular(20),
+            elevation: 2,
+            shadowColor: Colors.grey.withOpacity(0.3),
+            child: TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              style: TextButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              child: const Text(
+                'Batal',
+                style: TextStyle(fontFamily: 'DM Sans'),
+              ),
             ),
           ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(
-              'Logout',
-              style: TextStyle(color: AppTheme.brand_01, fontFamily: 'DM Sans'),
+          Material(
+            borderRadius: BorderRadius.circular(20),
+            elevation: 2,
+            shadowColor: AppTheme.brand_01.withOpacity(0.3),
+            child: TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: TextButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              child: Text(
+                'Keluar',
+                style: TextStyle(color: AppTheme.brand_01, fontFamily: 'DM Sans'),
+              ),
             ),
           ),
         ],
