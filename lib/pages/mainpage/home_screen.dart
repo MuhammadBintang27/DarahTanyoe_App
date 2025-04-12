@@ -15,12 +15,15 @@ import 'package:darahtanyoe_app/widget/header_widget.dart';
 import 'package:darahtanyoe_app/components/background_widget.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 import '../../components/article_slider.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  HomeScreen({super.key});
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -34,7 +37,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: BackgroundWidget(
-        child: SafeArea( // SafeArea di dalam BackgroundWidget
+        child: SafeArea(
+          // SafeArea di dalam BackgroundWidget
           child: Column(
             children: [
               HeaderWidget(),
@@ -63,14 +67,15 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-
   Widget _buildUserProfile() {
     return FutureBuilder<Map<String, dynamic>?>(
       future: AuthService().getCurrentUser(),
       builder: (context, snapshot) {
         String userName = 'User';
 
-        if (snapshot.connectionState == ConnectionState.done && snapshot.hasData && snapshot.data != null) {
+        if (snapshot.connectionState == ConnectionState.done &&
+            snapshot.hasData &&
+            snapshot.data != null) {
           userName = snapshot.data!['full_name'] ?? 'User';
         }
 
@@ -79,16 +84,15 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Row(
             children: [
               Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: AppTheme.brand_03,
-                    width: 2,
-                  ),
-                ),
+                
                 child: CircleAvatar(
                   radius: 30,
-                  backgroundImage: AssetImage('assets/images/profil.png'),
+                  child: Icon(
+                    Icons.person,
+                    size: 30,
+                    color: Colors.white,
+                  ),
+                  backgroundColor: const Color.fromARGB(255, 204, 200, 200), // bisa kamu sesuaikan warnanya
                 ),
               ),
               SizedBox(width: 12),
@@ -133,93 +137,117 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  
 
+// Fungsi untuk ambil total poin dari API
+Future<int?> fetchTotalPoints() async {
+  final userData = await AuthService().getCurrentUser();
+  final userId = userData?['id'];
 
-  Widget _buildActionButtons() {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
-      child: Row(
-        children: [
-          Padding(
-            padding: EdgeInsets.only(
-                right: 16, top: 8), // Atur jarak hanya di Wallet
-            child: Column(
-              children: [
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => DataPemintaanDarah()),
-                    );
-                  },
-                  child: Icon(
-                    Icons.account_balance_wallet,
-                    color: AppTheme.brand_02,
-                    size: 30,
-                  ),
-                ),
-                SizedBox(height: 4),
-                // Gunakan FutureBuilder untuk mendapatkan total_points
-                FutureBuilder<Map<String, dynamic>?>(
-                  future:
-                  AuthService().getCurrentUser(), // Mengambil data pengguna
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return CircularProgressIndicator(); // Loading
-                    } else if (snapshot.hasError) {
-                      return Text("Error fetching points");
-                    } else if (!snapshot.hasData || snapshot.data == null) {
-                      return Text("Data pengguna tidak ditemukan");
-                    }
+  if (userId == null) return null;
+  String baseUrl = dotenv.env['BASE_URL'] ?? 'https://default-url.com';
+  final url = Uri.parse('$baseUrl/users/poin/$userId');
+  print(url);
 
-                    var userData = snapshot.data;
-                    int totalPoints = userData?["total_points"] ?? 2;
-
-                    return Text(
-                      '$totalPoints Poin', // Menampilkan jumlah poin
-                      style: TextStyle(
-                        color: AppTheme.brand_02,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-          ActionButton(
-            text: 'Minta Darah',
-            color: AppTheme.brand_01,
-            textColor: Colors.white,
-            icon: Icons.water_drop,
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => DataPemintaanDarah()),
-              );
-            },
-          ),
-          SizedBox(width: 12),
-          ActionButton(
-            text: 'Donor Darah',
-            color: AppTheme.brand_03,
-            textColor: Colors.white,
-            icon: Icons.local_hospital,
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => PersonalInfo()),
-              );
-            },
-            isOutlined: false,
-          ),
-        ],
-      ),
-    );
+  try {
+    final response = await http.get(url);
+    print(response.body);  
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['total_points'];
+    } else {
+      print("Gagal fetch data, status: ${response.statusCode}");
+      return null;
+    }
+  } catch (e) {
+    print("Error saat fetch poin: $e");
+    return null;
   }
+}
 
-  Widget _buildPendingDonations() {
+ Widget _buildActionButtons() {
+  return Padding(
+    padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
+    child: Row(
+      children: [
+        Padding(
+          padding: EdgeInsets.only(right: 16, top: 8),
+          child: Column(
+            children: [
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => DataPemintaanDarah()),
+                  );
+                },
+                child: Icon(
+                  Icons.account_balance_wallet,
+                  color: AppTheme.brand_02,
+                  size: 30,
+                ),
+              ),
+              SizedBox(height: 4),
+              FutureBuilder<int?>(
+                future: fetchTotalPoints(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return SizedBox(
+                      height: 16,
+                      width: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    );
+                  } else if (snapshot.hasError) {
+                    return Text("Error");
+                  } else if (!snapshot.hasData || snapshot.data == null) {
+                    return Text("0 Poin");
+                  }
+
+                  return Text(
+                    '${snapshot.data} Poin',
+                    style: TextStyle(
+                      color: AppTheme.brand_02,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+        ActionButton(
+          text: 'Minta Darah',
+          color: AppTheme.brand_01,
+          textColor: Colors.white,
+          icon: Icons.water_drop,
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => DataPemintaanDarah()),
+            );
+          },
+        ),
+        SizedBox(width: 12),
+        ActionButton(
+          text: 'Donor Darah',
+          color: AppTheme.brand_03,
+          textColor: Colors.white,
+          icon: Icons.local_hospital,
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => PersonalInfo()),
+            );
+          },
+          isOutlined: false,
+        ),
+      ],
+    ),
+  );
+}
+Widget _buildPendingDonations() {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -304,7 +332,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         totalBags: data.bloodBagsNeeded,
                         isRequest: true,
                         uniqueCode: data.uniqueCode,
-                        description: (data.description.isNotEmpty) ? data.description : '-',
+                        description: (data.description.isNotEmpty)
+                            ? data.description
+                            : '-',
                       ),
                     );
                   },
@@ -317,6 +347,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+
+  
 // Fungsi helper untuk mendapatkan userId terlebih dahulu kemudian memanggil service
   Future<List<PermintaanDarahModel>> _getNearbyBloodRequests() async {
     try {
@@ -382,7 +414,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Navigator.pushAndRemoveUntil(
                     context,
                     MaterialPageRoute(builder: (context) => MainScreen()),
-                        (route) => false,
+                    (route) => false,
                   );
                 });
               },
@@ -419,29 +451,29 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: EdgeInsets.all(16),
           child: Center(
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppTheme.brand_01,
-                    ),
-                  ),
-                  SizedBox(height: 16),
-                  Text('Memuat data...',
-                    style: TextStyle(
-                      fontFamily: 'DM Sans',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              )
-          ),
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppTheme.brand_01,
+                ),
+              ),
+              SizedBox(height: 16),
+              Text(
+                'Memuat data...',
+                style: TextStyle(
+                  fontFamily: 'DM Sans',
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+          )),
         ),
       ],
     );
@@ -489,7 +521,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Positioned.fill(
             child: ImageFiltered(
               imageFilter:
-              ImageFilter.blur(sigmaX: 3, sigmaY: 3), // Blur latar belakang
+                  ImageFilter.blur(sigmaX: 3, sigmaY: 3), // Blur latar belakang
               child: Image.asset(
                 backgroundImage,
                 fit: BoxFit.cover,
@@ -522,7 +554,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   title,
                   maxLines: 2, // Batasi 1 baris
                   overflow:
-                  TextOverflow.ellipsis, // Tambahkan titik-titik (...)
+                      TextOverflow.ellipsis, // Tambahkan titik-titik (...)
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 22,
@@ -536,7 +568,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   description,
                   maxLines: 5, // Batasi 3 baris
                   overflow:
-                  TextOverflow.ellipsis, // Tambahkan titik-titik (...)
+                      TextOverflow.ellipsis, // Tambahkan titik-titik (...)
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.white70,
@@ -576,24 +608,18 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildPromotionCards() {
     List<Map<String, dynamic>> promotions = [
       {
-        "title": "SEMBAKO GRATIS",
-        "description":
-        "Palang Merah Indonesia menyediakan Sembako gratis pendonor yang telah mengumpulkan cukup poin.",
-        "points": 50,
-        "backgroundImage": "assets/images/sembako.png"
-      },
-      {
-        "title": "Ayo Donor Sekarang",
-        "description": "Bantu sesama dan raih hadiah menarik!",
-        "points": 30,
-        "backgroundImage": "assets/images/sembako.png"
-      },
-      {
-        "title": "Hadiah Menarik!",
-        "description": "Kumpulkan poin dan tukarkan dengan hadiah eksklusif.",
-        "points": 75,
-        "backgroundImage": "assets/images/sembako.png"
-      }
+    "title": "SEMBAKO GRATIS",
+    "description": "Palang Merah Indonesia memberikan paket sembako gratis bagi pendonor yang telah mengumpulkan poin tertentu.",
+    "points": 50,
+    "backgroundImage": "assets/images/sembako.png"
+  },
+  {
+    "title": "CEK KESEHATANMU",
+    "description": "Dapatkan layanan cek kesehatan dan vitamin gratis untuk menjaga tubuh tetap prima!",
+    "points": 30,
+    "backgroundImage": "assets/images/cek_kesehatan.jpg"
+  },
+  
     ];
 
     return SizedBox(

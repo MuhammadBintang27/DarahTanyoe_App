@@ -108,7 +108,6 @@ class ProfileScreen extends StatelessWidget {
                             _buildInfoSection(context, 'Informasi Donor', [
                               _buildInfoItem(context, 'Golongan Darah', userData['blood_type'] ?? 'Tidak tersedia'),
                               _buildInfoItem(context, 'Donor Terakhir', formattedDate),
-                              _buildInfoItem(context, 'Total Poin', userData['total_points']?.toString() ?? '0'),
                               _buildInfoItem(context, 'Catatan Kesehatan', userData['health_notes'] ?? 'Tidak ada'),
                             ]),
                             const SizedBox(height: 24),
