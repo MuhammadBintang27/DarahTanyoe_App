@@ -1,12 +1,14 @@
 import 'package:darahtanyoe_app/components/copyright.dart';
 import 'package:darahtanyoe_app/components/my_button.dart';
 import 'package:darahtanyoe_app/pages/mainpage/main_screen.dart';
+import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 import '../../components/my_textfield.dart';
+import '../../service/animation_service.dart';
 import '../../service/auth_service.dart';
 
 class BloodInfo extends StatefulWidget {
-  const BloodInfo({Key? key}) : super(key: key);
+  const BloodInfo({super.key});
 
   @override
   _BloodInfoState createState() => _BloodInfoState();
@@ -20,33 +22,47 @@ class _BloodInfoState extends State<BloodInfo> {
   String? _selectedMedical;
 
   void _submitBloodInfo() async {
-    if (_selectedBloodType == null || _selectedLastDonation == null) {
+    if (_selectedBloodType == null || _selectedLastDonation == null || _selectedMedical == null) {
+      if (!mounted) return; // Cegah akses ke context jika sudah tidak valid
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Harap lengkapi semua data")),
       );
       return;
     }
 
-    bool success = await _authService.saveBloodInfo(
-      _selectedBloodType!,
-      _selectedLastDonation!,
-      _selectedMedical!,
-    );
+    try {
+      bool success = await _authService.saveBloodInfo(
+          _selectedBloodType!,
+          _selectedLastDonation!,
+          _selectedMedical!,
+          context
+      );
 
-    if (success) {
+      if (success) {
+        // **Tampilkan animasi sukses terlebih dahulu, baru navigasi**
+        await AnimationService.showSuccess(context,
+            message: 'Informasi darah berhasil disimpan!', onComplete: () {
+              if (mounted) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => MainScreen()),
+                );
+              }
+            });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Gagal menyimpan informasi darah")),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Informasi darah berhasil disimpan!")),
-      );
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => MainScreen()),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Gagal menyimpan informasi darah")),
+        SnackBar(content: Text("Terjadi kesalahan: ${e.toString()}")),
       );
     }
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -54,6 +70,7 @@ class _BloodInfoState extends State<BloodInfo> {
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
           Container(
@@ -88,19 +105,27 @@ class _BloodInfoState extends State<BloodInfo> {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Color(0xFFCC5555),
+                      AppTheme.brand_01,
                       Color(0xFFCC8888),
                       Color(0xFFF8F0F0),
                     ],
-                    stops: [0.3, 0.7, 1.0],
+                    stops: [0.2, 0.7, 1.0],
                   ),
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(50),
                     topRight: Radius.circular(50),
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26, // Warna shadow
+                      blurRadius: 10, // Efek blur
+                      spreadRadius: 3, // Seberapa jauh shadow menyebar
+                      offset: Offset(0, -8), // Menggeser shadow ke atas
+                    ),
+                  ],
                 ),
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 30, vertical: 40),
+                const EdgeInsets.symmetric(horizontal: 30, vertical: 40),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -134,7 +159,16 @@ class _BloodInfoState extends State<BloodInfo> {
                     MyTextField(
                       hintText: 'Pilih golongan darah',
                       inputType: InputType.dropdown,
-                      dropdownItems: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
+                      dropdownItems: [
+                        'A+',
+                        'A-',
+                        'B+',
+                        'B-',
+                        'AB+',
+                        'AB-',
+                        'O+',
+                        'O-'
+                      ],
                       onChanged: (value) => _selectedBloodType = value,
                     ),
                     const SizedBox(height: 20),
@@ -161,8 +195,40 @@ class _BloodInfoState extends State<BloodInfo> {
                     ),
                     const SizedBox(height: 26),
                     MyButton(
-                      text: "Lanjut",
-                      onPressed: _submitBloodInfo,
+                      text: "Daftar",
+                      onPressed: () {
+                        // Validasi form untuk memastikan data tidak ada yang kosong
+                        if (_selectedBloodType == null ||
+                            _selectedBloodType!.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content:
+                                Text("Golongan darah tidak boleh kosong")),
+                          );
+                          return;
+                        }
+                        if (_selectedLastDonation == null ||
+                            _selectedLastDonation!.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content:
+                                Text("Riwayat donor tidak boleh kosong")),
+                          );
+                          return;
+                        }
+                        if (_selectedMedical == null ||
+                            _selectedMedical!.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text(
+                                    "Riwayat penyakit tidak boleh kosong")),
+                          );
+                          return;
+                        }
+
+                        _submitBloodInfo();
+
+                      },
                       color: const Color(0xFF476EB6),
                     ),
                     const SizedBox(height: 20),

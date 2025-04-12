@@ -1,19 +1,31 @@
 import 'dart:convert';
-
+import 'package:darahtanyoe_app/components/allSvg.dart';
+import 'package:darahtanyoe_app/components/background_widget.dart';
+import 'package:darahtanyoe_app/components/bloodCard.dart';
+import 'package:darahtanyoe_app/components/loadingIndicator.dart';
+import 'package:darahtanyoe_app/helpers/formatDateTime.dart';
+import 'package:darahtanyoe_app/models/pendonoran_darah_model.dart';
+import 'package:darahtanyoe_app/pages/detail_pendonoran/detail_pendonoran.dart';
+import 'package:darahtanyoe_app/pages/mainpage/main_screen.dart';
+import 'package:darahtanyoe_app/service/auth_service.dart';
+import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:darahtanyoe_app/widget/header_widget.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/permintaan_darah_model.dart';
 import '../../service/permintaan_darah_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_layout_grid/flutter_layout_grid.dart';
 import 'package:http/http.dart' as http;
-
-// Tambahkan import untuk BloodDonationDetailScreen
-import '../detail_permintaan/detail_permintaan_darah.dart'; // Sesuaikan dengan lokasi file yang benar
+import '../detail_permintaan/detail_permintaan_darah_anda.dart';
 
 class TransactionBlood extends StatefulWidget {
+  final String? defaultTab;
   final String? uniqueCode;
-  
-  const TransactionBlood({Key? key, this.uniqueCode}) : super(key: key);
+
+  const TransactionBlood({super.key, this.uniqueCode, this.defaultTab});
 
   @override
   State<TransactionBlood> createState() => _TransactionBloodState();
@@ -21,28 +33,72 @@ class TransactionBlood extends StatefulWidget {
 
 class _TransactionBloodState extends State<TransactionBlood> {
   // Track which tab is selected
-  
-  bool isRequestTab = true;
-  bool isLoading = true;
-  
+  late bool isRequestTab;
+  bool isLoading = false;
+
   // Lists for storing actual data from the service
   List<PermintaanDarahModel> permintaanList = [];
+  List<PendonoranDarahModel> pendonoranList = [];
 
   @override
   void initState() {
     super.initState();
-    _loadPermintaan();
+    _loadDefaultTab();
   }
-  static Future<List<PermintaanDarahModel>> getAllPermintaan(String userId) async {
-    final url = Uri.parse('https://3a3c-103-47-133-149.ngrok-free.app/bloodReq/$userId');
+
+  Future<void> _loadDefaultTab() async {
+    final prefs = await SharedPreferences.getInstance();
+    final rawTab = prefs.getString('transaksiTab') ?? widget.defaultTab;
+    final savedTab = (rawTab == null || rawTab.trim().isEmpty) ? "minta" : rawTab;
+
+
+    setState(() {
+      isRequestTab = savedTab == "minta";
+    });
+
+    print("ISREQUESTTAB: $isRequestTab" );
+
+    if (isRequestTab) {
+      _loadPermintaan();
+    } else {
+      _loadPendonoran();
+    }
+  }
+
+
+  static Future<List<PermintaanDarahModel>> fetchPermintaanData(String userId) async {
+    final String baseUrl = dotenv.env['BASE_URL'] ?? 'https://default-url.com';
+
+    final url = Uri.parse('$baseUrl/bloodReq/$userId');
 
     try {
       final response = await http.get(url);
-      print(response.body);
       if (response.statusCode == 200) {
-        List<dynamic> jsonData = json.decode(response.body);
-        print(jsonData);
-        return jsonData.map((item) => PermintaanDarahModel.fromJson(item)).toList();
+        Map<String, dynamic> jsonResponse = json.decode(response.body);
+        List<dynamic> jsonData = jsonResponse['data'];
+        return jsonData
+            .map((item) => PermintaanDarahModel.fromJson(item))
+            .toList();
+      } else {
+        throw Exception('Gagal mengambil data: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Terjadi kesalahan: $e');
+    }
+  }
+
+  Future<List<PendonoranDarahModel>> fetchDonorData(String userId) async {
+    final String baseUrl = dotenv.env['BASE_URL'] ?? 'https://default-url.com';
+    final url = Uri.parse('$baseUrl/donor/$userId');
+
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        Map<String, dynamic> jsonResponse = json.decode(response.body);
+        List<dynamic> jsonData = jsonResponse['data'];
+        return jsonData
+            .map((item) => PendonoranDarahModel.fromJson(item))
+            .toList();
       } else {
         throw Exception('Gagal mengambil data: ${response.statusCode}');
       }
@@ -52,44 +108,90 @@ class _TransactionBloodState extends State<TransactionBlood> {
   }
 
   Future<void> _loadPermintaan() async {
-  setState(() {
-    isLoading = true;
-  });
+    setState(() => isLoading = true);
 
-  try {
-    String userId = "87a286ba-1dcd-4f63-ae5a-5433e190b3c8"; // Gantilah dengan userId yang sesuai
-    List<PermintaanDarahModel> data = await getAllPermintaan(userId);
+    try {
+      final user = await AuthService().getCurrentUser();
 
-    if (mounted) {
+      if (user?['id'] == null) {
+        _showError("Anda belum login atau pengguna tidak ditemukan.");
+        setState(() => isLoading = false);
+        return;
+      }
+
+      final userId = user!['id'] as String;
+      final data = await fetchPermintaanData(userId);
+
+      if (!mounted) return;
+
       setState(() {
         permintaanList = data;
         isLoading = false;
       });
 
-      // Jika ada kode unik yang diberikan, scroll ke permintaan tersebut
+      // Scroll ke permintaan berdasarkan kode unik jika tersedia
       if (widget.uniqueCode != null) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _highlightRequest(widget.uniqueCode!);
         });
       }
-    }
-  } catch (e) {
-    if (mounted) {
-      setState(() {
-        isLoading = false;
-      });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Gagal memuat data: $e"),
-          backgroundColor: Colors.red,
-        ),
-      );
+    } catch (e) {
+      if (mounted) {
+        setState(() => isLoading = false);
+        _showError("Gagal memuat data permintaan: $e");
+      }
     }
   }
-}
 
-  
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
+
+  Future<void> _loadPendonoran() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final user = await AuthService().getCurrentUser();
+      if (user?['id'] == null) {
+        _showError("Anda belum login atau pengguna tidak ditemukan.");
+        setState(() => isLoading = false);
+        return;
+      }
+
+      String userId = user?['id'];
+      List<PendonoranDarahModel> data = await fetchDonorData(userId);
+
+      if (mounted) {
+        setState(() {
+          pendonoranList = data;
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Gagal memuat data pendonoran: $e"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   void _highlightRequest(String uniqueCode) {
     // Implementasi untuk menyoroti permintaan dengan uniqueCode tertentu
     // Misalnya dengan menampilkan dialog atau scroll ke item tersebut
@@ -103,31 +205,22 @@ class _TransactionBloodState extends State<TransactionBlood> {
 
   @override
   Widget build(BuildContext context) {
-    
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(kToolbarHeight),
-        child: HeaderWidget(),
-      ),
-      body: isLoading 
-        ? _buildLoadingIndicator() 
-        : _buildTransactionBody(),
-    );
-  }
-  
-  Widget _buildLoadingIndicator() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: const [
-          CircularProgressIndicator(color: Color(0xFFAB4545)),
-          SizedBox(height: 16),
-          Text("Memuat data transaksi...")
-        ],
+      body: SafeArea(
+        child: BackgroundWidget(
+          child: Column(
+            children: [
+              HeaderWidget(),
+              Expanded(
+                child: _buildTransactionBody(),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
-  
+
   Widget _buildTransactionBody() {
     return SingleChildScrollView(
       child: Padding(
@@ -138,17 +231,30 @@ class _TransactionBloodState extends State<TransactionBlood> {
             const Text(
               'Transaksi Anda',
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.neutral_01,
               ),
             ),
-            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.only(top: 20.0, bottom: 16.0),
+              child: Divider(color: Colors.black26, thickness: 0.8),
+            ),
 
             // Toggle buttons for switching between request and donation
             Container(
+              margin: const EdgeInsets.only(bottom: 14.0),
+              padding: const EdgeInsets.symmetric(horizontal: 2.6, vertical: 2),
               decoration: BoxDecoration(
-                color: Colors.grey.shade200,
-                borderRadius: BorderRadius.circular(8),
+                color: Colors.white70,
+                borderRadius: BorderRadius.circular(9),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black87.withOpacity(0.25),
+                    blurRadius: 3,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Row(
                 children: [
@@ -157,22 +263,31 @@ class _TransactionBloodState extends State<TransactionBlood> {
                       onPressed: () {
                         setState(() {
                           isRequestTab = true;
+                          _loadPermintaan();
                         });
                       },
                       style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 5),
                         backgroundColor: isRequestTab
-                            ? Colors.red.shade700
+                            ? AppTheme.brand_01
                             : Colors.transparent,
-                        foregroundColor:
-                            isRequestTab ? Colors.white : Colors.black,
+                        foregroundColor: isRequestTab
+                            ? Colors.white
+                            : Colors.black.withOpacity(0.5),
                         elevation: 0,
                         shape: const RoundedRectangleBorder(
                           borderRadius: BorderRadius.horizontal(
-                            left: Radius.circular(8),
+                            left: Radius.circular(9),
+                            right: Radius.circular(9),
                           ),
                         ),
                       ),
-                      child: const Text('Permintaan Darah'),
+                      child: const Text(
+                        'Permintaan Darah',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
                   Expanded(
@@ -180,22 +295,31 @@ class _TransactionBloodState extends State<TransactionBlood> {
                       onPressed: () {
                         setState(() {
                           isRequestTab = false;
+                          _loadPendonoran();
                         });
                       },
                       style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 5),
                         backgroundColor: !isRequestTab
-                            ? Colors.red.shade700
+                            ? AppTheme.brand_01
                             : Colors.transparent,
-                        foregroundColor:
-                            !isRequestTab ? Colors.white : Colors.black,
+                        foregroundColor: !isRequestTab
+                            ? Colors.white
+                            : Colors.black.withOpacity(0.5),
                         elevation: 0,
                         shape: const RoundedRectangleBorder(
                           borderRadius: BorderRadius.horizontal(
-                            right: Radius.circular(8),
+                            left: Radius.circular(9),
+                            right: Radius.circular(9),
                           ),
                         ),
                       ),
-                      child: const Text('Pendonoran Darah'),
+                      child: const Text(
+                        'Pendonoran Darah',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -212,6 +336,9 @@ class _TransactionBloodState extends State<TransactionBlood> {
   }
 
   Widget _buildRequestContent() {
+    if (isLoading) {
+      return const LoadingIndicator();
+    }
     if (permintaanList.isEmpty) {
       return Center(
         child: Padding(
@@ -238,404 +365,589 @@ class _TransactionBloodState extends State<TransactionBlood> {
       );
     }
 
-    return Column(
-      children: permintaanList.map((permintaan) {
-        // Konversi string tanggal ke format yang lebih mudah dibaca
-        String formattedDate = _formatDate(permintaan.partner_id);
-        
-        // Hitung kantong darah yang telah terpenuhi
-        int bagCount = permintaan.bloodBagsFulfilled;
-        int totalBags = int.tryParse(permintaan.bloodBagsNeeded) ?? 5;
-        
-        
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 16),
-          child: _buildBloodCard(
-            status: _getStatusText(permintaan.status),
-            bloodType: "${permintaan.bloodType}",
-            date: formattedDate,
-            hospital: permintaan.partner_id,
-            distance: _calculateDistance(permintaan.partner_id),
-            bagCount: bagCount,
-            totalBags: totalBags,
-            isCompleted: permintaan.status == PermintaanDarahModel.STATUS_COMPLETED,
-            isCancelled: permintaan.status == PermintaanDarahModel.STATUS_CANCELLED,
-            isRequest: true,
-            uniqueCode: permintaan.uniqueCode,
-            permintaan: permintaan, // Meneruskan permintaan ke card
-          ),
-        );
-      }).toList(),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        children: [
+          ...permintaanList.map((permintaan) {
+            String formattedDate = formatDateTime(permintaan.expiry_date);
+            int bagCount = permintaan.bloodBagsFulfilled;
+            int totalBags = permintaan.bloodBagsNeeded;
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 18),
+              child: BloodCard(
+                onTap: () {
+                  print("Klik detail permintaan");
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => DetailPermintaanDarah(permintaan: permintaan),
+                    ),
+                  );
+                },
+                status: permintaan.status,
+                bloodType: permintaan.bloodType,
+                date: formattedDate,
+                hospital: permintaan.partner_name,
+                createdAt: permintaan.createdAt!,
+                bagCount: bagCount,
+                totalBags: totalBags,
+                isRequest: true,
+                uniqueCode: permintaan.uniqueCode,
+                description: (permintaan.description.isNotEmpty)
+                    ? permintaan.description
+                    : '-',
+                permintaan: permintaan,
+                pendonoran: null,
+              ),
+            );
+          }).toList(),
+          const SizedBox(height: 60),
+        ],
+      ),
     );
   }
 
   Widget _buildDonationContent() {
-    // Untuk saat ini, tampilkan pesan bahwa fitur pendonoran belum tersedia
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.volunteer_activism, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text(
-              "Fitur Pendonoran Darah",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 8),
-            Text(
-              "Fitur ini akan segera hadir. Anda akan dapat melihat riwayat donasi darah Anda di sini.",
-              style: TextStyle(fontSize: 14, color: Colors.grey),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBloodCard({
-    required String status,
-    required String bloodType,
-    required String date,
-    required String hospital,
-    required String distance,
-    required int bagCount,
-    required int totalBags,
-    required bool isCompleted,
-    required bool isCancelled,
-    required bool isRequest,
-    required String uniqueCode,
-    required PermintaanDarahModel permintaan, // Tambahkan parameter permintaan
-    bool isUrgent = false,
-  }) {
-    // Warna berdasarkan status
-    Color statusColor;
-    Color titleColor;
-    Color borderColor;
-    Color backgroundColor;
-
-    if (isCancelled) {
-      statusColor = Color(0xFFAB4545);
-      titleColor = Color(0xFFAB4545);
-      borderColor = Color(0xFFAB4545);
-      backgroundColor = Color.fromRGBO(171, 69, 69, 0.08);
-    } else if (isCompleted) {
-      statusColor = Color(0xFF359B5E);
-      titleColor = Color(0xFF359B5E);
-      borderColor = Color(0xFF359B5E);
-      backgroundColor = Color.fromRGBO(53, 155, 94, 0.10);
-    } else {
-      statusColor = Color(0xFFCB9B0A);
-      titleColor = Color(0xFFCB9B0A);
-      borderColor = Color(0xFFE9B824);
-      backgroundColor = Color.fromRGBO(233, 184, 36, 0.06);
+    if (isLoading) {
+      return const LoadingIndicator();
     }
-
-    return GestureDetector(
-      onTap: () {
-        _navigateToDetailScreen(permintaan);
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: borderColor, width: 1),
-        ),
+    if (pendonoranList.isEmpty) {
+      return Center(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(32.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    isRequest ? 'Permintaan Darah Anda' : 'Pendonoran Darah Anda',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: titleColor,
-                    ),
-                  ),
-                  Text(
-                    date,
-                    style: TextStyle(fontSize: 12, color: titleColor),
-                  ),
-                ],
-              ),
-              SizedBox(height: 4),
+              Icon(Icons.volunteer_activism, size: 64, color: Colors.grey),
+              SizedBox(height: 16),
               Text(
-                'Kode: $uniqueCode',
-                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                "Belum ada pendonoran darah",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
               ),
-              SizedBox(height: 12),
-              Row(
-                children: [
-                  Icon(Icons.local_hospital, color: Colors.grey),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(hospital,
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                        Text(distance,
-                            style: TextStyle(
-                                fontSize: 12, color: Colors.grey.shade600)),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: titleColor, width: 2),
-                    ),
-                    child: Text(
-                      bloodType,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: titleColor,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 12),
-              Row(
-                children: [
-                  Icon(Icons.bloodtype, color: Colors.grey, size: 20),
-                  SizedBox(width: 8),
-                  Text(
-                    'Telah terisi $bagCount dari $totalBags Kantong yang dibutuhkan',
-                    style: TextStyle(fontSize: 12, color: titleColor),
-                  ),
-                ],
-              ),
-              SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        height: 8,
-                        width: 8,
-                        decoration: BoxDecoration(
-                          color: statusColor,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      Text(
-                        status,
-                        style: TextStyle(
-                          color: statusColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (isUrgent && !isCompleted && !isCancelled)
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade700,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        'URGENT',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 10,
-                        ),
-                      ),
-                    ),
-                ],
+              SizedBox(height: 8),
+              Text(
+                "Pendonoran darah yang Anda lakukan akan muncul di sini",
+                style: TextStyle(fontSize: 14, color: Colors.grey),
+                textAlign: TextAlign.center,
               ),
             ],
           ),
         ),
+      );
+    }
+
+    String _formatDateTime(String rawDate) {
+      DateTime dateTime = DateTime.parse(rawDate);
+      return DateFormat('dd MMM yyyy, HH:mm').format(dateTime);
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        children: [
+          ...pendonoranList.map((pendonoran) {
+            String formattedDate = _formatDateTime(pendonoran.bloodRequest.expiryDate);
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 18),
+              child: BloodCard(
+                onTap: () {
+                  print("Klik detail donor");
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => DetailPendonoranDarah(pendonoran: pendonoran),
+                    ),
+                  );
+                },
+                status: pendonoran.status,
+                createdAt: pendonoran.createdAt ?? "",
+                bloodType: pendonoran.bloodRequest.bloodType,
+                date: formattedDate,
+                hospital: pendonoran.bloodRequest.partner.name,
+                bagCount: pendonoran.bloodRequest.bloodBagsFulfilled,
+                totalBags: pendonoran.bloodRequest.quantity,
+                isRequest: false,
+                uniqueCode: pendonoran.uniqueCode,
+                description: (pendonoran.bloodRequest.reason.isNotEmpty)
+                    ? pendonoran.bloodRequest.reason
+                    : '-',
+                permintaan: null,
+                pendonoran: pendonoran,
+              ),
+            );
+          }).toList(),
+          const SizedBox(height: 60),
+        ],
       ),
     );
   }
-  
+
+  // Widget _buildBloodCard({
+  //   required String status,
+  //   required String bloodType,
+  //   required String date,
+  //   required String hospital,
+  //   String distance = "",
+  //   required int bagCount,
+  //   required int totalBags,
+  //   required bool isRequest,
+  //   required String uniqueCode,
+  //   PermintaanDarahModel? permintaan,
+  //   PendonoranDarahModel? pendonoran,
+  //   required String description,
+  // }) {
+  //   // Warna berdasarkan status
+  //   Color statusColor;
+  //   Color titleColor;
+  //   Color borderColor;
+  //   Color backgroundColor;
+  //   String statusText;
+  //
+  //   if (status == "cancelled") {
+  //     statusColor = Color(0xFFAB4545);
+  //     titleColor = Color(0xFFAB4545);
+  //     borderColor = Color(0xFFAB4545);
+  //     backgroundColor = Color(0xFFEAE2E2);
+  //     statusText = isRequest ? "Permintaan Darah Dibatalkan" : "Pendonoran Dibatalkan";
+  //   } else if (status == "completed") {
+  //     statusColor = Color(0xFF359B5E);
+  //     titleColor = Color(0xFF359B5E);
+  //     borderColor = Color(0xFF359B5E);
+  //     backgroundColor = Color(0xFFDBE6DF);
+  //     statusText = isRequest ? "Permintaan Darah Selesai" : "Pendonoran Selesai";
+  //   } else {
+  //     // Menggunakan warna kuning sesuai dengan gambar
+  //     statusColor = Color(0xFFCB9B0A);
+  //     titleColor = Color(0xFFCB9B0A);
+  //     borderColor = AppTheme.brand_02;
+  //     backgroundColor = Color(0xFFF1EEE5);
+  //
+  //     if (isRequest) {
+  //       status == "pending"
+  //           ? statusText = "Menunggu Konfirmasi RS/PMI"
+  //           : status == "confirmed"
+  //           ? statusText = "Menunggu Kantong Darah Terpenuhi"
+  //           : statusText = "Kantong Darah Terpenuhi";
+  //     } else {
+  //       statusText = "Menunggu Proses Donor";
+  //     }
+  //   }
+  //
+  //   return GestureDetector(
+  //     onTap: () {
+  //       if (isRequest && permintaan != null) {
+  //         print("detail permintaan");
+  //         // _navigateToDetailScreen(permintaan);
+  //       } else if (!isRequest && pendonoran != null) {
+  //         print("Klik detail donor");
+  //         Navigator.push(
+  //           context,
+  //           MaterialPageRoute(
+  //             builder: (context) => DetailPendonoranDarah(pendonoran: pendonoran),
+  //           ),
+  //         );
+  //       }
+  //     },
+  //     child: Stack(
+  //       children: [
+  //         Container(
+  //           padding: const EdgeInsets.only(top: 12, bottom: 12, left: 14, right: 14),
+  //           decoration: BoxDecoration(
+  //             color: backgroundColor,
+  //             borderRadius: BorderRadius.circular(20),
+  //             border: Border.all(color: borderColor, width: 1.5),
+  //             boxShadow: [
+  //               BoxShadow(
+  //                 color: Colors.black.withOpacity(0.25),
+  //                 blurRadius: 4,
+  //                 offset: Offset(0, 4),
+  //               ),
+  //             ],
+  //           ),
+  //           child: Padding(
+  //             padding: const EdgeInsets.all(0),
+  //             child: Column(
+  //               crossAxisAlignment: CrossAxisAlignment.start,
+  //               children: [
+  //                 // Header with title and deadline
+  //                 Row(
+  //                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //                   children: [
+  //                     Text(
+  //                       isRequest ? 'Permintaan Darah Anda' : 'Pendonoran Darah Anda',
+  //                       style: TextStyle(
+  //                         fontSize: 18,
+  //                         fontWeight: FontWeight.w600,
+  //                         color: titleColor,
+  //                       ),
+  //                     ),
+  //                     Column(
+  //                       crossAxisAlignment: CrossAxisAlignment.start,
+  //                       children: [
+  //                         Text(
+  //                           isRequest ? 'Permintaan Berakhir' : 'Donor Sebelum',
+  //                           style: TextStyle(
+  //                             fontSize: 10,
+  //                             fontWeight: FontWeight.w600,
+  //                             color: titleColor,
+  //                           ),
+  //                         ),
+  //                         Text(
+  //                           date,
+  //                           style: TextStyle(
+  //                             fontSize: 10,
+  //                             fontWeight: FontWeight.w500,
+  //                             color: titleColor,
+  //                           ),
+  //                         ),
+  //                       ],
+  //                     ),
+  //                   ],
+  //                 ),
+  //
+  //                 Padding(
+  //                   padding: const EdgeInsets.only(bottom: 0, top: 2),
+  //                   child: Divider(
+  //                     color: Color(0xFFA3A3A3).withOpacity(0.4),
+  //                     thickness: 1,
+  //                     height: 24,
+  //                   ),
+  //                 ),
+  //
+  //                 // Using LayoutGrid for the middle section
+  //                 LayoutGrid(
+  //                   columnSizes: [1.fr, 1.fr],
+  //                   rowSizes: [auto, auto, auto],
+  //                   rowGap: 8,
+  //                   children: [
+  //                     // Hospital section (top-left)
+  //                     Row(
+  //                       children: [
+  //                         Container(
+  //                           decoration: BoxDecoration(
+  //                             color: Colors.transparent,
+  //                             borderRadius: BorderRadius.circular(8),
+  //                           ),
+  //                           child: SvgPicture.string(
+  //                             hospitalSvg,
+  //                             width: 24,
+  //                             height: 24,
+  //                           ),
+  //                         ),
+  //                         SizedBox(width: 8),
+  //                         Expanded(
+  //                           child: Text(
+  //                             hospital,
+  //                             style: TextStyle(
+  //                               fontSize: 13,
+  //                               fontWeight: FontWeight.bold,
+  //                               color: AppTheme.neutral_01,
+  //                             ),
+  //                           ),
+  //                         ),
+  //                       ],
+  //                     ).withGridPlacement(
+  //                       columnStart: 0,
+  //                       columnSpan: 1,
+  //                       rowStart: 0,
+  //                       rowSpan: 1,
+  //                     ),
+  //
+  //                     // Blood type section (top-right)
+  //                     Row(
+  //                       mainAxisAlignment: MainAxisAlignment.start,
+  //                       children: [
+  //                         Container(
+  //                           decoration: BoxDecoration(
+  //                             color: Colors.transparent,
+  //                             borderRadius: BorderRadius.circular(8),
+  //                           ),
+  //                           child: SvgPicture.string(
+  //                             bloodTypeSvg,
+  //                             width: 24,
+  //                             height: 24,
+  //                           ),
+  //                         ),
+  //                         SizedBox(width: 8),
+  //                         Text(
+  //                           bloodType,
+  //                           style: TextStyle(
+  //                             fontSize: 22,
+  //                             fontWeight: FontWeight.bold,
+  //                             color: titleColor,
+  //                           ),
+  //                         ),
+  //                       ],
+  //                     ).withGridPlacement(
+  //                       columnStart: 1,
+  //                       columnSpan: 1,
+  //                       rowStart: 0,
+  //                       rowSpan: 1,
+  //                     ),
+  //
+  //                     // Description section
+  //                     Row(
+  //                       crossAxisAlignment: CrossAxisAlignment.center,
+  //                       children: [
+  //                         Container(
+  //                           decoration: BoxDecoration(
+  //                             borderRadius: BorderRadius.circular(8),
+  //                           ),
+  //                           child: SvgPicture.string(
+  //                             descriptionSvg,
+  //                             width: 24,
+  //                             height: 24,
+  //                           ),
+  //                         ),
+  //                         SizedBox(width: 8),
+  //                         Expanded(
+  //                           child: Text(
+  //                             description,
+  //                             style: TextStyle(
+  //                               fontSize: 11,
+  //                               color: AppTheme.neutral_01,
+  //                             ),
+  //                           ),
+  //                         ),
+  //                       ],
+  //                     ).withGridPlacement(
+  //                       columnStart: 0,
+  //                       columnSpan: 1,
+  //                       rowStart: 1,
+  //                       rowSpan: 1,
+  //                     ),
+  //
+  //                     // Progress indicator
+  //                     Row(
+  //                       crossAxisAlignment: CrossAxisAlignment.center,
+  //                       children: [
+  //                         Container(
+  //                           decoration: BoxDecoration(
+  //                             borderRadius: BorderRadius.circular(8),
+  //                           ),
+  //                           child: SvgPicture.string(
+  //                             bloodFilledDescSvg,
+  //                             width: 24,
+  //                             height: 24,
+  //                           ),
+  //                         ),
+  //                         SizedBox(width: 8),
+  //                         RichText(
+  //                           text: TextSpan(
+  //                             style: TextStyle(
+  //                               fontSize: 11,
+  //                               color: AppTheme.neutral_01,
+  //                               fontFamily: 'DM Sans',
+  //                             ),
+  //                             children: [
+  //                               TextSpan(text: 'Telah terisi '),
+  //                               TextSpan(
+  //                                 text: '$bagCount',
+  //                                 style: TextStyle(
+  //                                   fontWeight: FontWeight.bold,
+  //                                   color: titleColor,
+  //                                   fontSize: 11,
+  //                                 ),
+  //                               ),
+  //                               TextSpan(text: ' dari '),
+  //                               TextSpan(
+  //                                 text: '$totalBags',
+  //                                 style: TextStyle(
+  //                                   fontWeight: FontWeight.bold,
+  //                                   color: titleColor,
+  //                                   fontSize: 11,
+  //                                 ),
+  //                               ),
+  //                               TextSpan(text: '\nKantong'),
+  //                               TextSpan(
+  //                                 text: ' yang dibutuhkan',
+  //                                 style: TextStyle(
+  //                                   color: Colors.grey[600],
+  //                                 ),
+  //                               ),
+  //                             ],
+  //                           ),
+  //                         ),
+  //                       ],
+  //                     ).withGridPlacement(
+  //                       columnStart: 1,
+  //                       columnSpan: 1,
+  //                       rowStart: 1,
+  //                       rowSpan: 1,
+  //                     ),
+  //                   ],
+  //                 ),
+  //
+  //                 SizedBox(height: 10),
+  //
+  //                 // Status indicator
+  //                 Row(
+  //                   children: [
+  //                     Container(
+  //                       height: 16,
+  //                       width: 16,
+  //                       decoration: BoxDecoration(
+  //                         color: statusColor,
+  //                         shape: BoxShape.circle,
+  //                       ),
+  //                     ),
+  //                     SizedBox(width: 8),
+  //                     Text(
+  //                       statusText,
+  //                       style: TextStyle(
+  //                         color: statusColor,
+  //                         fontWeight: FontWeight.bold,
+  //                         fontSize: 12,
+  //                       ),
+  //                     ),
+  //                   ],
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //         ),
+  //
+  //         // Positioned arrow
+  //         Positioned(
+  //           right: 12,
+  //           top: 0,
+  //           bottom: 0,
+  //           child: Center(
+  //             child: Icon(
+  //               Icons.arrow_forward_ios,
+  //               color: Colors.grey[400],
+  //               size: 16,
+  //             ),
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
   // Helper function untuk navigasi ke halaman detail
-  void _navigateToDetailScreen(PermintaanDarahModel permintaan) {
-    // Konversi dari PermintaanDarahModel ke PatientDonationData
-    final patientData = PatientDonationData(
-      patientName: permintaan.patientName,
-      patientAge: int.tryParse(permintaan.patientAge) ?? 0,
-      phoneNumber: permintaan.phoneNumber,
-      bloodType: permintaan.bloodType,
-      bloodBagsNeeded: int.tryParse(permintaan.bloodBagsNeeded) ?? 0,
-      description: permintaan.description,
-      partner_id: permintaan.partner_id,
-      expiry_date: permintaan.expiry_date,
-    );
-    
-    // Tentukan status berdasarkan status permintaan
-    DonationStatus donationStatus;
-    DonationStatusType statusType;
-    
-    switch(permintaan.status) {
-      case PermintaanDarahModel.STATUS_PENDING:
-        statusType = DonationStatusType.pending;
-        break;
-      case PermintaanDarahModel.STATUS_WAITING:
-        statusType = DonationStatusType.countdown;
-        break;
-      case PermintaanDarahModel.STATUS_ACCEPTED:
-        statusType = DonationStatusType.confirmed;
-        break;
-      case PermintaanDarahModel.STATUS_COMPLETED:
-        statusType = DonationStatusType.completed;
-        break;
-      case PermintaanDarahModel.STATUS_CANCELLED:
-        statusType = DonationStatusType.rejected;
-        break;
-      default:
-        statusType = DonationStatusType.pending;
-    }
-    
-    donationStatus = DonationStatus(
-      uniqueCode: permintaan.uniqueCode,
-      filledBags: permintaan.bloodBagsFulfilled,
-      status: statusType,
-      remainingTime: statusType == DonationStatusType.countdown ? _parseexpiry_date(permintaan.partner_id) : null,
-      onCancelRequest: () async {
-        // Implementasi pembatalan permintaan
-        final updatedPermintaan = permintaan.copyWith(
-          status: PermintaanDarahModel.STATUS_CANCELLED,
-        );
-        
-        bool success = await PermintaanDarahService.updatePermintaan(updatedPermintaan);
-        
-        if (success) {
-          Navigator.pop(context); // Tutup halaman detail
-          
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Permintaan berhasil dibatalkan"),
-              backgroundColor: Colors.green,
-            ),
-          );
-          
-          // Refresh data permintaan
-          _loadPermintaan();
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Gagal membatalkan permintaan"),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      },
-    );
-    
-    // Navigasi ke halaman detail
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => BloodDonationDetailScreen(
-          patientData: patientData,
-          donationStatus: donationStatus,
-        ),
-      ),
-    );
-  }
-  
-  // Helper function to format date
-  String _formatDate(String dateString) {
-    try {
-      // Parse the input date string
-      DateTime date;
-      if (dateString.contains('-')) {
-        // Format: DD-MM-YYYY HH:MM
-        List<String> parts = dateString.split(' ');
-        List<String> dateParts = parts[0].split('-');
-        List<String> timeParts = parts.length > 1 ? parts[1].split(':') : ['00', '00'];
-        
-        date = DateTime(
-          int.parse(dateParts[2]),
-          int.parse(dateParts[1]),
-          int.parse(dateParts[0]),
-          int.parse(timeParts[0]),
-          int.parse(timeParts[1]),
-        );
-      } else {
-        // Assume ISO format
-        date = DateTime.parse(dateString);
-      }
-      
-      // Format the date
-      return DateFormat('dd MMM yyyy').format(date);
-    } catch (e) {
-      // If parsing fails, return the original string
-      return dateString;
-    }
-  }
-  
-  // Helper function to determine if a request is urgent
- 
-  
-  // Helper function to get status text
-  String _getStatusText(String statusCode) {
-    switch (statusCode) {
-      case PermintaanDarahModel.STATUS_PENDING:
-        return 'Menunggu Konfirmasi';
-      case PermintaanDarahModel.STATUS_WAITING:
-        return 'Menunggu Donor';
-      case PermintaanDarahModel.STATUS_ACCEPTED:
-        return 'Dalam Proses';
-      case PermintaanDarahModel.STATUS_COMPLETED:
-        return 'Telah Selesai';
-      case PermintaanDarahModel.STATUS_CANCELLED:
-        return 'Dibatalkan';
-      default:
-        return statusCode;
-    }
-  }
-  
+  // void _navigateToDetailScreen(PermintaanDarahModel permintaan) {
+  //   // Konversi dari PermintaanDarahModel ke PatientDonationData
+  //   final patientData = PatientDonationData(
+  //     patientName: permintaan.patientName,
+  //     patientAge: int.tryParse(permintaan.patientAge) ?? 0,
+  //     phoneNumber: permintaan.phoneNumber,
+  //     bloodType: permintaan.bloodType,
+  //     bloodBagsNeeded: permintaan.bloodBagsNeeded,
+  //     description: permintaan.description,
+  //     partner_id: permintaan.partner_id,
+  //     expiry_date: permintaan.expiry_date,
+  //   );
+  //
+  //   // Tentukan status berdasarkan status permintaan
+  //   DonationStatus donationStatus;
+  //   DonationStatusType statusType;
+  //
+  //   switch (permintaan.status) {
+  //     case PermintaanDarahModel.STATUS_PENDING:
+  //       statusType = DonationStatusType.pending;
+  //       break;
+  //     case PermintaanDarahModel.STATUS_CONFIRMED:
+  //       statusType = DonationStatusType.countdown;
+  //       break;
+  //     case PermintaanDarahModel.STATUS_COMPLETED:
+  //       statusType = DonationStatusType.completed;
+  //       break;
+  //     case PermintaanDarahModel.STATUS_CANCELLED:
+  //       statusType = DonationStatusType.rejected;
+  //       break;
+  //     default:
+  //       statusType = DonationStatusType.pending;
+  //   }
+  //
+  //   donationStatus = DonationStatus(
+  //     uniqueCode: permintaan.uniqueCode,
+  //     filledBags: permintaan.bloodBagsFulfilled,
+  //     status: statusType,
+  //     remainingTime: statusType == DonationStatusType.countdown
+  //         ? _parseexpiry_date(permintaan.expiry_date)
+  //         : null,
+  //     onCancelRequest: () async {
+  //       // Implementasi pembatalan permintaan
+  //       final updatedPermintaan = permintaan.copyWith(
+  //         status: PermintaanDarahModel.STATUS_CANCELLED,
+  //       );
+  //
+  //       bool success =
+  //       await PermintaanDarahService.updatePermintaan(updatedPermintaan);
+  //
+  //       if (success) {
+  //         MainScreen.navigateToTab(context, 3); // Tutup halaman detail
+  //
+  //         ScaffoldMessenger.of(context).showSnackBar(
+  //           const SnackBar(
+  //             content: Text("Permintaan berhasil dibatalkan"),
+  //             backgroundColor: Colors.green,
+  //           ),
+  //         );
+  //
+  //         // Refresh data permintaan
+  //         _loadPermintaan();
+  //       } else {
+  //         ScaffoldMessenger.of(context).showSnackBar(
+  //           const SnackBar(
+  //             content: Text("Gagal membatalkan permintaan"),
+  //             backgroundColor: Colors.red,
+  //           ),
+  //         );
+  //       }
+  //     },
+  //   );
+  //
+  //   // Navigasi ke halaman detail
+  //   Navigator.push(
+  //     context,
+  //     MaterialPageRoute(
+  //       builder: (context) => BloodDonationDetailScreen(
+  //         patientData: patientData,
+  //         donationStatus: donationStatus,
+  //       ),
+  //     ),
+  //   );
+  // }
+
   // Helper function to calculate distance (dummy implementation)
-  String _calculateDistance(String location) {
-    // Ini hanya implementasi dummy
-    // Di aplikasi nyata, gunakan geolokasi untuk menghitung jarak sesungguhnya
-    double randomDistance = (2 + (location.length % 8)) / 10.0 * 10;
-    return '${randomDistance.toStringAsFixed(1)} km dari lokasi Anda';
-  }
-  
-  // Helper function untuk parse expiry_date
-  DateTime _parseexpiry_date(String partner_id) {
-    try {
-      if (partner_id.contains('-')) {
-        // Format: DD-MM-YYYY HH:MM
-        List<String> parts = partner_id.split(' ');
-        List<String> dateParts = parts[0].split('-');
-        List<String> timeParts = parts.length > 1 ? parts[1].split(':') : ['00', '00'];
-        
-        return DateTime(
-          int.parse(dateParts[2]),
-          int.parse(dateParts[1]),
-          int.parse(dateParts[0]),
-          int.parse(timeParts[0]),
-          int.parse(timeParts[1]),
-        );
-      } else {
-        // Coba parse sebagai ISO string
-        return DateTime.parse(partner_id);
-      }
-    } catch (e) {
-      print('Error parsing expiry_date: $e');
-      // Kembalikan waktu default jika parsing gagal
-      return DateTime.now().add(const Duration(days: 1));
-    }
-  }
+  // String _calculateDistance(String location) {
+  //   // Ini hanya implementasi dummy
+  //   // Di aplikasi nyata, gunakan geolokasi untuk menghitung jarak sesungguhnya
+  //   double randomDistance = (2 + (location.length % 8)) / 10.0 * 10;
+  //   return '${randomDistance.toStringAsFixed(1)} km dari lokasi Anda';
+  // }
+  //
+  // // Helper function untuk parse expiry_date
+  // DateTime _parseexpiry_date(String partnerId) {
+  //   try {
+  //     if (partnerId.contains('-')) {
+  //       // Format: DD-MM-YYYY HH:MM
+  //       List<String> parts = partnerId.split(' ');
+  //       List<String> dateParts = parts[0].split('-');
+  //       List<String> timeParts =
+  //       parts.length > 1 ? parts[1].split(':') : ['00', '00'];
+  //
+  //       return DateTime(
+  //         int.parse(dateParts[2]),
+  //         int.parse(dateParts[1]),
+  //         int.parse(dateParts[0]),
+  //         int.parse(timeParts[0]),
+  //         int.parse(timeParts[1]),
+  //       );
+  //     } else {
+  //       // Coba parse sebagai ISO string
+  //       return DateTime.parse(partnerId);
+  //     }
+  //   } catch (e) {
+  //     print('Error parsing expiry_date: $e');
+  //     // Kembalikan waktu default jika parsing gagal
+  //     return DateTime.now().add(const Duration(days: 1));
+  //   }
+  // }
 }

@@ -1,4 +1,5 @@
 import 'package:darahtanyoe_app/pages/authentication/address_page.dart';
+import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:darahtanyoe_app/components/copyright.dart';
@@ -7,7 +8,7 @@ import '../../components/my_textfield.dart';
 import '../../service/auth_service.dart';
 
 class PersonalInfo extends StatefulWidget {
-  const PersonalInfo({Key? key}) : super(key: key);
+  const PersonalInfo({super.key});
 
   @override
   _PersonalInfoState createState() => _PersonalInfoState();
@@ -24,19 +25,18 @@ class _PersonalInfoState extends State<PersonalInfo> {
   @override
   void initState() {
     super.initState();
-    
+
     _authService.loadingCallback = (isLoading) {
       setState(() {
         _isLoading = isLoading;
       });
     };
-    
+
     _authService.errorCallback = (message) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message))
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
     };
-    
+
     _authService.successCallback = () {
       Navigator.push(
         context,
@@ -68,6 +68,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
           Container(
@@ -102,18 +103,27 @@ class _PersonalInfoState extends State<PersonalInfo> {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Color(0xFFCC5555),
+                      AppTheme.brand_01,
                       Color(0xFFCC8888),
                       Color(0xFFF8F0F0),
                     ],
-                    stops: [0.3, 0.7, 1.0],
+                    stops: [0.2, 0.7, 1.0],
                   ),
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(50),
                     topRight: Radius.circular(50),
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26, // Warna shadow
+                      blurRadius: 10, // Efek blur
+                      spreadRadius: 3, // Seberapa jauh shadow menyebar
+                      offset: Offset(0, -8), // Menggeser shadow ke atas
+                    ),
+                  ],
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 40),
+                padding:
+                const EdgeInsets.symmetric(horizontal: 30, vertical: 40),
                 child: Form(
                   key: _formKey,
                   child: Column(
@@ -139,7 +149,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                                 color: Colors.white,
                                 size: 18,
                               ),
-                            onPressed: () => Navigator.pop(context),
+                              onPressed: () => Navigator.pop(context),
                             ),
                           ),
                         ],
@@ -147,7 +157,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                       const SizedBox(height: 34),
                       _buildLabel('Nama Lengkap'),
                       MyTextField(
-                        hintText: 'Nama lengkap',
+                        hintText: 'Nama Lengkap',
                         keyboardType: TextInputType.text,
                         inputType: InputType.text,
                         controller: _nameController,
@@ -187,7 +197,8 @@ class _PersonalInfoState extends State<PersonalInfo> {
                           if (value == null || value.isEmpty) {
                             return 'Email tidak boleh kosong';
                           }
-                          if (!RegExp(r'^[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}$').hasMatch(value)) {
+                          if (!RegExp(r'^[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}$')
+                              .hasMatch(value)) {
                             return 'Email tidak valid';
                           }
                           return null;
@@ -195,19 +206,18 @@ class _PersonalInfoState extends State<PersonalInfo> {
                       ),
                       const SizedBox(height: 26),
                       MyButton(
-                        text: _isLoading ? "Memproses..." : "Lanjut",
-                        onPressed:  () async {
-                          if (_formKey.currentState!.validate()) {
-                            setState(() => _isLoading = true);
-                            await _authService.savePersonalInfo(
-                              _nameController.text,
-                              int.parse(_ageController.text),
-                              _emailController.text,
-                            );
-                          }
-                        },
-                        color: const Color(0xFF476EB6)
-                      ),
+                          text: _isLoading ? "Memproses..." : "Lanjut",
+                          onPressed: () async {
+                            if (_formKey.currentState!.validate()) {
+                              setState(() => _isLoading = true);
+                              await _authService.savePersonalInfo(
+                                  _nameController.text,
+                                  int.parse(_ageController.text),
+                                  _emailController.text,
+                                  context);
+                            }
+                          },
+                          color: const Color(0xFF476EB6)),
                       const SizedBox(height: 20),
                       const Spacer(),
                       CopyrightWidget(),

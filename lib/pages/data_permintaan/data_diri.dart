@@ -1,56 +1,143 @@
+import 'package:darahtanyoe_app/components/AppBarWithLogo.dart';
+import 'package:darahtanyoe_app/components/LanjutButton.dart';
+import 'package:darahtanyoe_app/components/background_widget.dart';
+import 'package:darahtanyoe_app/service/auth_service.dart';
+import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:flutter/material.dart';
-import 'package:darahtanyoe_app/pages/notifikasi/Notifikasi.dart';
-import 'data_darah.dart';
+import 'package:flutter/services.dart';
+import 'jadwal_lokasi.dart';
 
-class DataDiri extends StatefulWidget {
+class DataPemintaanDarah extends StatefulWidget {
+  const DataPemintaanDarah({super.key});
+
   @override
-  _DataDiriState createState() => _DataDiriState();
+  _DataPemintaanDarahState createState() => _DataPemintaanDarahState();
 }
 
-class _DataDiriState extends State<DataDiri> {
+class _DataPemintaanDarahState extends State<DataPemintaanDarah> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController usiaController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
+  final TextEditingController jumlahKantongController = TextEditingController();
+  final TextEditingController deskripsiController = TextEditingController();
+
+  String? selectedTipeDarah;
+  bool isLoading = false;
 
   @override
   void dispose() {
     nameController.dispose();
     usiaController.dispose();
     phoneController.dispose();
+    jumlahKantongController.dispose();
+    deskripsiController.dispose();
     super.dispose();
   }
 
+  Future<void> _autoFillUserData() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final user = await AuthService().getCurrentUser();
+      setState(() {
+        nameController.text = user?['full_name'] ?? '';
+        usiaController.text = user?['age']?.toString() ?? '';
+        String phoneNumber = user?['phone_number'] ?? '';
+        if (phoneNumber.startsWith('62')) {
+          phoneNumber = phoneNumber.substring(2);
+        } else if (phoneNumber.startsWith('+62')) {
+          phoneNumber = phoneNumber.substring(3);
+        }
+        phoneController.text = phoneNumber;
+        if (user?['blood_type'] != null) {
+          selectedTipeDarah = user?['blood_type'];
+        }
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal memuat data pengguna: ${e.toString()}')),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
   Widget _inputField(
-      String label, String hint, TextEditingController controller,
-      {String? suffixInside}) {
+      String label,
+      String hint,
+      TextEditingController controller, {
+        String? suffixInside,
+        int maxLines = 1,
+        TextInputType keyboardType = TextInputType.text,
+        List<TextInputFormatter>? inputFormatters,
+        bool isRequired = false, // New parameter for required fields
+      }) {
     return Padding(
-      padding: EdgeInsets.only(bottom: 16),
+      padding: EdgeInsets.only(bottom: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[700]),
+          Row(
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.neutral_01,
+                ),
+              ),
+              if (isRequired) // Add red asterisk if required
+                Text(
+                  ' *',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+            ],
           ),
           SizedBox(height: 4),
-          TextField(
-            controller: controller,
-            decoration: InputDecoration(
-              hintText: hint,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.white60,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.10),
+                  blurRadius: 4,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppTheme.neutral_01.withOpacity(0.53), width: 0.5),
+            ),
+            child: TextField(
+              controller: controller,
+              keyboardType: keyboardType,
+              inputFormatters: inputFormatters,
+              maxLines: maxLines,
+              style: TextStyle(color: AppTheme.neutral_01),
+              decoration: InputDecoration(
+                hintText: hint,
+                hintStyle: TextStyle(color: AppTheme.neutral_01.withOpacity(0.4)),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(vertical: 12),
+                suffixIcon: suffixInside != null
+                    ? Container(
+                  padding: EdgeInsets.all(12),
+                  child: Text(
+                    suffixInside,
+                    style: TextStyle(color: AppTheme.neutral_02),
+                  ),
+                )
+                    : null,
               ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              suffixIcon: suffixInside != null
-                  ? Padding(
-                      padding: EdgeInsets.only(right: 12, top: 12),
-                      child: Text(suffixInside,
-                          style: TextStyle(color: Colors.black54)),
-                    )
-                  : null,
             ),
           ),
         ],
@@ -58,36 +145,157 @@ class _DataDiriState extends State<DataDiri> {
     );
   }
 
-  Widget _phoneField() {
+  Widget _phoneField({bool isRequired = false}) {
     return Padding(
-      padding: EdgeInsets.only(bottom: 16),
+      padding: EdgeInsets.only(bottom: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Nomor Handphone (WhatsApp)',
-            style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[700]),
+          Row(
+            children: [
+              Text(
+                'Nomor Handphone (WhatsApp)',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.neutral_01,
+                ),
+              ),
+              if (isRequired)
+                Text(
+                  ' *',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+            ],
           ),
           SizedBox(height: 4),
-          TextField(
-            controller: phoneController,
-            keyboardType: TextInputType.phone,
-            decoration: InputDecoration(
-              hintText: 'Nomor Handphone (WhatsApp)',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              prefixIcon: Padding(
-                padding: EdgeInsets.only(left: 12, top: 12),
-                child: Text('+62', style: TextStyle(color: Colors.black54)),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.white60,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.10),
+                  blurRadius: 4,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppTheme.neutral_01.withOpacity(0.53), width: 0.5),
+            ),
+            child: TextField(
+              controller: phoneController,
+              keyboardType: TextInputType.phone,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              style: TextStyle(color: AppTheme.neutral_01),
+              decoration: InputDecoration(
+                hintText: 'Nomor Handphone (WhatsApp)',
+                hintStyle: TextStyle(color: AppTheme.neutral_01.withOpacity(0.4)),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(vertical: 12),
+                prefixIcon: Container(
+                  alignment: Alignment.center,
+                  width: 40,
+                  child: Text('+62', style: TextStyle(color: AppTheme.neutral_02)),
+                ),
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _dropdownField(
+      String label,
+      String? selectedValue,
+      List<String> options,
+      ValueChanged<String?> onChanged, {
+        bool isRequired = false,
+      }) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.neutral_01,
+                ),
+              ),
+              if (isRequired)
+                Text(
+                  ' *',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+            ],
+          ),
+          SizedBox(height: 4),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.white60,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.10),
+                  blurRadius: 4,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppTheme.neutral_01.withOpacity(0.53), width: 0.5),
+            ),
+            child: DropdownButton<String>(
+              value: selectedValue,
+              isExpanded: true,
+              hint: Text(
+                "Pilih $label",
+                style: TextStyle(color: AppTheme.neutral_01.withOpacity(0.4)),
+              ),
+              underline: SizedBox(),
+              onChanged: onChanged,
+              items: options.map((String option) {
+                return DropdownMenuItem<String>(
+                  value: option,
+                  child: Text(option),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _sectionTitle(String title) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 16),
+      child: Container(
+        padding: EdgeInsets.all(12),
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: Color(0xFFF2CC59),
+          border: Border.all(color: Color(0xFF565656)),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          title,
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          textAlign: TextAlign.center,
+        ),
       ),
     );
   }
@@ -95,121 +303,165 @@ class _DataDiriState extends State<DataDiri> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFAB4545),
-        title: Text(
-          "Data Permintaan Darah",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: [
-          Padding(
-            padding: EdgeInsets.only(right: 12),
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const NotificationPage()),
-                );
-              },
-              child: Image.asset(
-                'assets/images/icon_notif.png',
-                width: 60,
-                height: 60,
-              ),
-            ),
-          ),
-        ],
+      appBar: AppBarWithLogo(
+        title: 'Data Permintaan Darah',
+        onBackPressed: () {
+          Navigator.pop(context);
+        },
       ),
-      backgroundColor: Colors.white,
-      body: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Image.asset(
-              'assets/images/alur_permintaan_1.png',
-              width: double.infinity,
-              fit: BoxFit.contain,
-            ),
-            SizedBox(height: 20),
-            Container(
-              padding: EdgeInsets.all(12),
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Color(0xFFF2CC59),
-                border: Border.all(color: Color(0xFF565656)),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                "Isi dengan data diri anda saat ini",
-                style: TextStyle(fontSize: 14),
-                textAlign: TextAlign.center,
-              ),
-            ),
-            SizedBox(height: 20),
-            _inputField(
-                "Nama Lengkap Pasien", "Nama Lengkap Pasien", nameController),
-            _inputField("Usia Pasien", "Usia Pasien", usiaController,
-                suffixInside: "Tahun"),
-            _phoneField(),
-            Spacer(),
-            Align(
-              alignment: Alignment.bottomRight,
-              child: Padding(
-                padding: EdgeInsets.only(right: 16, bottom: 20),
-                child: SizedBox(
-                  width: MediaQuery.of(context).size.width / 2.5,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF476EB6),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30)),
-                      padding:
-                          EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-                    ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => DataDarah(
-                            nama: nameController.text,
-                            usia: usiaController.text,
-                            nomorHP: phoneController.text,
+      body: BackgroundWidget(
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.only(top: 10),
+                        child: Image.asset(
+                          'assets/images/alur_permintaan_1.png',
+                          width: double.infinity,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Container(
+                        width: double.infinity,
+                        height: 48,
+                        margin: EdgeInsets.only(top: 10, bottom: 16),
+                        decoration: BoxDecoration(
+                          color: AppTheme.brand_02,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.25),
+                              blurRadius: 4,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(20),
+                          child: InkWell(
+                            onTap: isLoading ? null : _autoFillUserData,
+                            borderRadius: BorderRadius.circular(20),
+                            child: Center(
+                              child: isLoading
+                                  ? CircularProgressIndicator(color: Colors.white)
+                                  : Text(
+                                'Isi dengan data anda saat ini',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
-                      );
-                    },
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: Text(">",
-                              style:
-                                  TextStyle(color: Colors.white, fontSize: 16)),
+                      ),
+                      SizedBox(height: 8),
+                      _inputField(
+                        "Nama Lengkap Pasien",
+                        "Nama Lengkap Pasien",
+                        nameController,
+                        isRequired: true, // Mark as required
+                      ),
+                      _inputField(
+                        "Usia Pasien",
+                        "Usia Pasien",
+                        usiaController,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        suffixInside: "Tahun",
+                        isRequired: true, // Mark as required
+                      ),
+                      _phoneField(isRequired: true), // Mark as required
+                      _dropdownField(
+                        "Golongan Darah",
+                        selectedTipeDarah,
+                        ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
+                            (value) {
+                          setState(() {
+                            selectedTipeDarah = value;
+                          });
+                        },
+                        isRequired: true, // Mark as required
+                      ),
+                      _inputField(
+                        "Jumlah Kebutuhan Kantong",
+                        "Masukkan jumlah kantong",
+                        jumlahKantongController,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        suffixInside: "Kantong",
+                        isRequired: true, // Mark as required
+                      ),
+                      _inputField(
+                        "Deskripsi Kebutuhan",
+                        "Masukkan deskripsi kebutuhan",
+                        deskripsiController,
+                        maxLines: 5,
+                        keyboardType: TextInputType.text,
+                        isRequired: false, // Not required
+                      ),
+                      SizedBox(height: 10),
+                      Align(
+                        alignment: Alignment.bottomRight,
+                        child: LanjutButton(
+                          onPressed: () {
+                            if (nameController.text.isEmpty ||
+                                usiaController.text.isEmpty ||
+                                phoneController.text.isEmpty ||
+                                selectedTipeDarah == null ||
+                                jumlahKantongController.text.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Mohon lengkapi semua data yang diperlukan'),
+                                  backgroundColor: Colors.red,
+                                  duration: Duration(seconds: 3),
+                                ),
+                              );
+                              return;
+                            }
+                            print('Nama: ${nameController.text}, Usia: ${usiaController.text}, No HP: 62${phoneController.text}, '
+                                'Tipe Darah: $selectedTipeDarah, Jumlah Kantong: ${jumlahKantongController.text}, '
+                                'Deskripsi: ${deskripsiController.text}');
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => JadwalLokasi(
+                                  nama: nameController.text,
+                                  usia: usiaController.text,
+                                  nomorHP: "62${phoneController.text}",
+                                  golDarah: selectedTipeDarah ?? "",
+                                  jumlahKantong: jumlahKantongController.text,
+                                  deskripsi: deskripsiController.text,
+                                ),
+                              ),
+                            );
+                          },
                         ),
-                        Text("Lanjut",
-                            style:
-                                TextStyle(color: Colors.white, fontSize: 16)),
-                      ],
-                    ),
+                      ),
+                      SizedBox(height: 20),
+                      Center(
+                        child: Text(
+                          '© 2025 Beyond. Hak Cipta Dilindungi.',
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
+                          textAlign: TextAlign.center,
+                        ),
+                      )
+                    ],
                   ),
                 ),
               ),
-            ),
-            SizedBox(height: 20),
-            Text(
-              '© 2025 Beyond. Hak Cipta Dilindungi.',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
-              textAlign: TextAlign.center,
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

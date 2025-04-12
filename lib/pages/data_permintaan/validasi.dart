@@ -1,10 +1,16 @@
+import 'package:darahtanyoe_app/components/AppBarWithLogo.dart';
+import 'package:darahtanyoe_app/components/allSvg.dart';
+import 'package:darahtanyoe_app/components/background_widget.dart';
+import 'package:darahtanyoe_app/components/kembali_button.dart';
+import 'package:darahtanyoe_app/pages/mainpage/main_screen.dart';
+import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:flutter/material.dart';
-
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../main.dart';
-
 import '../../models/permintaan_darah_model.dart';
 import '../../service/permintaan_darah_service.dart';
-import 'package:darahtanyoe_app/pages/notifikasi/Notifikasi.dart';
+import 'package:dotted_border/dotted_border.dart';
 
 class Validasi extends StatefulWidget {
   final String nama;
@@ -16,9 +22,10 @@ class Validasi extends StatefulWidget {
   final String lokasi;
   final String idLokasi;
   final String tanggal;
+  final String tanggalDatabase;
 
   const Validasi({
-    Key? key,
+    super.key,
     required this.nama,
     required this.usia,
     required this.nomorHP,
@@ -28,7 +35,8 @@ class Validasi extends StatefulWidget {
     required this.lokasi,
     required this.tanggal,
     required this.idLokasi,
-  }) : super(key: key);
+    required this.tanggalDatabase,
+  });
 
   @override
   _ValidasiState createState() => _ValidasiState();
@@ -38,56 +46,186 @@ class _ValidasiState extends State<Validasi> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFAB4545),
-        title: const Text(
-          "Data Permintaan Darah",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: [
-          Padding(
-            padding: EdgeInsets.only(right: 12),
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const NotificationPage()),
-                );
-              },
-              child: Image.asset(
-                'assets/images/icon_notif.png',
-                width: 60,
-                height: 60,
-              ),
-            ),
-          ),
-        ],
+      appBar: AppBarWithLogo(
+        title: 'Data Permintaan Darah Anda',
+        onBackPressed: () {
+          Navigator.pop(context);
+        },
       ),
-      backgroundColor: Colors.white,
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: ListView(
+      body: BackgroundWidget(
+        child: Column(
           children: [
-            Image.asset(
-              'assets/images/alur_permintaan_4.png',
-              width: double.infinity,
-              fit: BoxFit.contain,
-            ),
-            const SizedBox(height: 20),
-            _buildInfoCard(),
-            const SizedBox(height: 20),
-            _navigationButtons(context),
-            SizedBox(height: 20),
-            Text(
-              '© 2025 Beyond. Hak Cipta Dilindungi.',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
-              textAlign: TextAlign.center,
+            // Scrollable content
+            Expanded(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.only(top: 20),
+                        child: Image.asset(
+                          'assets/images/alur_permintaan_4.png',
+                          width: double.infinity,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      _buildInfoCard(),
+                      const SizedBox(height: 20),
+                      Container(
+                        width: double.infinity,
+                        child: IntrinsicHeight(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch, // <--- Penting agar anak ikut tinggi
+                            children: [
+                              // Kolom kiri
+                              Expanded(
+                                child: DottedBorder(
+                                  borderType: BorderType.RRect,
+                                  radius: const Radius.circular(12),
+                                  dashPattern: [8, 4],
+                                  color: AppTheme.brand_04.withOpacity(0.4),
+                                  strokeWidth: 1.5,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Color(0xFFCFD3DE),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.10),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 4),
+                                        )
+                                      ],
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: SizedBox(
+                                      width: double.infinity,
+                                      height: double.infinity,
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            "Kode Unik",
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black54,
+                                              fontFamily: 'DM Sans',
+                                              fontSize: 20,
+                                            ),
+                                          ),
+                                          SizedBox(height: 4),
+                                          Text(
+                                            "BELUM ADA",
+                                            style: TextStyle(
+                                              color: Colors.black54,
+                                              fontWeight: FontWeight.normal,
+                                              fontFamily: 'DM Sans',
+                                              fontSize: 22,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              // Kolom kanan
+                              Expanded(
+                                child: GestureDetector(
+                                  child: DottedBorder(
+                                    borderType: BorderType.RRect,
+                                    radius: const Radius.circular(12),
+                                    dashPattern: [8, 4],
+                                    color: AppTheme.neutral_01.withOpacity(0.4),
+                                    strokeWidth: 1.5,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFE5DADA),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(0.10),
+                                            blurRadius: 4,
+                                            offset: const Offset(0, 4),
+                                          )
+                                        ],
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: SizedBox(
+                                        width: double.infinity,
+                                        height: double.infinity,
+                                        child: Row(
+                                          crossAxisAlignment: CrossAxisAlignment.center,
+                                          children: [
+                                            SvgPicture.string(bloodFilledDescSvg, width: 40, height: 40, color: AppTheme.brand_01),
+                                            const SizedBox(width: 8),
+                                            Expanded(
+                                              child: Text.rich(
+                                                TextSpan(
+                                                  style: const TextStyle(
+                                                    fontFamily: 'DM Sans',
+                                                    fontSize: 12,
+                                                    color: Colors.black54,
+                                                  ),
+                                                  children: [
+                                                    const TextSpan(text: 'Telah terisi '),
+                                                    TextSpan(
+                                                      text: '0',
+                                                      style: const TextStyle(
+                                                        color: AppTheme.brand_01,
+                                                        fontWeight: FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                    const TextSpan(text: ' dari '),
+                                                    TextSpan(
+                                                      text: '${widget.jumlahKantong} Kantong',
+                                                      style: const TextStyle(
+                                                        color: AppTheme.brand_01,
+                                                        fontWeight: FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                    const TextSpan(text: ' yang Dibutuhkan'),
+                                                  ],
+                                                ),
+                                                softWrap: true,
+                                                overflow: TextOverflow.visible,
+                                              ),
+                                            )
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 32),
+                      Padding(
+                          padding: const EdgeInsets.only(top: 0),
+                          child:  Column(
+                            children: [
+                              _navigationButtons(context),
+                              SizedBox(height: 20,),
+                              Text(
+                                '© 2025 Beyond. Hak Cipta Dilindungi.',
+                                style: TextStyle(fontSize: 12, color: Colors.grey),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 20),
+                            ],
+                          )
+                      ),
+                    ],
+                  ),
+                ),
+
+              ),
             ),
           ],
         ),
@@ -96,39 +234,48 @@ class _ValidasiState extends State<Validasi> {
   }
 
   Widget _buildInfoCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.grey.withOpacity(0.2), // Warna abu-abu
-          width: 2, // Ketebalan border
+    return DottedBorder(
+      borderType: BorderType.RRect,
+      radius: const Radius.circular(20),
+      dashPattern: [16, 12], // Dash length: 16, gap length: 12
+      color: AppTheme.neutral_01.withOpacity(0.26),
+      strokeWidth: 2,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.10),
+              blurRadius: 4,
+              offset: const Offset(0, 4),
+            )
+          ],
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFEDE7D5), // Top color: EDE7D5
+              Colors.white70,    // Bottom color: white70
+            ],
+          ),
+          borderRadius: BorderRadius.circular(20), // Match the DottedBorder radius
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.4),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          _buildRow(
-            _buildLabeledField("Nama Pasien", widget.nama),
-            _buildLabeledField("Usia Pasien", "${widget.usia} Tahun"),
-          ),
-          _buildLabeledField("Nomor Handphone (WhatsApp)", widget.nomorHP),
-          _buildLabeledField("Golongan Darah", widget.golDarah),
-          _buildLabeledField("Jumlah Kebutuhan Kantong", widget.jumlahKantong),
-          _buildLabeledField("Deskripsi Kebutuhan", widget.deskripsi,
-              maxLines: 3),
-          _buildRow(
-            _buildLabeledField("Lokasi Pendonoran", widget.lokasi),
-            _buildLabeledField("Jadwal Berakhir Permintaan", widget.tanggal),
-          ),
-        ],
+        child: Column(
+          children: [
+            _buildRow(
+              _buildLabeledField("Nama Pasien", widget.nama),
+              _buildLabeledField("Usia Pasien", "${widget.usia} Tahun"),
+            ),
+            _buildLabeledField("Nomor Handphone (WhatsApp)", widget.nomorHP),
+            _buildLabeledField("Golongan Darah", widget.golDarah),
+            _buildLabeledField("Jumlah Kebutuhan Kantong", widget.jumlahKantong),
+            _buildLabeledField("Deskripsi Kebutuhan", widget.deskripsi, maxLines: 3),
+            _buildRow(
+              _buildLabeledField("Lokasi Pendonoran", widget.lokasi),
+              _buildLabeledField("Jadwal Berakhir Permintaan", widget.tanggal),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -145,12 +292,23 @@ class _ValidasiState extends State<Validasi> {
 
   Widget _buildLabeledField(String label, String value, {int maxLines = 1}) {
     return Container(
-      width: double.infinity, // Memastikan container memenuhi lebar parent
+      width: double.infinity,
       margin: const EdgeInsets.symmetric(vertical: 8),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFE9B824).withOpacity(0.11),
-        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.10),
+            blurRadius: 4,
+            offset: const Offset(0, 4),
+          )
+        ],
+        color: const Color(0xFFEDE8D8),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppTheme.brand_02.withOpacity(0.37), // Ganti dengan warna border yang kamu inginkan
+          width: 1.0,          // Ganti dengan ketebalan border yang kamu inginkan
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -159,15 +317,15 @@ class _ValidasiState extends State<Validasi> {
             label,
             style: const TextStyle(
               fontWeight: FontWeight.bold,
+              color: AppTheme.neutral_01,
               fontSize: 14,
             ),
           ),
           const SizedBox(height: 5),
           Text(
             value,
-            maxLines: maxLines,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 16),
+            softWrap: true,
+            style: const TextStyle(fontSize: 14, color: AppTheme.neutral_01),
           ),
         ],
       ),
@@ -180,27 +338,8 @@ class _ValidasiState extends State<Validasi> {
       children: [
         SizedBox(
           width: MediaQuery.of(context).size.width / 2.5,
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFE9B824),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-            ),
+          child: KembaliButton(
             onPressed: () => Navigator.pop(context),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text("<",
-                      style: TextStyle(color: Colors.white, fontSize: 16)),
-                ),
-                Text("Kembali",
-                    style: TextStyle(color: Colors.white, fontSize: 16)),
-              ],
-            ),
           ),
         ),
         const SizedBox(width: 16),
@@ -220,11 +359,9 @@ class _ValidasiState extends State<Validasi> {
               children: [
                 Align(
                   alignment: Alignment.centerRight,
-                  child: Text(">",
-                      style: TextStyle(color: Colors.white, fontSize: 16)),
+                  child: Text(">", style: TextStyle(color: Colors.white, fontSize: 16)),
                 ),
-                Text("Kirim",
-                    style: TextStyle(color: Colors.white, fontSize: 16)),
+                Text("Kirim", style: TextStyle(color: Colors.white, fontSize: 16)),
               ],
             ),
           ),
@@ -239,18 +376,51 @@ class _ValidasiState extends State<Validasi> {
         widget.nomorHP.isEmpty ||
         widget.golDarah.isEmpty ||
         widget.jumlahKantong.isEmpty ||
-        widget.deskripsi.isEmpty ||
         widget.idLokasi.isEmpty ||
         widget.lokasi.isEmpty ||
-        widget.tanggal.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Harap lengkapi semua data!"),
-          backgroundColor: Colors.red,
-        ),
+        widget.tanggalDatabase.isEmpty) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: Column(
+              children: [
+                Icon(Icons.error, color: Colors.red, size: 50),
+                const SizedBox(height: 10),
+                const Text(
+                  "Data Tidak Lengkap",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            content: const Text(
+              "Harap lengkapi semua data sebelum melanjutkan!",
+              textAlign: TextAlign.center,
+            ),
+            actions: [
+              Center(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text("OK", style: TextStyle(color: Colors.white)),
+                ),
+              ),
+            ],
+          );
+        },
       );
     } else {
-      // Menampilkan dialog loading
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -271,33 +441,29 @@ class _ValidasiState extends State<Validasi> {
         },
       );
 
-      // Membuat model permintaan darah
-      final String uniqueCode = PermintaanDarahService.generateUniqueCode();
-      final DateTime now = DateTime.now();
+      // final String uniqueCode = PermintaanDarahService.generateUniqueCode();
+      // final DateTime now = DateTime.now();
 
       final permintaan = PermintaanDarahModel(
         patientName: widget.nama,
         patientAge: widget.usia,
         phoneNumber: widget.nomorHP,
         bloodType: widget.golDarah,
-        bloodBagsNeeded: widget.jumlahKantong,
+        bloodBagsNeeded: int.tryParse(widget.jumlahKantong) ?? 0,
         description: widget.deskripsi,
         partner_id: widget.idLokasi,
-        expiry_date: widget.tanggal,
-        uniqueCode: uniqueCode,
+        expiry_date: widget.tanggalDatabase,
+        uniqueCode: "",
         bloodBagsFulfilled: 0,
         status: PermintaanDarahModel.STATUS_PENDING,
       );
 
-      // Menyimpan permintaan
       PermintaanDarahService.simpanPermintaan(permintaan).then((success) {
         Navigator.pop(context); // Tutup dialog loading
 
         if (success) {
-          // Tampilkan dialog sukses
           showCustomDialog(context, permintaan);
         } else {
-          // Tampilkan pesan error
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text("Gagal menyimpan permintaan. Silakan coba lagi."),
@@ -333,13 +499,12 @@ class _ValidasiState extends State<Validasi> {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 10),
-                Text(
-                  "Kode Permintaan: ${permintaan.uniqueCode}",
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
+                // const SizedBox(height: 10),
+                // Text(
+                //   "Kode Permintaan: ${permintaan.uniqueCode}",
+                //   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                //   textAlign: TextAlign.center,
+                // ),
                 const SizedBox(height: 10),
                 const Text(
                   "Pengajuan Anda sedang diproses. Mohon TUNGGU KONFIRMASI dari pihak RS/PMI terkait sebelum mendatangi idLokasi pendonoran.",
@@ -353,16 +518,21 @@ class _ValidasiState extends State<Validasi> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 12, horizontal: 20),
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
                   ),
                   onPressed: () {
-                    Navigator.popUntil(context, (route) => route.isFirst);
-                    MyApp.mainScreenKey.currentState
-                        ?.changeTab(2, code: permintaan.uniqueCode);
+                    Navigator.of(context).pop();
+                    SharedPreferences.getInstance().then((prefs) {
+                      prefs.setString('transaksiTab', "minta");
+                      prefs.setInt('selectedIndex', 3);
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (context) => MainScreen()),
+                            (route) => false,
+                      );
+                    });
                   },
-                  child: const Text("Lihat Permintaan",
-                      style: TextStyle(color: Colors.black)),
+                  child: const Text("Lihat Daftar Permintaan", style: TextStyle(color: Colors.black)),
                 ),
                 const SizedBox(height: 10),
                 ElevatedButton(
@@ -371,15 +541,13 @@ class _ValidasiState extends State<Validasi> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 12, horizontal: 20),
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
                   ),
                   onPressed: () {
                     Navigator.popUntil(context, (route) => route.isFirst);
                     MyApp.mainScreenKey.currentState?.changeTab(0);
                   },
-                  child: const Text("Kembali ke Beranda",
-                      style: TextStyle(color: Colors.white)),
+                  child: const Text("Kembali ke Beranda", style: TextStyle(color: Colors.white)),
                 ),
               ],
             ),

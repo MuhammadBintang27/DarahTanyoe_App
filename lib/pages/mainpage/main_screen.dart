@@ -1,11 +1,10 @@
+import 'package:darahtanyoe_app/pages/mainpage/profil.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:darahtanyoe_app/pages/mainpage/home_screen.dart';
-import 'package:darahtanyoe_app/pages/authentication/login_page.dart';
 import 'package:darahtanyoe_app/pages/mainpage/peta_darah.dart';
 import 'package:darahtanyoe_app/pages/mainpage/permintaan_darah_terdekat.dart';
 import 'package:darahtanyoe_app/pages/mainpage/transaksi.dart';
-import 'package:darahtanyoe_app/pages/authentication/blood_info.dart';
-
 import '../../components/my_navbar.dart';
 
 class MainScreen extends StatefulWidget {
@@ -13,54 +12,83 @@ class MainScreen extends StatefulWidget {
 
   @override
   MainScreenState createState() => MainScreenState();
+
+  static Future<void> navigateToTab(BuildContext context, int index, {String? transaksiTab}) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (transaksiTab != null) {
+      await prefs.setString('transaksiTab', transaksiTab);
+    }
+
+    await prefs.setInt('selectedIndex', index);
+  }
+
 }
 
 class MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
   String? _uniqueCode;
 
-  void changeTab(int index, {String? code}) {
-  debugPrint("changeTab dipanggil: index = $index, code = $code");
-  
-  setState(() {
-    _selectedIndex = index;
-    _uniqueCode = (index == 2) ? code : null;
-  });
+  @override
+  void initState() {
+    super.initState();
+    _loadSelectedIndex();
+  }
 
-  Future.delayed(Duration(milliseconds: 50), () {
-    setState(() {});
-  });
+  Future<void> _loadSelectedIndex() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _selectedIndex = prefs.getInt('selectedIndex') ?? 0;
+    });
+  }
 
-  debugPrint("Setelah setState gfhdsg: _selectedIndex = $_selectedIndex, _uniqueCode = $_uniqueCode");
-}
+  Future<void> changeTab(int index) async {
+    final prefs = await SharedPreferences.getInstance();
+    debugPrint("changeTab dipanggil: index = $index");
 
+    setState(() {
+      _selectedIndex = index;
+      _uniqueCode = (index == 3) ? prefs.getString('uniqueCode') : null;
+    });
 
+    await prefs.setInt('selectedIndex', _selectedIndex);
+  }
 
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      extendBody: true,
+      backgroundColor: Colors.transparent,
+      body: Stack(
+        children: [
+          // Content area
+          IndexedStack(
+            index: _selectedIndex,
+            children: [
+              _wrapWithScrollableContainer(HomeScreen()),
+              _wrapWithScrollableContainer(NearestBloodDonation()),
+              _wrapWithScrollableContainer(BloodMap()),
+              _wrapWithScrollableContainer(TransactionBlood(uniqueCode: _uniqueCode)),
+              _wrapWithScrollableContainer(ProfileScreen()),
+            ],
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: CustomBottomNavBar(
+              selectedIndex: _selectedIndex,
+              onItemTapped: (index) => changeTab(index),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-  
-  
-@override
-Widget build(BuildContext context) {
-  debugPrint("============================================");
-  debugPrint("MainScreen rebuild: _selectedIndex = $_selectedIndex, _uniqueCode = $_uniqueCode");
-  
-  return Scaffold(
-    body: _selectedIndex == 0
-    ? HomeScreen()
-    : _selectedIndex == 1
-        ? NearestBloodDonation()
-        : _selectedIndex == 2
-            ? BloodMap()
-            : _selectedIndex == 3
-                ? TransactionBlood(uniqueCode: _uniqueCode)
-                : BloodInfo(),
-
-    bottomNavigationBar: CustomBottomNavBar(
-      selectedIndex: _selectedIndex,
-      onItemTapped: (index) => changeTab(index),
-    ),
-  );
-}
-
-
+  Widget _wrapWithScrollableContainer(Widget screen) {
+    return SafeArea(
+      bottom: false,
+      child: screen,
+    );
+  }
 }

@@ -6,10 +6,10 @@ class CopyrightWidget extends StatelessWidget {
   final Color textColor;
 
   const CopyrightWidget({
-    Key? key,
+    super.key,
     this.owner = "Beyond",
     this.textColor = const Color(0xFFCC5555),
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
