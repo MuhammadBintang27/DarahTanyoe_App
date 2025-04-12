@@ -207,10 +207,14 @@ class _HomeScreenState extends State<HomeScreen> {
             textColor: Colors.white,
             icon: Icons.local_hospital,
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => PersonalInfo()),
-              );
+              SharedPreferences.getInstance().then((prefs) {
+                prefs.setInt('selectedIndex', 1);
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => MainScreen()),
+                      (route) => false,
+                );
+              });
             },
             isOutlined: false,
           ),
