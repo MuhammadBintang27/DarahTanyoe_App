@@ -1,9 +1,13 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:darahtanyoe_app/components/copyright.dart';
 import 'package:darahtanyoe_app/components/my_button.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 import '../../service/auth_service.dart';
 import 'blood_info.dart';
 import 'package:geocoding/geocoding.dart';
@@ -19,6 +23,7 @@ class AddressPage extends StatefulWidget {
 
 class _AddressPageState extends State<AddressPage> {
   final TextEditingController _addressController = TextEditingController();
+  TextEditingController _searchLocationController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
   bool _isLoadingLocation = false;
@@ -50,6 +55,8 @@ class _AddressPageState extends State<AddressPage> {
   LatLng? userLocation;
   LatLng? selectedLocation;
   final MapController mapController = MapController();
+  List<Map<String, dynamic>> _suggestions = [];
+  Timer? _debounce;
 
   Future<void> _getCurrentLocation() async {
     setState(() => _isLoadingLocation = true);
@@ -96,6 +103,30 @@ class _AddressPageState extends State<AddressPage> {
       setState(() => _isLoadingLocation = false);
     }
   }
+
+  Future<void> _searchLocation(String query) async {
+    final uri = Uri.parse('https://nominatim.openstreetmap.org/search?q=$query&format=json');
+
+    try {
+      final response = await http.get(uri);
+      if (response.statusCode == 200) {
+        final List data = jsonDecode(response.body);
+
+        setState(() {
+          _suggestions = data
+              .map((item) => {
+            "display_name": item["display_name"],
+            "lat": double.parse(item["lat"]),
+            "lon": double.parse(item["lon"]),
+          })
+              .toList();
+        });
+      }
+    } catch (e) {
+      print("Error search location: $e");
+    }
+  }
+
 
   Future<void> _onMapTapped(LatLng tapPosition) async {
     // Set lokasi yang dipilih sesuai tap pada peta
@@ -237,9 +268,110 @@ class _AddressPageState extends State<AddressPage> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 34),
+                      const SizedBox(height: 20),
+                      Positioned(
+                        top: 16,
+                        left: 16,
+                        right: 16,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Search TextField
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: TextField(
+                                controller: _searchLocationController,
+                                onChanged: (value) {
+                                  if (_debounce?.isActive ?? false) _debounce!.cancel();
+                                  _debounce = Timer(Duration(milliseconds: 500), () {
+                                    if (value.trim().isNotEmpty) {
+                                      _searchLocation(value.trim());
+                                    } else {
+                                      setState(() => _suggestions = []);
+                                    }
+                                  });
+                                },
+                                decoration: InputDecoration(
+                                  hintText: 'Cari lokasi...',
+                                  contentPadding: EdgeInsets.all(12),
+                                  border: InputBorder.none,
+                                  prefixIcon: Icon(Icons.search),
+                                ),
+                              ),
+                            ),
+
+                            // Dropdown Suggestion - Ditampilkan di bawah search box saja
+                            // Ini dropdown suggestion, MUNCUL di atas map juga
+                            if (_suggestions.isNotEmpty)
+                              Positioned(
+                                left: 20,
+                                right: 20,
+                                top: 110, // Atur sesuai posisi TextField + padding
+                                child: Container(
+                                  constraints: BoxConstraints(maxHeight: 200),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(10),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black26,
+                                        blurRadius: 6,
+                                        offset: Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: ListView.builder(
+                                    padding: EdgeInsets.zero,
+                                    shrinkWrap: true,
+                                    itemCount: _suggestions.length,
+                                    itemBuilder: (context, index) {
+                                      final suggestion = _suggestions[index];
+                                      return ListTile(
+                                        dense: true,
+                                        title: Text(
+                                          suggestion['display_name'],
+                                          style: TextStyle(fontSize: 13),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        onTap: () async {
+                                          final lat = suggestion['lat'];
+                                          final lon = suggestion['lon'];
+
+                                          setState(() {
+                                            selectedLocation = LatLng(lat, lon);
+                                            _suggestions.clear();
+                                            mapController.move(selectedLocation!, 15.0);
+                                          });
+
+                                          try {
+                                            List<Placemark> placemarks = await placemarkFromCoordinates(lat, lon);
+                                            if (placemarks.isNotEmpty) {
+                                              Placemark place = placemarks.first;
+                                              setState(() {
+                                                _addressController.text =
+                                                '${place.street}, ${place.locality}, ${place.country}';
+                                              });
+                                            }
+                                          } catch (e) {
+                                            print("Gagal reverse geocoding: $e");
+                                          }
+                                        },
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+
                       SizedBox(
-                        height: 231,
+                        height: 260,
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 0),
                           child: Stack(
@@ -418,7 +550,7 @@ class _AddressPageState extends State<AddressPage> {
                       const SizedBox(height: 20),
                       TextFormField(
                         controller: _addressController,
-                        maxLines: 6,
+                        maxLines: 4,
                         readOnly: true,
                         style: TextStyle(
                             fontSize: 13,
@@ -467,7 +599,6 @@ class _AddressPageState extends State<AddressPage> {
 
                               _authService.saveAddress(
                                   _addressController.text, 95.123, 4.123, context);
-
                             }
                           }
                         },
