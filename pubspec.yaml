@@ -73,6 +73,7 @@ flutter:
     - assets/images/logo.png
     - assets/logo/
     - assets/data/
+    - assets/fonts/
     - .env
     - assets/animations/
 

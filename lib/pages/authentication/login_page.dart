@@ -196,7 +196,7 @@ class _LoginPageState extends State<LoginPage> {
                                     // Sembunyikan keyboard sebelum menjalankan aksi
                                     FocusScope.of(context).unfocus();
                                     _authService.registrationData['phoneNumber'] =
-                                    "62${_phoneController.text}";
+                                    "+62${_phoneController.text}";
                                     _authService.sendOTP(
                                         _authService.registrationData['phoneNumber'],
                                         context);

@@ -16,33 +16,48 @@ class PersonalInfo extends StatefulWidget {
 
 class _PersonalInfoState extends State<PersonalInfo> {
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _ageController = TextEditingController();
+  final TextEditingController _dateOfBirthController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
   final AuthService _authService = AuthService();
+  DateTime? _selectedDate;
 
   @override
   void initState() {
     super.initState();
 
     _authService.loadingCallback = (isLoading) {
-      setState(() {
-        _isLoading = isLoading;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = isLoading;
+        });
+      }
     };
 
     _authService.errorCallback = (message) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(message)));
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(message)));
+      }
     };
 
     _authService.successCallback = () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => AddressPage()),
-      );
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => AddressPage()),
+        );
+      }
     };
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _dateOfBirthController.dispose();
+    _emailController.dispose();
+    super.dispose();
   }
 
   Widget _buildLabel(String text) {
@@ -95,40 +110,42 @@ class _PersonalInfoState extends State<PersonalInfo> {
                   ),
                 ),
               ),
-              Container(
-                width: screenWidth,
-                height: screenHeight * 0.6,
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      AppTheme.brand_01,
-                      Color(0xFFCC8888),
-                      Color(0xFFF8F0F0),
-                    ],
-                    stops: [0.2, 0.7, 1.0],
-                  ),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(50),
-                    topRight: Radius.circular(50),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black26, // Warna shadow
-                      blurRadius: 10, // Efek blur
-                      spreadRadius: 3, // Seberapa jauh shadow menyebar
-                      offset: Offset(0, -8), // Menggeser shadow ke atas
+              Expanded(
+                flex: 2,
+                child: Container(
+                  width: screenWidth,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        AppTheme.brand_01,
+                        Color(0xFFCC8888),
+                        Color(0xFFF8F0F0),
+                      ],
+                      stops: [0.2, 0.7, 1.0],
                     ),
-                  ],
-                ),
-                padding:
-                const EdgeInsets.symmetric(horizontal: 30, vertical: 40),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(50),
+                      topRight: Radius.circular(50),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26, // Warna shadow
+                        blurRadius: 10, // Efek blur
+                        spreadRadius: 3, // Seberapa jauh shadow menyebar
+                        offset: Offset(0, -8), // Menggeser shadow ke atas
+                      ),
+                    ],
+                  ),
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 30, vertical: 40),
+                  child: Form(
+                    key: _formKey,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                       Stack(
                         children: [
                           Center(
@@ -169,22 +186,45 @@ class _PersonalInfoState extends State<PersonalInfo> {
                         },
                       ),
                       const SizedBox(height: 20),
-                      _buildLabel('Usia'),
-                      MyTextField(
-                        hintText: 'Usia',
-                        keyboardType: TextInputType.number,
-                        inputType: InputType.text,
-                        controller: _ageController,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Usia tidak boleh kosong';
+                      _buildLabel('Tanggal Lahir'),
+                      GestureDetector(
+                        onTap: () async {
+                          DateTime? pickedDate = await showDatePicker(
+                            context: context,
+                            initialDate: DateTime.now().subtract(Duration(days: 365 * 18)), // Default 18 tahun lalu
+                            firstDate: DateTime(1900),
+                            lastDate: DateTime.now().subtract(Duration(days: 365 * 17)), // Minimal 17 tahun
+                          );
+                          if (pickedDate != null) {
+                            setState(() {
+                              _selectedDate = pickedDate;
+                              _dateOfBirthController.text = "${pickedDate.day.toString().padLeft(2, '0')}/${pickedDate.month.toString().padLeft(2, '0')}/${pickedDate.year}";
+                            });
                           }
-                          final age = int.tryParse(value);
-                          if (age == null || age < 17 || age > 120) {
-                            return 'Usia harus antara 17-120 tahun';
-                          }
-                          return null;
                         },
+                        child: AbsorbPointer(
+                          child: MyTextField(
+                            hintText: 'Pilih Tanggal Lahir',
+                            keyboardType: TextInputType.datetime,
+                            inputType: InputType.text,
+                            controller: _dateOfBirthController,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Tanggal lahir tidak boleh kosong';
+                              }
+                              if (_selectedDate == null) {
+                                return 'Pilih tanggal lahir yang valid';
+                              }
+                              final age = DateTime.now().year - _selectedDate!.year;
+                              final monthDiff = DateTime.now().month - _selectedDate!.month;
+                              final actualAge = monthDiff < 0 || (monthDiff == 0 && DateTime.now().day < _selectedDate!.day) ? age - 1 : age;
+                              if (actualAge < 17 || actualAge > 65) {
+                                return 'Usia harus antara 17-65 tahun berdasarkan tanggal lahir';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 20),
                       _buildLabel('Email'),
@@ -212,16 +252,17 @@ class _PersonalInfoState extends State<PersonalInfo> {
                               setState(() => _isLoading = true);
                               await _authService.savePersonalInfo(
                                   _nameController.text,
-                                  int.parse(_ageController.text),
+                                  _selectedDate!,
                                   _emailController.text,
                                   context);
                             }
                           },
                           color: const Color(0xFF476EB6)),
                       const SizedBox(height: 20),
-                      const Spacer(),
                       CopyrightWidget(),
-                    ],
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),

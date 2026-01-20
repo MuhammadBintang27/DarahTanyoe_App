@@ -47,11 +47,15 @@ class AuthService {
 
   /// **✅ Kirim OTP**
   Future<bool> sendOTP(String phone, [BuildContext? context]) async {
+    print("🔍 DEBUG: Base URL from dotenv: ${dotenv.env['BASE_URL']}");
+    print("🔍 DEBUG: AuthService baseUrl: $baseUrl");
     var request = http.Request('POST', Uri.parse('$baseUrl/users/masuk'));
-    request.body = jsonEncode({"phone": phone});
+    print("🔍 DEBUG: Full URL: $baseUrl/users/masuk");
+    print("🔍 DEBUG: Request body: ${jsonEncode({"phone": phone})}");
     request.headers.addAll({
       'Content-Type': 'application/json',
     });
+    request.body = jsonEncode({"phone": phone}); // <-- MENAMBAHKAN BODY REQUEST
 
     print("Nomor yang dikirim OTP: $phone");
 
@@ -98,6 +102,7 @@ class AuthService {
         return false;
       }
     } catch (e) {
+      print("Error in sendOTP: $e");
       errorCallback?.call(e.toString());
 
       if (context != null) {
@@ -113,6 +118,8 @@ class AuthService {
 
   /// **✅ Verifikasi OTP**
   Future<bool> verifyOTP(String otp, String phone, BuildContext context) async {
+    print("🔍 DEBUG: Verifying OTP - Phone: $phone, OTP: $otp");
+    print("🔍 DEBUG: Base URL: $baseUrl");
     try {
       // Call original loading callback
       loadingCallback?.call(true);
@@ -128,6 +135,10 @@ class AuthService {
           'Content-Type': 'application/json'
         },
       );
+
+      print("Verify OTP URL: $baseUrl/users/verifyOTP");
+      print("Response status: ${response.statusCode}");
+      print("Response body: ${response.body}");
 
       // Hide animation
       AnimationService.hideLoading(context);
@@ -214,6 +225,7 @@ class AuthService {
         return false;
       }
     } catch (e) {
+      print("Error in verifyOTP: $e");
       // Call original error callback
       errorCallback?.call(e.toString());
 
@@ -227,7 +239,7 @@ class AuthService {
     }
   }
 
-  Future<bool> savePersonalInfo(String name, int age, String email,
+  Future<bool> savePersonalInfo(String name, DateTime dateOfBirth, String email,
       [BuildContext? context]) async {
     try {
       // Aktifkan loading
@@ -239,7 +251,7 @@ class AuthService {
       }
 
       registrationData['full_name'] = name;
-      registrationData['age'] = age;
+      registrationData['date_of_birth'] = dateOfBirth.toIso8601String().split('T')[0]; // Format YYYY-MM-DD
       registrationData['email'] = email;
       await _saveToLocalStorage();
 
@@ -338,7 +350,6 @@ class AuthService {
       registrationData['blood_type'] = bloodType;
       registrationData['last_donation_date'] = lastDonation;
       registrationData['health_notes'] = medicalHistory;
-      registrationData['user_type'] = "pendonor_peminta";
 
       final String? accessToken = await storage.read(key: 'access_token');
       if (accessToken == null) {
@@ -350,10 +361,9 @@ class AuthService {
 
       final response = await http.post(
         Uri.parse('$baseUrl/users/daftar'),
-        body: jsonEncode(dataToSend), // Kirim data tanpa phoneNumber
+        body: jsonEncode(dataToSend),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $accessToken'
         },
       );
 
@@ -370,26 +380,26 @@ class AuthService {
         await storage.write(key: 'userData', value: jsonEncode(userData));
 
         // Tampilkan animasi sukses dan navigasi jika ada context
-        // if (context != null) {
-        //   await AnimationService.showSuccess(context,
-        //       message: 'Registrasi berhasil!', onComplete: () {
-        //     Navigator.of(context).pushAndRemoveUntil(
-        //       PageRouteBuilder(
-        //         pageBuilder: (context, animation, secondaryAnimation) =>
-        //             MainScreen(),
-        //         transitionsBuilder:
-        //             (context, animation, secondaryAnimation, child) {
-        //           return AnimationService.buildPageTransition(
-        //             child: child,
-        //             animation: animation,
-        //             secondaryAnimation: secondaryAnimation,
-        //           );
-        //         },
-        //       ),
-        //       (route) => false,
-        //     );
-        //   });
-        // }
+        if (context != null) {
+          await AnimationService.showSuccess(context,
+              message: 'Registrasi berhasil!', onComplete: () {
+            Navigator.of(context).pushAndRemoveUntil(
+              PageRouteBuilder(
+                pageBuilder: (context, animation, secondaryAnimation) =>
+                    MainScreen(),
+                transitionsBuilder:
+                    (context, animation, secondaryAnimation, child) {
+                  return AnimationService.buildPageTransition(
+                    child: child,
+                    animation: animation,
+                    secondaryAnimation: secondaryAnimation,
+                  );
+                },
+              ),
+              (route) => false,
+            );
+          });
+        }
 
         return true;
       } else {

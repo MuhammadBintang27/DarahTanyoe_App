@@ -39,12 +39,12 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
       );
     };
 
-    _authService.successCallback = () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => PersonalInfo()),
-      );
-    };
+    // _authService.successCallback = () {
+    //   Navigator.push(
+    //     context,
+    //     MaterialPageRoute(builder: (context) => PersonalInfo()),
+    //   );
+    // };
   }
 
   void _startCountdown() {
