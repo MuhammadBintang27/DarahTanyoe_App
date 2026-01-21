@@ -11,7 +11,7 @@ class PersonalInfo extends StatefulWidget {
   const PersonalInfo({super.key});
 
   @override
-  _PersonalInfoState createState() => _PersonalInfoState();
+  State<PersonalInfo> createState() => _PersonalInfoState();
 }
 
 class _PersonalInfoState extends State<PersonalInfo> {
@@ -79,7 +79,6 @@ class _PersonalInfoState extends State<PersonalInfo> {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(

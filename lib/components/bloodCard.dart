@@ -3,8 +3,6 @@ import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_layout_grid/flutter_layout_grid.dart';
-import '../models/permintaan_darah_model.dart';
-import '../models/pendonoran_darah_model.dart';
 import 'package:darahtanyoe_app/components/allSvg.dart';
 
 class BloodCard extends StatelessWidget {
@@ -20,8 +18,6 @@ class BloodCard extends StatelessWidget {
   final double? distance;
   final String uniqueCode;
   final String createdAt;
-  final PermintaanDarahModel? permintaan;
-  final PendonoranDarahModel? pendonoran;
   final String description;
   final bool isUrgent;
   final void Function()? onTap;
@@ -38,9 +34,7 @@ class BloodCard extends StatelessWidget {
     this.isNearest = false,
     this.isHomeScreen = false,
     required this.uniqueCode,
-    this.permintaan,
     this.createdAt = "",
-    this.pendonoran,
     required this.description,
     this.isUrgent = false,
     this.distance,

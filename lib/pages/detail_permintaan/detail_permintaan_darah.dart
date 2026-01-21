@@ -45,7 +45,7 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
                   height: 30,
                 ),
                 title: 'Peminta Darah',
-                subtitle: widget.permintaan.patientName,
+                subtitle: widget.permintaan.patientName ?? '-',
                 isProfile: true,
               ),
               const SizedBox(height: 6),
@@ -80,8 +80,8 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            widget.permintaan.bloodType,
-                            style: TextStyle(
+                            widget.permintaan.bloodType ?? '-',
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 32,
                               fontWeight: FontWeight.bold,
@@ -130,8 +130,8 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
                                 ),
                               ),
                               Text(
-                                '${widget.permintaan.bloodBagsNeeded} Kantong',
-                                style: TextStyle(
+                                '${widget.permintaan.relatedBloodRequest?.quantity ?? 0} Kantong',
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 14,
                                 ),
@@ -147,10 +147,10 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
               const SizedBox(height: 16),
               _buildLocationCard(
                 title: 'Lokasi Permintaan Darah',
-                location: widget.permintaan.partner_name,
-                distance: widget.permintaan.distance,
-                latitude: widget.permintaan.partner_latitude,
-                longitude: widget.permintaan.partner_longitude,
+                location: widget.permintaan.organiser?.institutionName ?? 'N/A',
+                distance: null,
+                latitude: widget.permintaan.latitude,
+                longitude: widget.permintaan.longitude,
               ),
               _buildInfoCard(
                 leadingIcon: SvgPicture.string(
@@ -160,7 +160,7 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
                   height: 30,
                 ),
                 title: 'Jadwal Berakhir Permintaan',
-                subtitle: formatDateTime(widget.permintaan.expiry_date),
+                subtitle: formatDateTime(widget.permintaan.endDate.toIso8601String()),
               ),
               _buildInfoCard(
                 leadingIcon: SvgPicture.string(
@@ -171,7 +171,7 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
                 ),
                 title: 'Deskripsi Kebutuhan',
                 subtitle: (widget.permintaan.description ?? '').trim().isNotEmpty
-                    ? widget.permintaan.description
+                    ? widget.permintaan.description ?? '-'
                     : '-',
                 hasMoreButton: true,
               ),
@@ -183,7 +183,7 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
                   height: 30,
                 ),
                 title: 'Progress Permintaan',
-                subtitle: 'Telah terisi ${widget.permintaan.bloodBagsFulfilled} dari ${widget.permintaan.bloodBagsNeeded} Kantong',
+                subtitle: 'Telah terisi ${widget.permintaan.currentQuantity} dari ${widget.permintaan.relatedBloodRequest?.quantity ?? 0} Kantong',
               ),
               const Spacer(),
               Container(
@@ -210,7 +210,7 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
                         MaterialPageRoute(
                           builder: (context) => DataPendonoranDarah(
                             requestId: widget.permintaan.id,
-                            golonganDarah: widget.permintaan.bloodType,
+                            golonganDarah: widget.permintaan.bloodType ?? '-',
                           ),
                         ),
                       );
@@ -348,18 +348,19 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
                 ),
                 Text(
                   location,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 14,
                     color: AppTheme.neutral_01,
                   ),
                 ),
-                Text(
-                  '$distance KM dari alamat anda',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
+                if (distance != null)
+                  Text(
+                    '$distance KM dari alamat anda',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
                   ),
-                ),
               ],
             ),
           ),

@@ -1,13 +1,10 @@
 import 'dart:async';
-import 'dart:convert';
-
 import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:darahtanyoe_app/components/copyright.dart';
 import 'package:darahtanyoe_app/components/my_button.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:http/http.dart' as http;
 import '../../service/auth_service.dart';
 import 'blood_info.dart';
 import 'package:geocoding/geocoding.dart';
@@ -18,7 +15,7 @@ class AddressPage extends StatefulWidget {
   const AddressPage({super.key});
 
   @override
-  _AddressPageState createState() => _AddressPageState();
+  State<AddressPage> createState() => _AddressPageState();
 }
 
 class _AddressPageState extends State<AddressPage> {
@@ -152,7 +149,6 @@ class _AddressPageState extends State<AddressPage> {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
@@ -253,7 +249,7 @@ class _AddressPageState extends State<AddressPage> {
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
+                                  color: Colors.black.withValues(alpha: 0.2),
                                   blurRadius: 8,
                                   offset: const Offset(0, 4),
                                 ),
@@ -293,7 +289,7 @@ class _AddressPageState extends State<AddressPage> {
                                                   boxShadow: [
                                                     BoxShadow(
                                                       color: Colors.black
-                                                          .withOpacity(0.3),
+                                                          .withValues(alpha: 0.3),
                                                       blurRadius: 8,
                                                       offset:
                                                           const Offset(0, 4),
@@ -379,7 +375,7 @@ class _AddressPageState extends State<AddressPage> {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 disabledBackgroundColor:
-                                    const Color(0xFFD4A574).withOpacity(0.5),
+                                    const Color(0xFFD4A574).withValues(alpha: 0.5),
                               ),
                               icon: _isLoadingLocation
                                   ? const SizedBox(

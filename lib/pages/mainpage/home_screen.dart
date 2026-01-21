@@ -4,12 +4,11 @@ import 'package:darahtanyoe_app/components/action_button.dart';
 import 'package:darahtanyoe_app/components/bloodCard.dart';
 import 'package:darahtanyoe_app/helpers/formatDateTime.dart';
 import 'package:darahtanyoe_app/models/permintaan_darah_model.dart';
-import 'package:darahtanyoe_app/pages/data_permintaan/data_diri.dart';
-import 'package:darahtanyoe_app/pages/authentication/personal_info.dart';
+import 'package:darahtanyoe_app/pages/mainpage/transaksi.dart';
 import 'package:darahtanyoe_app/pages/detail_permintaan/detail_permintaan_darah.dart';
 import 'package:darahtanyoe_app/pages/mainpage/main_screen.dart';
 import 'package:darahtanyoe_app/service/auth_service.dart';
-import 'package:darahtanyoe_app/service/permintaan_terdekat.dart';
+import 'package:darahtanyoe_app/service/campaign_service.dart';
 import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:darahtanyoe_app/widget/header_widget.dart';
 import 'package:darahtanyoe_app/components/background_widget.dart';
@@ -23,16 +22,13 @@ import 'package:http/http.dart' as http;
 import '../../components/article_slider.dart';
 
 class HomeScreen extends StatefulWidget {
-  HomeScreen({super.key});
+  const HomeScreen({super.key});
 
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final int _selectedIndex = 0;
-
-  @override
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -121,7 +117,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: AppTheme.neutral_01,
                       shadows: [
                         Shadow(
-                          color: AppTheme.brand_03.withOpacity(0.5),
+                          color: AppTheme.brand_03.withValues(alpha: 0.5),
                           blurRadius: 10,
                           offset: Offset(0, 4),
                         ),
@@ -148,20 +144,17 @@ Future<int?> fetchTotalPoints() async {
   if (userId == null) return null;
   String baseUrl = dotenv.env['BASE_URL'] ?? 'https://default-url.com';
   final url = Uri.parse('$baseUrl/users/poin/$userId');
-  print(url);
 
   try {
     final response = await http.get(url);
-    print(response.body);  
+    
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       return data['total_points'];
     } else {
-      print("Gagal fetch data, status: ${response.statusCode}");
       return null;
     }
   } catch (e) {
-    print("Error saat fetch poin: $e");
     return null;
   }
 }
@@ -180,7 +173,7 @@ Widget _buildActionButtons() {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => DataPemintaanDarah()),
+                        builder: (context) => TransactionBlood()),
                   );
                 },
                 child: Icon(
@@ -226,7 +219,7 @@ Widget _buildActionButtons() {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => DataPemintaanDarah()),
+              MaterialPageRoute(builder: (context) => TransactionBlood()),
             );
           },
         ),
@@ -311,7 +304,7 @@ Widget _buildPendingDonations() {
                   itemCount: donationData.length,
                   itemBuilder: (context, index) {
                     var data = donationData[index];
-                    String formattedDate = formatDateTime(data.expiry_date);
+                    String formattedDate = formatDateTime(data.endDate.toString());
 
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
@@ -326,20 +319,20 @@ Widget _buildPendingDonations() {
                             ),
                           );
                         },
-                        createdAt: data.createdAt!,
+                        createdAt: formatDateTime(data.createdAt.toString()),
                         status: data.status,
-                        bloodType: data.bloodType,
+                        bloodType: data.bloodType ?? 'Tidak Diketahui',
                         date: formattedDate,
-                        hospital: data.partner_name,
+                        hospital: data.organiser?.institutionName ?? 'Institusi',
                         isNearest: true,
                         isHomeScreen: true,
-                        distance: data.distance,
-                        bagCount: data.bloodBagsFulfilled,
-                        totalBags: data.bloodBagsNeeded,
+                        distance: data.distanceKm, // ✅ Dari API getNearestCampaigns
+                        bagCount: data.currentQuantity,
+                        totalBags: data.targetQuantity ?? 0,
                         isRequest: true,
-                        uniqueCode: data.uniqueCode,
-                        description: (data.description.isNotEmpty)
-                            ? data.description
+                        uniqueCode: '', // Unique code ada di DonorConfirmationModel
+                        description: (data.description?.isNotEmpty ?? false)
+                            ? data.description!
                             : '-',
                       ),
                     );
@@ -355,7 +348,8 @@ Widget _buildPendingDonations() {
 
 
   
-// Fungsi helper untuk mendapatkan userId terlebih dahulu kemudian memanggil service
+/// Get nearby blood campaigns from backend
+/// Backend automatically filters based on user's profile
   Future<List<PermintaanDarahModel>> _getNearbyBloodRequests() async {
     try {
       final user = await AuthService().getCurrentUser();
@@ -364,7 +358,8 @@ Widget _buildPendingDonations() {
       }
 
       final String userId = user['id'];
-      return await PermintaanTerdekat().fetchBloodRequests(userId);
+      // Backend API sudah handle filtering berdasarkan blood type, location, urgency
+      return await CampaignService.getNearestCampaigns(userId);
     } catch (e) {
       throw Exception('Gagal mengambil data permintaan darah: $e');
     }
@@ -381,7 +376,7 @@ Widget _buildPendingDonations() {
         ),
         border: Border(
           bottom: BorderSide(
-            color: AppTheme.brand_02.withOpacity(0.4),
+            color: AppTheme.brand_02.withValues(alpha: 0.4),
             width: 1,
           ),
         ),
@@ -538,7 +533,7 @@ Widget _buildPendingDonations() {
           // Overlay dengan efek gelap agar teks tetap terbaca
           Positioned.fill(
             child: Container(
-              color: Colors.black.withOpacity(0.5),
+              color: Colors.black.withValues(alpha: 0.5),
             ),
           ),
 
@@ -550,7 +545,7 @@ Widget _buildPendingDonations() {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                  color: Colors.white.withOpacity(0.5)), // Border tipis
+                  color: Colors.white.withValues(alpha: 0.5)), // Border tipis
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

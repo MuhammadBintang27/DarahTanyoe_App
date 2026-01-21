@@ -8,9 +8,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../main.dart';
-import '../../models/permintaan_darah_model.dart';
-import '../../service/permintaan_darah_service.dart';
 import 'package:dotted_border/dotted_border.dart';
+
+/// DEPRECATED: Fitur membuat permintaan darah dari donor sudah tidak ada di flow baru
+/// Dalam sistem notification-driven, hanya PMI yang membuat campaign
+/// Donor hanya merespons notifikasi yang diterima
 
 class Validasi extends StatefulWidget {
   final String nama;
@@ -441,41 +443,17 @@ class _ValidasiState extends State<Validasi> {
         },
       );
 
-      // final String uniqueCode = PermintaanDarahService.generateUniqueCode();
-      // final DateTime now = DateTime.now();
-
-      final permintaan = PermintaanDarahModel(
-        patientName: widget.nama,
-        patientAge: widget.usia,
-        phoneNumber: widget.nomorHP,
-        bloodType: widget.golDarah,
-        bloodBagsNeeded: int.tryParse(widget.jumlahKantong) ?? 0,
-        description: widget.deskripsi,
-        partner_id: widget.idLokasi,
-        expiry_date: widget.tanggalDatabase,
-        uniqueCode: "",
-        bloodBagsFulfilled: 0,
-        status: PermintaanDarahModel.STATUS_PENDING,
-      );
-
-      PermintaanDarahService.simpanPermintaan(permintaan).then((success) {
-        Navigator.pop(context); // Tutup dialog loading
-
-        if (success) {
-          showCustomDialog(context, permintaan);
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Gagal menyimpan permintaan. Silakan coba lagi."),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      });
+      // DEPRECATED: Fitur membuat permintaan darah tidak ada di arsitektur baru
+      // Dalam sistem notification-driven, hanya PMI yang membuat campaign
+      // Flow baru: PMI creates campaign → Backend finds eligible donors → 
+      //            Sends notifications → Donor confirms → Gets unique code
+      
+      Navigator.pop(context); // Close loading dialog
+      showCustomDialog(context);
     }
   }
 
-  void showCustomDialog(BuildContext context, PermintaanDarahModel permintaan) {
+  void showCustomDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -507,7 +485,7 @@ class _ValidasiState extends State<Validasi> {
                 // ),
                 const SizedBox(height: 10),
                 const Text(
-                  "Pengajuan Anda sedang diproses. Mohon TUNGGU KONFIRMASI dari pihak RS/PMI terkait sebelum mendatangi idLokasi pendonoran.",
+                  "Pengajuan Anda sedang diproses. Mohon TUNGGU KONFIRMASI dari pihak RS/PMI terkait sebelum mendatangi lokasi pendonoran.",
                   style: TextStyle(fontSize: 14),
                   textAlign: TextAlign.center,
                 ),

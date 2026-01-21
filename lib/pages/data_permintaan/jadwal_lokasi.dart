@@ -8,10 +8,8 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
-import '../../components/dropdown_api.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:darahtanyoe_app/pages/notifikasi/Notifikasi.dart';
 import 'validasi.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 

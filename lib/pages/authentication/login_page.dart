@@ -11,7 +11,7 @@ class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
   @override
-  _LoginPageState createState() => _LoginPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
@@ -150,7 +150,7 @@ class _LoginPageState extends State<LoginPage> {
                                     width: 48,
                                     height: 48,
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.11),
+                                      color: Colors.white.withValues(alpha: 0.11),
                                       borderRadius: BorderRadius.circular(16),
                                       border: Border.all(color: Colors.white, width: 0.5),
                                     ),
@@ -163,7 +163,7 @@ class _LoginPageState extends State<LoginPage> {
                                         border: InputBorder.none,
                                         hintText: '+62',
                                         hintStyle: GoogleFonts.dmSans(
-                                          color: Colors.white.withOpacity(0.3),
+                                          color: Colors.white.withValues(alpha: 0.3),
                                         ),
                                       ),
                                       textAlign: TextAlign.center,

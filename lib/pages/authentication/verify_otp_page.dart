@@ -1,5 +1,4 @@
 import 'package:darahtanyoe_app/components/copyright.dart';
-import 'package:darahtanyoe_app/pages/authentication/personal_info.dart';
 import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +11,7 @@ class VerifyOtpPage extends StatefulWidget {
   const VerifyOtpPage({super.key});
 
   @override
-  _VerifyOtpPageState createState() => _VerifyOtpPageState();
+  State<VerifyOtpPage> createState() => _VerifyOtpPageState();
 }
 
 class _VerifyOtpPageState extends State<VerifyOtpPage> {

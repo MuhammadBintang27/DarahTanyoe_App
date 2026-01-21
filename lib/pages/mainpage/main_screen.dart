@@ -2,7 +2,7 @@ import 'package:darahtanyoe_app/pages/mainpage/profil.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:darahtanyoe_app/pages/mainpage/home_screen.dart';
-import 'package:darahtanyoe_app/pages/mainpage/peta_darah.dart';
+import 'package:darahtanyoe_app/pages/mainpage/informasi_pmi.dart';
 import 'package:darahtanyoe_app/pages/mainpage/permintaan_darah_terdekat.dart';
 import 'package:darahtanyoe_app/pages/mainpage/transaksi.dart';
 import '../../components/my_navbar.dart';
@@ -66,7 +66,7 @@ class MainScreenState extends State<MainScreen> {
             children: [
               _wrapWithScrollableContainer(HomeScreen()),
               _wrapWithScrollableContainer(NearestBloodDonation()),
-              _wrapWithScrollableContainer(BloodMap()),
+              _wrapWithScrollableContainer(InformasiPMI()),
               _wrapWithScrollableContainer(TransactionBlood(uniqueCode: _uniqueCode)),
               _wrapWithScrollableContainer(ProfileScreen()),
             ],

@@ -50,7 +50,7 @@ class CustomBottomNavBar extends StatelessWidget {
               _buildNavItem(
                   context, 1, 'assets/logo/logo_nearby_nav.png', 'Terdekat'),
               _buildNavItem(
-                  context, 2, 'assets/logo/logo_map_nav.png', 'Peta Darah'),
+                  context, 2, 'assets/logo/logo_map_nav.png', 'Info PMI'),
               _buildNavItem(context, 3, 'assets/logo/logo_transaction_nav.png',
                   'Transaksi'),
               _buildNavItem(

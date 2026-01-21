@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:darahtanyoe_app/components/background_widget.dart';
 import 'package:darahtanyoe_app/components/bloodCard.dart';
 import 'package:darahtanyoe_app/components/loadingIndicator.dart';
@@ -10,8 +9,7 @@ import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:darahtanyoe_app/widget/header_widget.dart';
-import 'package:intl/intl.dart';
-import '../../service/permintaan_terdekat.dart';
+import '../../service/campaign_service.dart';
 
 class NearestBloodDonation extends StatefulWidget {
   final String? uniqueCode;
@@ -109,14 +107,11 @@ class _NearestBloodDonationState extends State<NearestBloodDonation> {
           return _buildEmptyRequestUI();
         }
 
-        // Data berhasil dimuat
-        List<PermintaanDarahModel> permintaanList = snapshot.data!;
-
         return Column(
-          children: permintaanList.map((permintaan) {
-            String formattedDate = formatDateTime(permintaan.expiry_date);
-            int bagCount = permintaan.bloodBagsFulfilled;
-            int totalBags = permintaan.bloodBagsNeeded;
+          children: snapshot.data!.map((permintaan) {
+            String formattedDate = formatDateTime(permintaan.endDate.toString());
+            int bagCount = permintaan.currentQuantity;
+            int totalBags = permintaan.targetQuantity ?? 0;
 
             return Padding(
               padding: const EdgeInsets.only(bottom: 18),
@@ -132,17 +127,19 @@ class _NearestBloodDonationState extends State<NearestBloodDonation> {
                     ),
                   );
                 },
-                createdAt: permintaan.createdAt!,
-                bloodType: permintaan.bloodType,
+                createdAt: formatDateTime(permintaan.createdAt.toString()),
+                bloodType: permintaan.bloodType ?? 'Tidak Diketahui',
                 date: formattedDate,
-                hospital: permintaan.partner_name,
+                hospital: permintaan.organiser?.institutionName ?? 'Institusi',
                 bagCount: bagCount,
                 totalBags: totalBags,
                 isNearest: true,
                 isRequest: true,
-                distance: permintaan.distance,
-                uniqueCode: permintaan.uniqueCode,
-                description: (permintaan.description.isNotEmpty) ? permintaan.description : '-',
+                distance: permintaan.distanceKm, // ✅ Pass distance from API
+                uniqueCode: '', // Unique code ada di DonorConfirmationModel
+                description: (permintaan.description?.isNotEmpty ?? false) 
+                    ? permintaan.description! 
+                    : '-',
               ),
             );
           }).toList(),
@@ -151,7 +148,12 @@ class _NearestBloodDonationState extends State<NearestBloodDonation> {
     );
   }
 
-// Helper function untuk mendapatkan data
+/// Get nearby blood campaigns from backend
+/// Backend automatically filters & sorts based on user's profile
+/// - Blood type match
+/// - Location proximity
+/// - Urgency level (critical > high > medium > low)
+/// - Availability (still needs donors)
   Future<List<PermintaanDarahModel>> _getNearbyBloodRequests() async {
     try {
       final user = await AuthService().getCurrentUser();
@@ -160,7 +162,12 @@ class _NearestBloodDonationState extends State<NearestBloodDonation> {
       }
 
       final String userId = user['id'];
-      return await PermintaanTerdekat().fetchBloodRequests(userId);
+      // Backend API sudah handle:
+      // 1. Filter by blood type match
+      // 2. Filter by proximity
+      // 3. Sort by urgency
+      // 4. Filter active campaigns only
+      return await CampaignService.getNearestCampaigns(userId);
     } catch (e) {
       throw Exception('Gagal mengambil data permintaan darah: $e');
     }

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:darahtanyoe_app/pages/mainpage/main_screen.dart';
 import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:flutter/material.dart';
@@ -10,7 +9,7 @@ class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  _SplashScreenState createState() => _SplashScreenState();
+  State<SplashScreen> createState() => _SplashScreenState();
 }
 
 class _SplashScreenState extends State<SplashScreen> {
@@ -30,7 +29,6 @@ class _SplashScreenState extends State<SplashScreen> {
       // Check if access token exists in secure storage
       final String? accessToken = await storage.read(key: 'access_token');
       final String? expiryDateStr = await storage.read(key: 'expiry_date');
-      print(expiryDateStr);
 
       if (!mounted) return;
 

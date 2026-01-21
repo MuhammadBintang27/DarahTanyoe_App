@@ -1,25 +1,17 @@
 import 'dart:convert';
-import 'package:darahtanyoe_app/components/allSvg.dart';
 import 'package:darahtanyoe_app/components/background_widget.dart';
 import 'package:darahtanyoe_app/components/bloodCard.dart';
 import 'package:darahtanyoe_app/components/loadingIndicator.dart';
 import 'package:darahtanyoe_app/helpers/formatDateTime.dart';
-import 'package:darahtanyoe_app/models/pendonoran_darah_model.dart';
-import 'package:darahtanyoe_app/pages/detail_pendonoran/detail_pendonoran.dart';
-import 'package:darahtanyoe_app/pages/mainpage/main_screen.dart';
+import 'package:darahtanyoe_app/pages/detail_permintaan/detail_permintaan_darah.dart';
 import 'package:darahtanyoe_app/service/auth_service.dart';
 import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:darahtanyoe_app/widget/header_widget.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/permintaan_darah_model.dart';
-import '../../service/permintaan_darah_service.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:flutter_layout_grid/flutter_layout_grid.dart';
 import 'package:http/http.dart' as http;
-import '../detail_permintaan/detail_permintaan_darah_anda.dart';
 
 class TransactionBlood extends StatefulWidget {
   final String? defaultTab;
@@ -38,7 +30,6 @@ class _TransactionBloodState extends State<TransactionBlood> {
 
   // Lists for storing actual data from the service
   List<PermintaanDarahModel> permintaanList = [];
-  List<PendonoranDarahModel> pendonoranList = [];
 
   @override
   void initState() {
@@ -55,8 +46,6 @@ class _TransactionBloodState extends State<TransactionBlood> {
     setState(() {
       isRequestTab = savedTab == "minta";
     });
-
-    print("ISREQUESTTAB: $isRequestTab" );
 
     if (isRequestTab) {
       _loadPermintaan();
@@ -78,26 +67,6 @@ class _TransactionBloodState extends State<TransactionBlood> {
         List<dynamic> jsonData = jsonResponse['data'];
         return jsonData
             .map((item) => PermintaanDarahModel.fromJson(item))
-            .toList();
-      } else {
-        throw Exception('Gagal mengambil data: ${response.statusCode}');
-      }
-    } catch (e) {
-      throw Exception('Terjadi kesalahan: $e');
-    }
-  }
-
-  Future<List<PendonoranDarahModel>> fetchDonorData(String userId) async {
-    final String baseUrl = dotenv.env['BASE_URL'] ?? 'https://default-url.com';
-    final url = Uri.parse('$baseUrl/donor/$userId');
-
-    try {
-      final response = await http.get(url);
-      if (response.statusCode == 200) {
-        Map<String, dynamic> jsonResponse = json.decode(response.body);
-        List<dynamic> jsonData = jsonResponse['data'];
-        return jsonData
-            .map((item) => PendonoranDarahModel.fromJson(item))
             .toList();
       } else {
         throw Exception('Gagal mengambil data: ${response.statusCode}');
@@ -167,12 +136,10 @@ class _TransactionBloodState extends State<TransactionBlood> {
         return;
       }
 
-      String userId = user?['id'];
-      List<PendonoranDarahModel> data = await fetchDonorData(userId);
-
+      // DEPRECATED: Donor history feature no longer available
+      // Will be replaced with DonorConfirmationService in future update
       if (mounted) {
         setState(() {
-          pendonoranList = data;
           isLoading = false;
         });
       }
@@ -184,8 +151,8 @@ class _TransactionBloodState extends State<TransactionBlood> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Gagal memuat data pendonoran: $e"),
-            backgroundColor: Colors.red,
+            content: Text("Fitur sedang diperbarui: $e"),
+            backgroundColor: Colors.orange,
           ),
         );
       }
@@ -193,14 +160,8 @@ class _TransactionBloodState extends State<TransactionBlood> {
   }
 
   void _highlightRequest(String uniqueCode) {
-    // Implementasi untuk menyoroti permintaan dengan uniqueCode tertentu
-    // Misalnya dengan menampilkan dialog atau scroll ke item tersebut
-    for (var i = 0; i < permintaanList.length; i++) {
-      if (permintaanList[i].uniqueCode == uniqueCode) {
-        // Implementasi highlight
-        break;
-      }
-    }
+    // DEPRECATED: uniqueCode feature removed from new schema
+    // In new architecture: DonorConfirmationModel tracks confirmation status instead
   }
 
   @override
@@ -250,7 +211,7 @@ class _TransactionBloodState extends State<TransactionBlood> {
                 borderRadius: BorderRadius.circular(9),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black87.withOpacity(0.25),
+                    color: Colors.black87.withValues(alpha: 0.25),
                     blurRadius: 3,
                     offset: const Offset(0, 4),
                   ),
@@ -273,7 +234,7 @@ class _TransactionBloodState extends State<TransactionBlood> {
                             : Colors.transparent,
                         foregroundColor: isRequestTab
                             ? Colors.white
-                            : Colors.black.withOpacity(0.5),
+                            : Colors.black.withValues(alpha: 0.5),
                         elevation: 0,
                         shape: const RoundedRectangleBorder(
                           borderRadius: BorderRadius.horizontal(
@@ -305,7 +266,7 @@ class _TransactionBloodState extends State<TransactionBlood> {
                             : Colors.transparent,
                         foregroundColor: !isRequestTab
                             ? Colors.white
-                            : Colors.black.withOpacity(0.5),
+                            : Colors.black.withValues(alpha: 0.5),
                         elevation: 0,
                         shape: const RoundedRectangleBorder(
                           borderRadius: BorderRadius.horizontal(
@@ -370,15 +331,12 @@ class _TransactionBloodState extends State<TransactionBlood> {
       child: Column(
         children: [
           ...permintaanList.map((permintaan) {
-            String formattedDate = formatDateTime(permintaan.expiry_date);
-            int bagCount = permintaan.bloodBagsFulfilled;
-            int totalBags = permintaan.bloodBagsNeeded;
+            String formattedDate = formatDateTime(permintaan.endDate.toIso8601String());
 
             return Padding(
               padding: const EdgeInsets.only(bottom: 18),
               child: BloodCard(
                 onTap: () {
-                  print("Klik detail permintaan");
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -387,19 +345,17 @@ class _TransactionBloodState extends State<TransactionBlood> {
                   );
                 },
                 status: permintaan.status,
-                bloodType: permintaan.bloodType,
+                bloodType: permintaan.bloodType ?? '-',
                 date: formattedDate,
-                hospital: permintaan.partner_name,
-                createdAt: permintaan.createdAt!,
-                bagCount: bagCount,
-                totalBags: totalBags,
+                hospital: permintaan.organiser?.institutionName ?? 'N/A',
+                createdAt: formatDateTime(permintaan.createdAt.toIso8601String()),
+                bagCount: permintaan.currentQuantity,
+                totalBags: permintaan.relatedBloodRequest?.quantity ?? 0,
                 isRequest: true,
-                uniqueCode: permintaan.uniqueCode,
-                description: (permintaan.description.isNotEmpty)
-                    ? permintaan.description
+                uniqueCode: permintaan.id,
+                description: (permintaan.description?.isNotEmpty == true)
+                    ? permintaan.description ?? '-'
                     : '-',
-                permintaan: permintaan,
-                pendonoran: null,
               ),
             );
           }).toList(),
@@ -410,78 +366,29 @@ class _TransactionBloodState extends State<TransactionBlood> {
   }
 
   Widget _buildDonationContent() {
-    if (isLoading) {
-      return const LoadingIndicator();
-    }
-    if (pendonoranList.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.volunteer_activism, size: 64, color: Colors.grey),
-              SizedBox(height: 16),
-              Text(
-                "Belum ada pendonoran darah",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 8),
-              Text(
-                "Pendonoran darah yang Anda lakukan akan muncul di sini",
-                style: TextStyle(fontSize: 14, color: Colors.grey),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
+    // DEPRECATED: Donation history feature uses old PendonoranDarahModel which no longer exists
+    // In new architecture: notifications → donor confirms → DonorConfirmationModel tracks status
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.volunteer_activism, size: 64, color: Colors.grey),
+            SizedBox(height: 16),
+            Text(
+              "Belum ada pendonoran darah",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 8),
+            Text(
+              "Fitur riwayat pendonaran sedang diperbarui",
+              style: TextStyle(fontSize: 14, color: Colors.grey),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
-      );
-    }
-
-    String _formatDateTime(String rawDate) {
-      DateTime dateTime = DateTime.parse(rawDate);
-      return DateFormat('dd MMM yyyy, HH:mm').format(dateTime);
-    }
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        children: [
-          ...pendonoranList.map((pendonoran) {
-            String formattedDate = _formatDateTime(pendonoran.bloodRequest.expiryDate);
-
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 18),
-              child: BloodCard(
-                onTap: () {
-                  print("Klik detail donor");
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => DetailPendonoranDarah(pendonoran: pendonoran),
-                    ),
-                  );
-                },
-                status: pendonoran.status,
-                createdAt: pendonoran.createdAt ?? "",
-                bloodType: pendonoran.bloodRequest.bloodType,
-                date: formattedDate,
-                hospital: pendonoran.bloodRequest.partner.name,
-                bagCount: pendonoran.bloodRequest.bloodBagsFulfilled,
-                totalBags: pendonoran.bloodRequest.quantity,
-                isRequest: false,
-                uniqueCode: pendonoran.uniqueCode,
-                description: (pendonoran.bloodRequest.reason.isNotEmpty)
-                    ? pendonoran.bloodRequest.reason
-                    : '-',
-                permintaan: null,
-                pendonoran: pendonoran,
-              ),
-            );
-          }).toList(),
-          const SizedBox(height: 60),
-        ],
       ),
     );
   }

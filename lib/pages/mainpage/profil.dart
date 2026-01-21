@@ -58,6 +58,22 @@ class ProfileScreen extends StatelessWidget {
                         }
                       }
 
+                      // Hitung usia dari date_of_birth
+                      int? age;
+                      if (userData['date_of_birth'] != null) {
+                        try {
+                          final dateOfBirth = DateTime.parse(userData['date_of_birth']);
+                          final today = DateTime.now();
+                          age = today.year - dateOfBirth.year;
+                          if (today.month < dateOfBirth.month ||
+                              (today.month == dateOfBirth.month && today.day < dateOfBirth.day)) {
+                            age--;
+                          }
+                        } catch (e) {
+                          age = null;
+                        }
+                      }
+
                       return Padding(
                         padding: EdgeInsets.only(bottom: bottomNavHeight + 20),
                         child: Column(
@@ -72,7 +88,7 @@ class ProfileScreen extends StatelessWidget {
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.grey.withOpacity(0.3),
+                                      color: Colors.grey.withValues(alpha: 0.3),
                                       spreadRadius: 1,
                                       blurRadius: 5,
                                       offset: const Offset(0, 2),
@@ -101,7 +117,7 @@ class ProfileScreen extends StatelessWidget {
                             _buildInfoSection(context, 'Informasi Pribadi', [
                               _buildInfoItem(context, 'Email', userData['email'] ?? 'Tidak tersedia'),
                               _buildInfoItem(context, 'Telepon', userData['phone_number'] ?? 'Tidak tersedia'),
-                              _buildInfoItem(context, 'Usia', userData['age']?.toString() ?? 'Tidak tersedia'),
+                              _buildInfoItem(context, 'Usia', age != null ? '$age tahun' : 'Tidak tersedia'),
                               _buildInfoItem(context, 'Alamat', userData['address'] ?? 'Tidak tersedia'),
                             ]),
                             const SizedBox(height: 16),
@@ -118,7 +134,7 @@ class ProfileScreen extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(20),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.grey.withOpacity(0.3),
+                                      color: Colors.grey.withValues(alpha: 0.3),
                                       spreadRadius: 1,
                                       blurRadius: 6,
                                       offset: const Offset(0, 3),
@@ -129,7 +145,7 @@ class ProfileScreen extends StatelessWidget {
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(20),
                                   elevation: 4,
-                                  shadowColor: Colors.grey.withOpacity(0.4),
+                                  shadowColor: Colors.grey.withValues(alpha: 0.4),
                                   child: InkWell(
                                     onTap: () {},
                                     borderRadius: BorderRadius.circular(20),
@@ -163,7 +179,7 @@ class ProfileScreen extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(20),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: AppTheme.brand_01.withOpacity(0.3),
+                                      color: AppTheme.brand_01.withValues(alpha: 0.3),
                                       spreadRadius: 1,
                                       blurRadius: 6,
                                       offset: const Offset(0, 3),
@@ -174,7 +190,7 @@ class ProfileScreen extends StatelessWidget {
                                   color: AppTheme.brand_01,
                                   borderRadius: BorderRadius.circular(20),
                                   elevation: 4,
-                                  shadowColor: AppTheme.brand_01.withOpacity(0.5),
+                                  shadowColor: AppTheme.brand_01.withValues(alpha: 0.5),
                                   child: InkWell(
                                     onTap: () {
                                       _showLogoutConfirmation(context);
@@ -222,7 +238,7 @@ class ProfileScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.25),
+            color: Colors.grey.withValues(alpha: 0.25),
             spreadRadius: 1,
             blurRadius: 8,
             offset: const Offset(0, 3),
@@ -322,7 +338,7 @@ class ProfileScreen extends StatelessWidget {
           Material(
             borderRadius: BorderRadius.circular(20),
             elevation: 2,
-            shadowColor: Colors.grey.withOpacity(0.3),
+            shadowColor: Colors.grey.withValues(alpha: 0.3),
             child: TextButton(
               onPressed: () => Navigator.of(context).pop(false),
               style: TextButton.styleFrom(
@@ -339,7 +355,7 @@ class ProfileScreen extends StatelessWidget {
           Material(
             borderRadius: BorderRadius.circular(20),
             elevation: 2,
-            shadowColor: AppTheme.brand_01.withOpacity(0.3),
+            shadowColor: AppTheme.brand_01.withValues(alpha: 0.3),
             child: TextButton(
               onPressed: () => Navigator.of(context).pop(true),
               style: TextButton.styleFrom(

@@ -9,7 +9,7 @@ class BloodInfo extends StatefulWidget {
   const BloodInfo({super.key});
 
   @override
-  _BloodInfoState createState() => _BloodInfoState();
+  State<BloodInfo> createState() => _BloodInfoState();
 }
 
 class _BloodInfoState extends State<BloodInfo> {
@@ -55,7 +55,6 @@ class _BloodInfoState extends State<BloodInfo> {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
