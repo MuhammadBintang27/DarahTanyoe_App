@@ -4,11 +4,11 @@ import 'package:darahtanyoe_app/components/background_widget.dart';
 import 'package:darahtanyoe_app/helpers/formatDateTime.dart';
 import 'package:darahtanyoe_app/models/permintaan_darah_model.dart';
 import 'package:darahtanyoe_app/pages/donor_darah/data_donor_darah.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:geolocator/geolocator.dart';
 
 class DetailPermintaanDarah extends StatefulWidget {
   final PermintaanDarahModel permintaan;
@@ -23,6 +23,61 @@ class DetailPermintaanDarah extends StatefulWidget {
 }
 
 class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
+  double? _distance;
+
+  @override
+  void initState() {
+    super.initState();
+    _calculateDistance();
+  }
+
+  Future<void> _calculateDistance() async {
+    try {
+      final permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.best,
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () async {
+          return await Geolocator.getLastKnownPosition() ?? 
+            Position(
+              latitude: 0,
+              longitude: 0,
+              timestamp: DateTime.now(),
+              accuracy: 0,
+              altitude: 0,
+              altitudeAccuracy: 0,
+              heading: 0,
+              headingAccuracy: 0,
+              speed: 0,
+              speedAccuracy: 0,
+            );
+        },
+      );
+
+      if (position.latitude != 0 && position.longitude != 0 && widget.permintaan.latitude != null && widget.permintaan.longitude != null) {
+        final distance = Geolocator.distanceBetween(
+          position.latitude,
+          position.longitude,
+          widget.permintaan.latitude!,
+          widget.permintaan.longitude!,
+        ) / 1000; // Convert meters to km
+
+        if (mounted) {
+          setState(() {
+            _distance = double.parse(distance.toStringAsFixed(1));
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("Error calculating distance: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -148,7 +203,7 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
               _buildLocationCard(
                 title: 'Lokasi Permintaan Darah',
                 location: widget.permintaan.organiser?.institutionName ?? 'N/A',
-                distance: null,
+                distance: _distance,
                 latitude: widget.permintaan.latitude,
                 longitude: widget.permintaan.longitude,
               ),
@@ -291,7 +346,7 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
                     fontSize: 14,
                     color: AppTheme.neutral_01,
                   ),
-                  maxLines: 1,
+                  maxLines: hasMoreButton ? 2 : 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
@@ -366,10 +421,10 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
           ),
           InkWell(
             onTap: () async {
-              debugPrint("LATITUDE $latitude");
-              debugPrint("LONGITUDE $longitude");
+              debugPrint("LATITUDE ${widget.permintaan.latitude}");
+              debugPrint("LONGITUDE ${widget.permintaan.longitude}");
               final Uri url = Uri.parse(
-                'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude',
+                'https://www.google.com/maps/search/?api=1&query=${widget.permintaan.latitude},${widget.permintaan.longitude}',
               );
               if (await canLaunchUrl(url)) {
                 await launchUrl(url, mode: LaunchMode.externalApplication);

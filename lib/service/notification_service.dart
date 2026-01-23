@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:darahtanyoe_app/models/notification_model.dart';
-import 'package:darahtanyoe_app/service/auth_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
@@ -10,25 +9,35 @@ class NotificationService {
   static final String _baseUrl = dotenv.env['BASE_URL'] ?? 'https://default-url.com';
 
   /// Get semua notifikasi untuk donor
-  /// Maps: GET /notifications/:userId
+  /// Maps: GET /notifications/user/:userId
   static Future<List<NotificationModel>> getNotifications(String userId,
       {bool includeRead = false}) async {
     try {
       final query = includeRead ? '?include_read=true' : '';
+      final url = '$_baseUrl/notifications/user/$userId$query';
+      print('📲 Fetching notifications from: $url');
+      
       final response = await http.get(
-        Uri.parse('$_baseUrl/notifications/$userId$query'),
-      );
+        Uri.parse(url),
+      ).timeout(const Duration(seconds: 10));
 
+      print('📲 Response status: ${response.statusCode}');
+      print('📲 Response body: ${response.body}');
+      
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        // Backend return structure: {status, code, message, data: [...]}
         final List<dynamic> notifications = data['data'] ?? [];
+        print('📲 Parsed ${notifications.length} notifications');
+        
         return notifications
             .map((item) => NotificationModel.fromJson(item as Map<String, dynamic>))
             .toList();
       }
+      print('❌ Failed to fetch notifications: ${response.statusCode}');
       return [];
     } catch (e) {
-      print('Error fetching notifications: $e');
+      print('❌ Error fetching notifications: $e');
       return [];
     }
   }
@@ -78,13 +87,17 @@ class NotificationService {
   /// Maps: PATCH /notifications/:notificationId/read
   static Future<bool> markAsRead(String notificationId) async {
     try {
+      final url = '$_baseUrl/notifications/$notificationId/read';
+      print('📲 Marking notification as read: $url');
+      
       final response = await http.patch(
-        Uri.parse('$_baseUrl/notifications/$notificationId/read'),
+        Uri.parse(url),
       );
 
+      print('📲 Mark as read response: ${response.statusCode}');
       return response.statusCode == 200;
     } catch (e) {
-      print('Error marking notification as read: $e');
+      print('❌ Error marking notification as read: $e');
       return false;
     }
   }

@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "663576570531",
-    "project_id": "darahtanyoe",
-    "storage_bucket": "darahtanyoe.firebasestorage.app"
+    "project_number": "1056158041652",
+    "project_id": "darahtanyoe-fbcdc",
+    "storage_bucket": "darahtanyoe-fbcdc.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:663576570531:android:ef9dfeb6545f4e66ea6d16",
+        "mobilesdk_app_id": "1:1056158041652:android:b293269c60102480182c61",
         "android_client_info": {
-          "package_name": "com.example.darahtanyoe_app"
+          "package_name": "com.darahtanyoe.app"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDLeGxBaz08v3ZsgeFoaUwMAN1gLKBqTWs"
+          "current_key": "AIzaSyAo16lk93MhFLcUNYxyDnIaNW8OZwZT194"
         }
       ],
       "services": {

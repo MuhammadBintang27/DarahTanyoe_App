@@ -1,187 +1,11 @@
-import 'package:darahtanyoe_app/components/AppBarWithLogo.dart';
 import 'package:darahtanyoe_app/components/background_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:convert';
 import 'dart:async';
-import 'package:http/http.dart' as http;
-import '../../service/auth_service.dart'; // Import AuthService
+import '../../service/auth_service.dart';
+import '../../service/notification_service.dart' as NotifService;
+import '../../models/notification_model.dart';
 
-// Model class for notifications with fromJson constructor
-class NotificationModel {
-  final String id;
-  final String userId;
-  final String title;
-  final String message;
-  final String type;
-  final String relatedTo;
-  final String? referenceId;
-  final bool isRead;
-  final String createdAt;
-  
-  NotificationModel({
-    required this.id,
-    required this.userId,
-    required this.title,
-    required this.message,
-    required this.type,
-    required this.relatedTo,
-    this.referenceId,
-    required this.isRead,
-    required this.createdAt,
-  });
-
-  // Factory constructor to create a NotificationModel from JSON
-  factory NotificationModel.fromJson(Map<String, dynamic> json) {
-    return NotificationModel(
-      id: json['id'] ?? '',
-      userId: json['user_id'] ?? '',
-      title: json['title'] ?? 'Notifikasi',
-      message: json['message'] ?? 'Ketuk untuk melihat informasi lebih lanjut',
-      type: json['type'] ?? 'app',
-      relatedTo: json['related_to'] ?? '',
-      referenceId: json['reference_id'],
-      isRead: json['is_read'] ?? false,
-      createdAt: json['created_at'] ?? '',
-    );
-  }
-  
-  // Helper method to get appropriate icon based on notification type/relatedTo
-  IconData get icon {
-    switch (relatedTo) {
-      case 'request':
-        return Icons.water_drop_outlined;
-      case 'offer':
-        return Icons.volunteer_activism_outlined;
-      case 'donation':
-        return Icons.handshake_outlined;
-      case 'reminder':
-        return Icons.hourglass_empty_outlined;
-      case 'reward':
-        return Icons.card_giftcard_outlined;
-      default:
-        return Icons.notifications_outlined;
-    }
-  }
-  
-  // Get background color for icon based on related_to value
-  Color get iconBackgroundColor {
-    switch (relatedTo) {
-      case 'request':
-        return const Color(0xFF5A7D7C);
-      case 'offer':
-        return const Color(0xFF41628A);
-      case 'donation':
-        return const Color(0xFF6D7958);
-      case 'reminder':
-        return const Color(0xFF8C7D64);
-      case 'reward':
-        return const Color(0xFF8A4250);
-      default:
-        return const Color(0xFF8A4250);
-    }
-  }
-  
-  // Calculate time ago from created_at timestamp
-  String get timeAgo {
-    final now = DateTime.now();
-    final createdDateTime = DateTime.parse(createdAt);
-    final difference = now.difference(createdDateTime);
-    
-    if (difference.inDays > 0) {
-      return '${difference.inDays}h';
-    } else if (difference.inHours > 0) {
-      return '${difference.inHours}j';
-    } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes}m';
-    } else {
-      return 'baru';
-    }
-  }
-}
-
-// API service class to handle API requests
-class NotificationService {
-  // Base URL of your API
-  final String baseUrl;
-  final String userId;
-
-  NotificationService({required this.baseUrl, required this.userId});
-
-  // Method to fetch notifications from API with timeout
-  Future<List<NotificationModel>> fetchNotifications() async {
-    try {
-      // Create a completer to handle the timeout
-      final completer = Completer<http.Response>();
-
-      // Start the HTTP request
-      final request = http.get(Uri.parse('$baseUrl/notification/$userId'));
-
-
-      // Set up a 5-second timeout
-      final timeoutTimer = Timer(const Duration(seconds: 5), () {
-        if (!completer.isCompleted) {
-          completer.completeError(
-              TimeoutException('Request timed out after 5 seconds'));
-        }
-      });
-
-      // Complete the completer with the response when it comes
-      request.then((response) {
-        if (!completer.isCompleted) {
-          completer.complete(response);
-        }
-      }).catchError((error) {
-        if (!completer.isCompleted) {
-          completer.completeError(error);
-        }
-      });
-
-      // Wait for either the response or the timeout
-      final response = await completer.future;
-
-      // Cancel the timer to avoid memory leaks
-      timeoutTimer.cancel();
-
-      if (response.statusCode == 200) {
-        // Parse the JSON response
-        final jsonResponse = json.decode(response.body);
-        
-        // Check if the API response is successful
-        if (jsonResponse['status'] == 'SUCCESS' && jsonResponse['data'] != null) {
-          List<dynamic> data = jsonResponse['data'];
-          return data.map((item) => NotificationModel.fromJson(item)).toList();
-        } else {
-          // Handle API error response
-          throw Exception('API Error: ${jsonResponse['message'] ?? 'Unknown error'}');
-        }
-      } else {
-        // Handle API errors
-        throw Exception('Failed to load notifications: ${response.statusCode}');
-      }
-    } on TimeoutException {
-      // Handle timeout specifically
-      throw TimeoutException('Permintaan melebihi batas waktu 5 detik');
-    } catch (e) {
-      // Handle other network errors
-      throw Exception('Network error: $e');
-    }
-  }
-
-  // Method to mark a notification as read
-  Future<bool> markAsRead(String notificationId) async {
-    try {
-      final response = await http.put(
-        Uri.parse('$baseUrl/$userId/read/$notificationId'),
-        headers: {'Content-Type': 'application/json'},
-      );
-
-      return response.statusCode == 200;
-    } catch (e) {
-      return false;
-    }
-  }
-}
 
 class NotificationPage extends StatefulWidget {
   final VoidCallback? onBackPressed;
@@ -201,6 +25,7 @@ class _NotificationPageState extends State<NotificationPage> {
   String? _errorMessage;
   bool _timedOut = false;
   Timer? _loadingTimer;
+  bool _hasLoaded = false; // Flag untuk ensure load hanya sekali
   
   // Simpan future untuk mendapatkan user dalam state
   late Future<Map<String, dynamic>?> _userFuture;
@@ -219,13 +44,48 @@ class _NotificationPageState extends State<NotificationPage> {
     super.dispose();
   }
 
-  // Load notifications from API with timeout
+  // Helper to get icon based on notification type
+  IconData _getIconForNotification(NotificationModel notification) {
+    switch (notification.type) {
+      case 'donation':
+        return Icons.volunteer_activism_outlined;
+      case 'pickup':
+        return Icons.local_shipping_outlined;
+      case 'stock':
+        return Icons.inventory_2_outlined;
+      case 'campaign':
+        return Icons.campaign_outlined;
+      case 'request':
+        return Icons.water_drop_outlined;
+      case 'system':
+        return Icons.info_outlined;
+      default:
+        return Icons.notifications_outlined;
+    }
+  }
+
+  // Helper to format time ago
+  String _getTimeAgo(DateTime createdAt) {
+    final now = DateTime.now();
+    final difference = now.difference(createdAt);
+    
+    if (difference.inDays > 0) {
+      return '${difference.inDays}h';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}j';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m';
+    } else {
+      return 'baru';
+    }
+  }
+
+  // Get count of unread notifications
+  int get _unreadCount => _notifications.where((n) => !n.isRead).length;
+
+  // Load notifications from API
   Future<void> _loadNotifications(String userId) async {
-    // Buat NotificationService untuk userId
-    final notificationService = NotificationService(
-      baseUrl: 'https://gtf-api.vercel.app',
-      userId: userId,
-    );
+    debugPrint('📲 Loading notifications for userId: $userId');
     
     setState(() {
       _isLoading = true;
@@ -233,54 +93,80 @@ class _NotificationPageState extends State<NotificationPage> {
       _timedOut = false;
     });
 
-    // Cancel any existing loading timer
-    _loadingTimer?.cancel();
-
-    // Set a timer for 5 seconds
-    _loadingTimer = Timer(const Duration(seconds: 5), () {
-      if (_isLoading && mounted) {
-        setState(() {
-          _isLoading = false;
-          _timedOut = true;
-          _errorMessage =
-              'Permintaan melebihi batas waktu 5 detik. Ketuk tombol di bawah untuk mencoba lagi.';
-        });
-      }
-    });
-
     try {
-      final notifications = await notificationService.fetchNotifications();
+      final notifications = await NotifService.NotificationService.getNotifications(userId, includeRead: false);
+      
+      debugPrint('📲 Loaded ${notifications.length} notifications');
+      for (var notif in notifications) {
+        debugPrint('  - ${notif.title} (isRead: ${notif.isRead})');
+      }
 
-      // Only update state if the loading timer hasn't fired yet and widget still mounted
-      if (_loadingTimer != null && _loadingTimer!.isActive && mounted) {
-        _loadingTimer!.cancel();
+      if (mounted) {
         setState(() {
           _notifications = notifications;
           _isLoading = false;
           _timedOut = false;
         });
       }
-    } on TimeoutException {
-      // Handle timeout exception
-      if (_loadingTimer != null && _loadingTimer!.isActive && mounted) {
-        _loadingTimer!.cancel();
-        setState(() {
-          _isLoading = false;
-          _timedOut = true;
-          _errorMessage =
-              'Permintaan melebihi batas waktu 5 detik. Ketuk tombol di bawah untuk mencoba lagi.';
-        });
-      }
     } catch (e) {
-      // Handle other errors
-      if (_loadingTimer != null && _loadingTimer!.isActive && mounted) {
-        _loadingTimer!.cancel();
+      debugPrint('❌ Error loading notifications: $e');
+      if (mounted) {
         setState(() {
           _errorMessage = 'Gagal memuat notifikasi. Silakan coba lagi.';
           _isLoading = false;
           _timedOut = false;
         });
       }
+    }
+  }
+
+  // Reset flag untuk reload
+  void _reloadNotifications(String userId) {
+    _hasLoaded = false;
+    _loadNotifications(userId);
+  }
+
+  // Mark notification as read
+  Future<void> _markAsRead(String notificationId, String userId) async {
+    // Call API to mark as read
+    try {
+      await NotifService.NotificationService.markAsRead(notificationId);
+      
+      // Update UI after successful API call
+      if (mounted) {
+        setState(() {
+          _notifications = _notifications.map((item) {
+            if (item.id == notificationId) {
+              // Create new notification with isRead = true
+              return NotificationModel(
+                id: item.id,
+                userId: item.userId,
+                institutionId: item.institutionId,
+                title: item.title,
+                message: item.message,
+                type: item.type,
+                priority: item.priority,
+                relatedId: item.relatedId,
+                relatedType: item.relatedType,
+                isRead: true,
+                readAt: item.readAt,
+                actionUrl: item.actionUrl,
+                actionLabel: item.actionLabel,
+                imageUrl: item.imageUrl,
+                pushSent: item.pushSent,
+                emailSent: item.emailSent,
+                smsSent: item.smsSent,
+                expiresAt: item.expiresAt,
+                metadata: item.metadata,
+                createdAt: item.createdAt,
+              );
+            }
+            return item;
+          }).toList();
+        });
+      }
+    } catch (e) {
+      debugPrint('Error marking notification as read: $e');
     }
   }
 
@@ -294,11 +180,51 @@ class _NotificationPageState extends State<NotificationPage> {
     ));
 
     return Scaffold(
-      appBar: AppBarWithLogo(
-        title: 'Notifikasi',
-        onBackPressed: () {
-          Navigator.pop(context);
-        },
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: Row(
+          children: [
+            const Text(
+              'Notifikasi',
+              style: TextStyle(
+                color: Color(0xFF333333),
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const Spacer(),
+            // Notification bell with badge
+            Stack(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.notifications_outlined, color: Color(0xFF333333)),
+                  onPressed: () {}, // Already on notification page
+                ),
+                if (_unreadCount > 0)
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFA83838),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        _unreadCount.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ),
       ),
       body: BackgroundWidget(
         child: SafeArea(
@@ -319,9 +245,9 @@ class _NotificationPageState extends State<NotificationPage> {
                 // Ambil userId dari data pengguna
                 final String userId = snapshot.data!['id'] ?? '';
                 
-                // Jika ini adalah pertama kalinya userId tersedia, muat notifikasi
-                if (_isLoading && _notifications.isEmpty && userId.isNotEmpty) {
-                  // Gunakan Future.microtask untuk menghindari setState selama build
+                // Load notifications hanya sekali untuk userId ini
+                if (!_hasLoaded && userId.isNotEmpty) {
+                  _hasLoaded = true;
                   Future.microtask(() => _loadNotifications(userId));
                 }
                 
@@ -333,6 +259,45 @@ class _NotificationPageState extends State<NotificationPage> {
                         padding: const EdgeInsets.only(top: 30),
                         child: Column(
                           children: [
+                            // Unread count header
+                            if (_notifications.isNotEmpty && !_isLoading)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                child: Row(
+                                  children: [
+                                    Text(
+                                      _unreadCount > 0
+                                          ? 'Anda memiliki $_unreadCount notifikasi baru'
+                                          : 'Semua notifikasi telah dibaca',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: Color(0xFF666666),
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    if (_unreadCount > 0)
+                                      const Spacer(),
+                                    if (_unreadCount > 0)
+                                      GestureDetector(
+                                        onTap: () {
+                                          // Mark all as read
+                                          for (var notification in _notifications.where((n) => !n.isRead)) {
+                                            _markAsRead(notification.id, userId);
+                                          }
+                                        },
+                                        child: const Text(
+                                          'Tandai semua dibaca',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: Color(0xFFA83838),
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+
                             // Notification list atau loading indicator
                             Expanded(
                               child: _buildNotificationList(userId),
@@ -388,6 +353,7 @@ class _NotificationPageState extends State<NotificationPage> {
                         setState(() {
                           // Reload user future
                           _userFuture = AuthService().getCurrentUser();
+                          _hasLoaded = false; // Reset flag untuk reload
                         });
                       },
                       style: ElevatedButton.styleFrom(
@@ -464,7 +430,10 @@ class _NotificationPageState extends State<NotificationPage> {
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: _isLoading ? null : () => _loadNotifications(userId),
+              onPressed: _isLoading ? null : () {
+                _hasLoaded = false; // Reset flag
+                _loadNotifications(userId);
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFAB4545),
                 foregroundColor: Colors.white,
@@ -499,7 +468,10 @@ class _NotificationPageState extends State<NotificationPage> {
             ),
             const SizedBox(height: 24),
             OutlinedButton(
-              onPressed: () => _loadNotifications(userId),
+              onPressed: () {
+                _hasLoaded = false; // Reset flag
+                _loadNotifications(userId);
+              },
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFFAB4545),
                 side: const BorderSide(color: Color(0xFFAB4545)),
@@ -569,33 +541,7 @@ class _NotificationPageState extends State<NotificationPage> {
                 InkWell(
                   onTap: () {
                     // Mark notification as read when tapped
-                    setState(() {
-                      _notifications = _notifications.map((item) {
-                        if (item.id == notification.id) {
-                          return NotificationModel(
-                            id: item.id,
-                            userId: item.userId,
-                            title: item.title,
-                            message: item.message,
-                            type: item.type,
-                            relatedTo: item.relatedTo,
-                            referenceId: item.referenceId,
-                            isRead: true,
-                            createdAt: item.createdAt,
-                          );
-                        }
-                        return item;
-                      }).toList();
-                    });
-
-                    // Create a new service instance to mark as read
-                    final notificationService = NotificationService(
-                      baseUrl: 'https://gtf-api.vercel.app/notification',
-                      userId: userId,
-                    );
-                    
-                    // Call the API to mark as read
-                    notificationService.markAsRead(notification.id);
+                    _markAsRead(notification.id, userId);
 
                     // Handle notification tap - navigate to detail page etc.
                   },
@@ -612,7 +558,7 @@ class _NotificationPageState extends State<NotificationPage> {
                               right: 14), // More space after icon
                           alignment: Alignment.center, // Center the icon
                           child: Icon(
-                            notification.icon,
+                            _getIconForNotification(notification),
                             color: const Color(0xFF4D4D4D),
                             size: 30, // Larger icon
                           ),
@@ -652,7 +598,7 @@ class _NotificationPageState extends State<NotificationPage> {
                               .min, // Only take necessary vertical space
                           children: [
                             Text(
-                              notification.timeAgo,
+                              _getTimeAgo(notification.createdAt),
                               style: const TextStyle(
                                 fontSize: 13, // Slightly larger font
                                 color: Color(0xFF9E9E9E),
@@ -667,39 +613,13 @@ class _NotificationPageState extends State<NotificationPage> {
                               ),
                               onSelected: (value) {
                                 if (value == 'mark_read') {
-                                  setState(() {
-                                    _notifications = _notifications.map((item) {
-                                      if (item.id == notification.id) {
-                                        return NotificationModel(
-                                          id: item.id,
-                                          userId: item.userId,
-                                          title: item.title,
-                                          message: item.message,
-                                          type: item.type,
-                                          relatedTo: item.relatedTo,
-                                          referenceId: item.referenceId,
-                                          isRead: true,
-                                          createdAt: item.createdAt,
-                                        );
-                                      }
-                                      return item;
-                                    }).toList();
-                                  });
-                                  
-                                  // Create a new service instance for marking read
-                                  final notificationService = NotificationService(
-                                    baseUrl: 'https://gtf-api.vercel.app/notification',
-                                    userId: userId,
-                                  );
-                                  
-                                  // Call API to mark as read
-                                  notificationService.markAsRead(notification.id);
+                                  _markAsRead(notification.id, userId);
                                 }
                               },
                               itemBuilder: (context) => [
-                                const PopupMenuItem(
+                                PopupMenuItem(
                                   value: 'mark_read',
-                                  child: Text('Tandai sebagai dibaca'),
+                                  child: Text(notification.isRead ? 'Tandai sebagai belum dibaca' : 'Tandai sebagai dibaca'),
                                 ),
                                 const PopupMenuItem(
                                   value: 'details',

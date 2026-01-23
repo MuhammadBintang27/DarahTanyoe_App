@@ -25,7 +25,7 @@ class TransactionBlood extends StatefulWidget {
 
 class _TransactionBloodState extends State<TransactionBlood> {
   // Track which tab is selected
-  late bool isRequestTab;
+  bool isRequestTab = true; // Default to request tab
   bool isLoading = false;
 
   // Lists for storing actual data from the service

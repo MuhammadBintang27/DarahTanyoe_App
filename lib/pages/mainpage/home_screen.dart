@@ -7,6 +7,7 @@ import 'package:darahtanyoe_app/models/permintaan_darah_model.dart';
 import 'package:darahtanyoe_app/pages/mainpage/transaksi.dart';
 import 'package:darahtanyoe_app/pages/detail_permintaan/detail_permintaan_darah.dart';
 import 'package:darahtanyoe_app/pages/mainpage/main_screen.dart';
+import 'package:darahtanyoe_app/pages/mainpage/informasi_pmi.dart';
 import 'package:darahtanyoe_app/service/auth_service.dart';
 import 'package:darahtanyoe_app/service/campaign_service.dart';
 import 'package:darahtanyoe_app/theme/theme.dart';
@@ -212,19 +213,6 @@ Widget _buildActionButtons() {
           ),
         ),
         ActionButton(
-          text: 'Minta Darah',
-          color: AppTheme.brand_01,
-          textColor: Colors.white,
-          icon: Icons.water_drop,
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => TransactionBlood()),
-            );
-          },
-        ),
-        SizedBox(width: 12),
-        ActionButton(
           text: 'Donor Darah',
           color: AppTheme.brand_03,
           textColor: Colors.white,
@@ -240,6 +228,21 @@ Widget _buildActionButtons() {
             });
           },
           isOutlined: false,
+        ),
+        SizedBox(width: 12),
+        ActionButton(
+          text: 'Info PMI',
+          color: AppTheme.brand_01,
+          textColor: Colors.white,
+          icon: Icons.info,
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => InformasiPMI(),
+              ),
+            );
+          },
         ),
       ],
     ),

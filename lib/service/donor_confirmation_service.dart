@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:darahtanyoe_app/models/donor_confirmation_model.dart';
-import 'package:darahtanyoe_app/service/auth_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
