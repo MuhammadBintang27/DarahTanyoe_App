@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:darahtanyoe_app/pages/mainpage/main_screen.dart';
 import 'package:darahtanyoe_app/theme/theme.dart';
+import 'package:darahtanyoe_app/service/push_notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'dart:convert';
 import 'login_page.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -40,6 +42,28 @@ class _SplashScreenState extends State<SplashScreen> {
 
         // If token exists and is not expired, navigate to main screen
         if (expiryDate.isAfter(now)) {
+          // ✅ Register FCM token untuk existing user
+          try {
+            print('🔔 App startup: Checking FCM token for existing user...');
+            
+            // Ambil user ID dari userData di secure storage
+            final String? userDataStr = await storage.read(key: 'userData');
+            if (userDataStr != null) {
+              final Map<String, dynamic> userData = jsonDecode(userDataStr);
+              final String? userId = userData['id'];
+              
+              if (userId != null) {
+                print('🔍 Found existing user: $userId');
+                final pushNotificationService = PushNotificationService();
+                await pushNotificationService.registerFCMTokenForUser(userId);
+                print('✅ FCM token registered for existing user at app startup');
+              }
+            }
+          } catch (fcmError) {
+            print('⚠️ Error registering FCM token at startup: $fcmError');
+            // Non-blocking error, continue navigation
+          }
+          
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => MainScreen()),

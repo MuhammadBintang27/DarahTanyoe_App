@@ -16,6 +16,7 @@ class MyTextField extends StatefulWidget {
   final Function(String)? onChanged;
   final String? Function(String?)? validator;
   final bool isAuth;
+  final bool readOnly;
 
   const MyTextField({
     super.key,
@@ -28,6 +29,7 @@ class MyTextField extends StatefulWidget {
     this.onChanged,
     this.validator,
     this.isAuth = true,
+    this.readOnly = false,
   });
 
   @override
@@ -101,6 +103,7 @@ class _MyTextFieldState extends State<MyTextField> {
       child: widget.inputType == InputType.text
           ? TextFormField(
         controller: _controller,
+        readOnly: widget.readOnly,
         style: GoogleFonts.dmSans(color: textColor),
         decoration: InputDecoration(
           hintText: widget.hintText,

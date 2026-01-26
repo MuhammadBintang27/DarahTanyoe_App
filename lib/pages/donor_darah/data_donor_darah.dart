@@ -5,6 +5,7 @@ import 'package:darahtanyoe_app/components/background_widget.dart';
 import 'package:darahtanyoe_app/components/my_textfield.dart';
 import 'package:darahtanyoe_app/pages/mainpage/main_screen.dart';
 import 'package:darahtanyoe_app/pages/mainpage/transaksi.dart';
+import 'package:darahtanyoe_app/pages/donor_darah/donor_confirmation_success.dart';
 import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -14,12 +15,14 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class DataPendonoranDarah extends StatefulWidget {
-  final String? requestId;
+  final String? confirmationId;    // From notification
+  final String campaignId;         // Campaign ID
   final String golonganDarah;
 
   const DataPendonoranDarah({
     Key? key,
-    required this.requestId,
+    this.confirmationId,
+    required this.campaignId,
     required this.golonganDarah,
   }) : super(key: key);
 
@@ -51,22 +54,22 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
   void initState() {
     super.initState();
     _bloodTypeController.text = widget.golonganDarah;
-  }
-
-  String generateUniqueCode() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    final rand = Random();
-    return List.generate(6, (index) => chars[rand.nextInt(chars.length)]).join();
+    _autoFillUserData(); // ✅ Auto-fill data on page load
   }
 
   Future<void> _autoFillUserData() async {
+    print("🔍 [DEBUG] _autoFillUserData called");
+    
     setState(() {
       _isLoading = true;
     });
 
     try {
       final userDataString = await _storage.read(key: 'userData');
+      print("🔍 [DEBUG] userData from storage: $userDataString");
+      
       if (userDataString == null) {
+        print("❌ [DEBUG] userData is null");
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Data pengguna tidak ditemukan. Silakan login kembali.')),
         );
@@ -74,8 +77,12 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
       }
 
       final userData = jsonDecode(userDataString);
+      print("🔍 [DEBUG] userData decoded: $userData");
+      
       setState(() {
         _nameController.text = userData['full_name'] ?? '';
+        print("✅ [DEBUG] Name filled: ${_nameController.text}");
+        
         String phoneNumber = userData['phone_number'] ?? '';
         if (phoneNumber.startsWith('62')) {
           phoneNumber = phoneNumber.substring(2);
@@ -83,14 +90,21 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
           phoneNumber = phoneNumber.substring(3);
         }
         _phoneController.text = phoneNumber;
+        print("✅ [DEBUG] Phone filled: ${_phoneController.text}");
+        
         String? healthNotes = userData['health_notes'];
+        print("🔍 [DEBUG] healthNotes: $healthNotes");
+        
         if (healthNotes != null && _riwayatPenyakitOptions.contains(healthNotes)) {
           _selectedRiwayatPenyakit = healthNotes;
+          print("✅ [DEBUG] Health notes set to: $healthNotes");
         } else {
           _selectedRiwayatPenyakit = 'Lainnya'; // Fallback if health_notes doesn't match options
+          print("⚠️ [DEBUG] Health notes not found, using fallback: Lainnya");
         }
       });
     } catch (e) {
+      print("❌ [DEBUG] Error: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Gagal memuat data pengguna: ${e.toString()}')),
       );
@@ -102,16 +116,23 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
   }
 
   Future<void> _submitForm() async {
+    print("🔍 [DEBUG] _submitForm called");
+    
     if (_formKey.currentState!.validate()) {
+      print("✅ [DEBUG] Form validation passed");
+      
       setState(() {
         _isLoading = true;
       });
 
       final userDataString = await _storage.read(key: 'userData');
+      print("🔍 [DEBUG] userData from storage: $userDataString");
+      
       if (userDataString == null) {
         setState(() {
           _isLoading = false;
         });
+        print("❌ [DEBUG] userData is null");
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('User belum login')),
         );
@@ -119,35 +140,87 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
       }
 
       final userData = jsonDecode(userDataString);
-      final userId = userData['id'];
+      final donorId = userData['id'];
+      print("🔍 [DEBUG] donorId: $donorId");
+      print("🔍 [DEBUG] confirmationId: ${widget.confirmationId}");
+      print("🔍 [DEBUG] campaignId: ${widget.campaignId}");
 
-      final body = {
-        "user_id": userId,
-        "request_id": widget.requestId,
-        "full_name": _nameController.text,
-        "phone_number": '62${_phoneController.text}',
-        "health_notes": _selectedRiwayatPenyakit ?? '',
-        "status": "on_progress",
-        "unique_code": generateUniqueCode(),
-      };
+      try {
+        // ✅ Call correct endpoint: /fulfillment/donor/confirm
+        final requestBody = {
+          'donor_id': donorId,  // ✅ ALWAYS send donor_id
+        };
 
-      final response = await http.post(
-        Uri.parse('${dotenv.env['BASE_URL']}/donor/create'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(body),
-      );
+        // Add confirmation_id jika ada (dari notification)
+        if (widget.confirmationId != null) {
+          requestBody['confirmation_id'] = widget.confirmationId;
+          print("🔍 [DEBUG] Using confirmation_id path");
+        } else {
+          // Jika tidak ada confirmation_id, kirim campaign_id
+          // Backend akan create confirmation baru dari campaign_id
+          requestBody['campaign_id'] = widget.campaignId;
+          print("🔍 [DEBUG] Using campaign_id path");
+        }
 
-      setState(() {
-        _isLoading = false;
-      });
+        print("🔍 [DEBUG] Request body: $requestBody");
+        print("🔍 [DEBUG] Endpoint: ${dotenv.env['BASE_URL']}/fulfillment/donor/confirm");
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        showDonorSuccessDialog(context);
-      } else {
+        final response = await http.post(
+          Uri.parse('${dotenv.env['BASE_URL']}/fulfillment/donor/confirm'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(requestBody),
+        );
+
+        print("🔍 [DEBUG] Response status: ${response.statusCode}");
+        print("🔍 [DEBUG] Response body: ${response.body}");
+
+        setState(() {
+          _isLoading = false;
+        });
+
+        if (response.statusCode == 200) {
+          print("✅ [DEBUG] Success response received");
+          final data = jsonDecode(response.body);
+          final confirmationData = data['data'];
+
+          print("🔍 [DEBUG] Confirmation data: $confirmationData");
+
+          // ✅ Navigate to success page with unique code
+          if (mounted) {
+            print("✅ [DEBUG] Navigating to DonorConfirmationSuccess");
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => DonorConfirmationSuccess(
+                  uniqueCode: confirmationData['uniqueCode'] ?? 'N/A',
+                  donorName: confirmationData['donorName'] ?? _nameController.text,
+                  bloodType: widget.golonganDarah,
+                  instructions: 'Harap datang ke PMI dengan membawa kode unik ini untuk verifikasi dan proses donor darah.',
+                  codeExpiresAt: confirmationData['codeExpiresAt'] ?? DateTime.now().add(Duration(days: 7)).toString(),
+                ),
+              ),
+            );
+          }
+        } else {
+          print("❌ [DEBUG] Error response: ${response.statusCode}");
+          final error = jsonDecode(response.body);
+          final errorMsg = error['message'] ?? response.body;
+          print("❌ [DEBUG] Error message: $errorMsg");
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $errorMsg')),
+          );
+        }
+      } catch (e) {
+        print("❌ [DEBUG] Exception: $e");
+        setState(() {
+          _isLoading = false;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal mengirim data: ${response.body}')),
+          SnackBar(content: Text('Error: $e')),
         );
       }
+    } else {
+      print("❌ [DEBUG] Form validation failed");
     }
   }
 
@@ -165,81 +238,6 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
           ),
         ),
       ),
-    );
-  }
-
-  void showDonorSuccessDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.check_circle, size: 80, color: Colors.green),
-                const SizedBox(height: 10),
-                const Text(
-                  "Pendaftaran Donor Berhasil",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  "Pengajuan Anda diproses. Silakan datang ke RS/PMI tujuan untuk pengecekan dan donor darah.",
-                  style: TextStyle(fontSize: 14),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.amber,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-                  ),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    SharedPreferences.getInstance().then((prefs) {
-                      prefs.setString('transaksiTab', "donor");
-                      prefs.setInt('selectedIndex', 3);
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(builder: (context) => MainScreen()),
-                            (route) => false,
-                      );
-                    });
-                  },
-                  child: const Text("Lihat Daftar Pendonoran", style: TextStyle(color: Colors.black)),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey[800],
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-                  ),
-                  onPressed: () {
-                    Navigator.popUntil(context, (route) => route.isFirst);
-                  },
-                  child: const Text("Kembali ke Beranda", style: TextStyle(color: Colors.white)),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 
@@ -316,6 +314,7 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
                               keyboardType: TextInputType.text,
                               inputType: InputType.text,
                               controller: _nameController,
+                              readOnly: true, // ✅ Read-only - auto-filled from profile
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
                                   return 'Nama tidak boleh kosong';

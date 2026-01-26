@@ -4,12 +4,13 @@ import 'package:darahtanyoe_app/components/bloodCard.dart';
 import 'package:darahtanyoe_app/components/loadingIndicator.dart';
 import 'package:darahtanyoe_app/helpers/formatDateTime.dart';
 import 'package:darahtanyoe_app/pages/detail_permintaan/detail_permintaan_darah.dart';
+import 'package:darahtanyoe_app/pages/detail_donor_confirmation/donor_confirmation_detail.dart';
 import 'package:darahtanyoe_app/service/auth_service.dart';
 import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:darahtanyoe_app/widget/header_widget.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/permintaan_darah_model.dart';
+import 'package:darahtanyoe_app/models/donor_confirmation_model.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -25,11 +26,14 @@ class TransactionBlood extends StatefulWidget {
 
 class _TransactionBloodState extends State<TransactionBlood> {
   // Track which tab is selected
-  bool isRequestTab = true; // Default to request tab
+  // Change: true = "Sedang Berlangsung" (active confirmations), false = "Selesai" (completed confirmations)
+  bool isBerlangsungTab = true;
   bool isLoading = false;
 
   // Lists for storing actual data from the service
   List<PermintaanDarahModel> permintaanList = [];
+  List<DonorConfirmationModel> berlangsungList = [];
+  List<DonorConfirmationModel> selesaiList = [];
 
   @override
   void initState() {
@@ -38,20 +42,8 @@ class _TransactionBloodState extends State<TransactionBlood> {
   }
 
   Future<void> _loadDefaultTab() async {
-    final prefs = await SharedPreferences.getInstance();
-    final rawTab = prefs.getString('transaksiTab') ?? widget.defaultTab;
-    final savedTab = (rawTab == null || rawTab.trim().isEmpty) ? "minta" : rawTab;
-
-
-    setState(() {
-      isRequestTab = savedTab == "minta";
-    });
-
-    if (isRequestTab) {
-      _loadPermintaan();
-    } else {
-      _loadPendonoran();
-    }
+    // Default to "Sedang Berlangsung" tab (new flow)
+    _loadBerlangsung();
   }
 
 
@@ -164,6 +156,104 @@ class _TransactionBloodState extends State<TransactionBlood> {
     // In new architecture: DonorConfirmationModel tracks confirmation status instead
   }
 
+  // ✅ NEW: Load active confirmations (Sedang Berlangsung)
+  Future<void> _loadBerlangsung() async {
+    setState(() => isLoading = true);
+
+    try {
+      final user = await AuthService().getCurrentUser();
+      if (user?['id'] == null) {
+        _showError("Anda belum login atau pengguna tidak ditemukan.");
+        setState(() => isLoading = false);
+        return;
+      }
+
+      final donorId = user!['id'] as String;
+      final String baseUrl = dotenv.env['BASE_URL'] ?? '';
+      final url = Uri.parse('$baseUrl/fulfillment/donor/$donorId/confirmations?status=active');
+
+      print('🔍 Fetching berlangsung from: $url');
+
+      final response = await http.get(url);
+
+      print('📊 Response status: ${response.statusCode}');
+      print('📊 Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        final List<dynamic> data = jsonData['data'] ?? [];
+        
+        print('✅ Loaded ${data.length} active confirmations');
+
+        if (mounted) {
+          setState(() {
+            berlangsungList = data
+                .map((item) => DonorConfirmationModel.fromJson(item))
+                .toList();
+            isLoading = false;
+          });
+        }
+      } else {
+        throw Exception('Gagal mengambil data: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('❌ Error loading berlangsung: $e');
+      if (mounted) {
+        setState(() => isLoading = false);
+        _showError("Gagal memuat data pendonoran: $e");
+      }
+    }
+  }
+
+  // ✅ NEW: Load completed confirmations (Selesai)
+  Future<void> _loadSelesai() async {
+    setState(() => isLoading = true);
+
+    try {
+      final user = await AuthService().getCurrentUser();
+      if (user?['id'] == null) {
+        _showError("Anda belum login atau pengguna tidak ditemukan.");
+        setState(() => isLoading = false);
+        return;
+      }
+
+      final donorId = user!['id'] as String;
+      final String baseUrl = dotenv.env['BASE_URL'] ?? '';
+      final url = Uri.parse('$baseUrl/fulfillment/donor/$donorId/confirmations?status=completed');
+
+      print('🔍 Fetching selesai from: $url');
+
+      final response = await http.get(url);
+
+      print('📊 Response status: ${response.statusCode}');
+      print('📊 Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        final List<dynamic> data = jsonData['data'] ?? [];
+        
+        print('✅ Loaded ${data.length} completed confirmations');
+
+        if (mounted) {
+          setState(() {
+            selesaiList = data
+                .map((item) => DonorConfirmationModel.fromJson(item))
+                .toList();
+            isLoading = false;
+          });
+        }
+      } else {
+        throw Exception('Gagal mengambil data: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('❌ Error loading selesai: $e');
+      if (mounted) {
+        setState(() => isLoading = false);
+        _showError("Gagal memuat data pendonoran: $e");
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -223,16 +313,16 @@ class _TransactionBloodState extends State<TransactionBlood> {
                     child: ElevatedButton(
                       onPressed: () {
                         setState(() {
-                          isRequestTab = true;
-                          _loadPermintaan();
+                          isBerlangsungTab = true;
+                          _loadBerlangsung();
                         });
                       },
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 5),
-                        backgroundColor: isRequestTab
+                        backgroundColor: isBerlangsungTab
                             ? AppTheme.brand_01
                             : Colors.transparent,
-                        foregroundColor: isRequestTab
+                        foregroundColor: isBerlangsungTab
                             ? Colors.white
                             : Colors.black.withValues(alpha: 0.5),
                         elevation: 0,
@@ -244,7 +334,7 @@ class _TransactionBloodState extends State<TransactionBlood> {
                         ),
                       ),
                       child: const Text(
-                        'Permintaan Darah',
+                        'Sedang Berlangsung',
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
                         ),
@@ -255,16 +345,16 @@ class _TransactionBloodState extends State<TransactionBlood> {
                     child: ElevatedButton(
                       onPressed: () {
                         setState(() {
-                          isRequestTab = false;
-                          _loadPendonoran();
+                          isBerlangsungTab = false;
+                          _loadSelesai();
                         });
                       },
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 5),
-                        backgroundColor: !isRequestTab
+                        backgroundColor: !isBerlangsungTab
                             ? AppTheme.brand_01
                             : Colors.transparent,
-                        foregroundColor: !isRequestTab
+                        foregroundColor: !isBerlangsungTab
                             ? Colors.white
                             : Colors.black.withValues(alpha: 0.5),
                         elevation: 0,
@@ -276,7 +366,7 @@ class _TransactionBloodState extends State<TransactionBlood> {
                         ),
                       ),
                       child: const Text(
-                        'Pendonoran Darah',
+                        'Selesai',
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
                         ),
@@ -289,7 +379,7 @@ class _TransactionBloodState extends State<TransactionBlood> {
             const SizedBox(height: 16),
 
             // Display different content based on selected tab
-            isRequestTab ? _buildRequestContent() : _buildDonationContent(),
+            isBerlangsungTab ? _buildBerlangsungContent() : _buildSelesaiContent(),
           ],
         ),
       ),
@@ -857,4 +947,438 @@ class _TransactionBloodState extends State<TransactionBlood> {
   //     return DateTime.now().add(const Duration(days: 1));
   //   }
   // }
+
+  // ✅ NEW: Build Sedang Berlangsung content
+  Widget _buildBerlangsungContent() {
+    if (isLoading) {
+      return const LoadingIndicator();
+    }
+
+    if (berlangsungList.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.inbox_outlined,
+              size: 64,
+              color: AppTheme.neutral_01.withOpacity(0.3),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Tidak ada pendonoran sedang berlangsung',
+              style: TextStyle(
+                color: AppTheme.neutral_01.withOpacity(0.6),
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: berlangsungList.length,
+      itemBuilder: (context, index) {
+        final confirmation = berlangsungList[index];
+        return _buildDonationCard(confirmation);
+      },
+    );
+  }
+
+  // ✅ NEW: Build Selesai content
+  Widget _buildSelesaiContent() {
+    if (isLoading) {
+      return const LoadingIndicator();
+    }
+
+    if (selesaiList.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.check_circle_outline,
+              size: 64,
+              color: AppTheme.neutral_01.withOpacity(0.3),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Belum ada pendonoran yang selesai',
+              style: TextStyle(
+                color: AppTheme.neutral_01.withOpacity(0.6),
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: selesaiList.length,
+      itemBuilder: (context, index) {
+        final confirmation = selesaiList[index];
+        return _buildDonationCard(confirmation);
+      },
+    );
+  }
+
+  // ✅ NEW: Build donation card widget - using BloodCard style
+  Widget _buildDonationCard(DonorConfirmationModel confirmation) {
+    // Determine colors based on status
+    Color titleColor;
+    Color borderColor;
+    Color backgroundColor;
+    String statusText;
+
+    if (confirmation.status == 'completed') {
+      titleColor = const Color(0xFF359B5E); // Green
+      borderColor = const Color(0xFF359B5E);
+      backgroundColor = const Color(0xFFDBE6DF);
+      statusText = 'Pendonoran Selesai';
+    } else if (confirmation.status == 'rejected' || confirmation.status == 'expired') {
+      titleColor = const Color(0xFFAB4545); // Red
+      borderColor = const Color(0xFFAB4545);
+      backgroundColor = const Color(0xFFEAE2E2);
+      statusText = confirmation.status == 'rejected' ? 'Pendonoran Ditolak' : 'Kadaluarsa';
+    } else {
+      // Active/pending - Yellow
+      titleColor = const Color(0xFFCB9B0A);
+      borderColor = AppTheme.brand_02;
+      backgroundColor = const Color(0xFFF1EEE5);
+      statusText = 'Pendonoran Sedang Berlangsung';
+    }
+
+    return GestureDetector(
+      onTap: () => _navigateToDonationDetail(confirmation),
+      child: Stack(
+        children: [
+          Container(
+            padding: const EdgeInsets.only(top: 12, bottom: 12, left: 14, right: 14),
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: borderColor, width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.25),
+                  blurRadius: 4,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Pendonoran Darah',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: titleColor,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          confirmation.patientName ?? 'Nama Pasien',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: AppTheme.neutral_01,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          'Golongan darah',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: titleColor,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: titleColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.bloodtype_outlined,
+                                size: 20,
+                                color: titleColor,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                confirmation.patientBloodType ?? 'N/A',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: titleColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 0, top: 8),
+                  child: Divider(
+                    color: const Color(0xFFA3A3A3).withOpacity(0.4),
+                    thickness: 1,
+                    height: 16,
+                  ),
+                ),
+
+                // Grid Content Row 1: Location + Progress
+                Row(
+                  children: [
+                    // Location (left)
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Icon(Icons.location_on_outlined,
+                              size: 24,
+                              color: AppTheme.neutral_01),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  confirmation.campaignLocation != null
+                                      ? confirmation.campaignLocation!.split(',').first
+                                      : 'Lokasi',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.neutral_01,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Text(
+                                  '→ ${confirmation.distanceKm?.toStringAsFixed(1) ?? '?'} KM dari lokasi anda',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.normal,
+                                    fontSize: 11,
+                                    color: AppTheme.neutral_01,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Progress (right)
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Icon(Icons.check_circle_outline,
+                              size: 24,
+                              color: titleColor),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: RichText(
+                              text: TextSpan(
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: AppTheme.neutral_01,
+                                  fontFamily: 'DM Sans',
+                                ),
+                                children: [
+                                  const TextSpan(text: 'Telah terisi '),
+                                  TextSpan(
+                                    text: '${confirmation.fulfillmentRequest?.quantityCollected ?? 0}',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: titleColor,
+                                    ),
+                                  ),
+                                  const TextSpan(text: ' dari '),
+                                  TextSpan(
+                                    text: '${confirmation.fulfillmentRequest?.quantityNeeded ?? 0}',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: titleColor,
+                                    ),
+                                  ),
+                                  const TextSpan(text: '\nKantong'),
+                                  TextSpan(
+                                    text: ' yang dibutuhkan',
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 8),
+
+                // Grid Row 2: Description + Unique Code
+                Row(
+                  children: [
+                    // Description (left)
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Icon(Icons.description_outlined,
+                              size: 24,
+                              color: AppTheme.neutral_01),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              confirmation.campaign?.description ?? 'Deskripsi tidak tersedia',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: AppTheme.neutral_01,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Kode Unik (right)
+                    if (confirmation.uniqueCode != null)
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: titleColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: titleColor.withOpacity(0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Kode Unik',
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w600,
+                                  color: titleColor,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                confirmation.uniqueCode!,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: titleColor,
+                                  letterSpacing: 0.5,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+
+                const SizedBox(height: 10),
+
+                // Status
+                Row(
+                  children: [
+                    Container(
+                      height: 16,
+                      width: 16,
+                      decoration: BoxDecoration(
+                        color: titleColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      statusText,
+                      style: TextStyle(
+                        color: titleColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Arrow icon
+          Positioned(
+            right: 12,
+            top: 0,
+            bottom: 0,
+            child: Center(
+              child: Icon(
+                Icons.arrow_forward_ios,
+                color: Colors.grey[400],
+                size: 16,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ✅ NEW: Navigate to donation detail page
+  void _navigateToDonationDetail(DonorConfirmationModel confirmation) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            DonorConfirmationDetail(confirmation: confirmation),
+      ),
+    );
+  }
 }

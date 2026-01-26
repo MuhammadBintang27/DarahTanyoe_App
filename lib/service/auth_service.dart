@@ -3,6 +3,7 @@ import 'package:darahtanyoe_app/pages/authentication/login_page.dart';
 import 'package:darahtanyoe_app/pages/authentication/personal_info.dart';
 import 'package:darahtanyoe_app/pages/mainpage/main_screen.dart';
 import 'animation_service.dart';
+import 'push_notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -151,6 +152,7 @@ class AuthService {
         final String? expires_at =
         responseData['data']['session']['expires_at'];
         final userData = responseData['user'];
+        final userId = userData['id'];
 
         if (accessToken != null) {
           await storage.write(key: 'access_token', value: accessToken);
@@ -162,6 +164,17 @@ class AuthService {
         if (responseData['user'] != null && responseData['user'].isNotEmpty) {
           registrationData['otpVerified'] = true;
           await _saveToLocalStorage();
+
+          // ✅ Register FCM token untuk user yang login
+          try {
+            print('🔔 Registering FCM token for existing user: $userId');
+            final pushNotificationService = PushNotificationService();
+            await pushNotificationService.registerFCMTokenForUser(userId);
+            print('✅ FCM token registered for user: $userId');
+          } catch (fcmError) {
+            print('⚠️ Error registering FCM token: $fcmError');
+            // Non-blocking error, continue dengan login
+          }
 
           // Call original success callback
           successCallback?.call();
@@ -190,6 +203,17 @@ class AuthService {
           return true;
         } else {
           print("User tidak ditemukan, mengarah ke PersonalInfo...");
+
+          // ✅ Register FCM token juga untuk user baru yang belum lengkap profile
+          try {
+            print('🔔 Registering FCM token for new user: $userId');
+            final pushNotificationService = PushNotificationService();
+            await pushNotificationService.registerFCMTokenForUser(userId);
+            print('✅ FCM token registered for new user: $userId');
+          } catch (fcmError) {
+            print('⚠️ Error registering FCM token: $fcmError');
+            // Non-blocking error, continue dengan navigation
+          }
 
           // Show success and navigate to personal info
           await AnimationService.showSuccess(
@@ -338,6 +362,8 @@ class AuthService {
   Future<bool> saveBloodInfo(
       String bloodType, String lastDonation, String medicalHistory, [BuildContext? context]) async {
     try {
+      print('🔍 saveBloodInfo() called - starting registration');
+      
       // Aktifkan loading
       loadingCallback?.call(true);
 
@@ -370,14 +396,32 @@ class AuthService {
       print("Final Registration Data Sent: ${jsonEncode(dataToSend)}");
       print(response.statusCode);
       print(response.body);
+      
       if (response.statusCode == 201) {
+        print('✅ Registration successful (201), response received');
+        
         await _saveToLocalStorage();
         // Ambil data user dari response body
         final responseBody = jsonDecode(response.body);
         final userData = responseBody['user'];
+        final userId = userData['id'];
+        
+        print('🔍 User ID extracted: $userId');
 
         // Simpan ke SecureStorage dalam bentuk JSON string
         await storage.write(key: 'userData', value: jsonEncode(userData));
+
+        // ✅ Register FCM token untuk user baru
+        try {
+          print('🔔 Attempting to register FCM token...');
+          final pushNotificationService = PushNotificationService();
+          await pushNotificationService.registerFCMTokenForUser(userId);
+          print('✅ FCM token registered for new user: $userId');
+        } catch (fcmError) {
+          print('⚠️ Error registering FCM token: $fcmError');
+          print('⚠️ Stack trace: $fcmError');
+          // Non-blocking error, continue dengan registration
+        }
 
         // Tampilkan animasi sukses dan navigasi jika ada context
         if (context != null) {
@@ -436,6 +480,20 @@ class AuthService {
   /// **✅ Logout** - WITH ANIMATION
   Future<void> logout(BuildContext context) async {
   try {
+    // Get current user ID before clearing storage
+    final userDataJson = await storage.read(key: 'userData');
+    if (userDataJson != null) {
+      final userData = jsonDecode(userDataJson);
+      final userId = userData['id'];
+      
+      // Unregister FCM token for this user
+      if (userId != null) {
+        debugPrint('🔌 Unregistering FCM token for user $userId...');
+        final pushNotificationService = PushNotificationService();
+        await pushNotificationService.unregisterFCMTokenForUser(userId);
+      }
+    }
+    
     // Clear all data from SecureStorage
     await storage.deleteAll();
     

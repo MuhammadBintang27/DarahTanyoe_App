@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 /// Donor Confirmation Model - Tracks donor responses to fulfillment requests
 /// Based on donor_confirmations table from database schema
 class DonorConfirmationModel {
@@ -7,6 +9,7 @@ class DonorConfirmationModel {
   final String donorId;
   final String? donorName;
   final String? bloodType;
+  final String? patientBloodType; // ✅ NEW: Blood type needed for patient
   final String status; // 'pending', 'confirmed', 'code_verified', 'completed', 'rejected', 'expired', 'failed'
   final String? uniqueCode;
   final DateTime? codeGeneratedAt;
@@ -25,6 +28,18 @@ class DonorConfirmationModel {
   final String? notes;
   final DateTime createdAt;
   final DateTime updatedAt;
+  
+  // ✅ NEW: Patient info from fulfillment request
+  final String? patientName;
+  final String? campaignLocation; // ✅ NEW: Location of campaign (donation place)
+  final String? campaignAddress; // ✅ NEW: Full address of campaign
+  final double? campaignLatitude; // ✅ NEW: Extracted from campaign_location GEOGRAPHY
+  final double? campaignLongitude; // ✅ NEW: Extracted from campaign_location GEOGRAPHY
+  final double? distanceKm; // ✅ NEW: Distance to donation location in km
+  
+  // ✅ NEW: Nested objects from API response
+  final FulfillmentRequestData? fulfillmentRequest;
+  final CampaignData? campaign;
 
   DonorConfirmationModel({
     required this.id,
@@ -33,6 +48,7 @@ class DonorConfirmationModel {
     required this.donorId,
     this.donorName,
     this.bloodType,
+    this.patientBloodType, // ✅ NEW
     required this.status,
     this.uniqueCode,
     this.codeGeneratedAt,
@@ -51,6 +67,14 @@ class DonorConfirmationModel {
     this.notes,
     required this.createdAt,
     required this.updatedAt,
+    this.patientName,
+    this.campaignLocation,
+    this.campaignAddress,
+    this.campaignLatitude,
+    this.campaignLongitude,
+    this.distanceKm,
+    this.fulfillmentRequest,
+    this.campaign,
   });
 
   /// Check if code is still valid
@@ -58,6 +82,54 @@ class DonorConfirmationModel {
     if (codeExpiresAt == null) return false;
     if (codeVerified) return false; // Code invalid after verification
     return DateTime.now().isBefore(codeExpiresAt!);
+  }
+
+  /// ✅ NEW: Get human-readable status display
+  String get statusDisplay {
+    switch (status) {
+      case 'pending_notification':
+        return 'Menunggu Konfirmasi';
+      case 'pending':
+        return 'Menunggu Konfirmasi';
+      case 'confirmed':
+        return 'Dikonfirmasi';
+      case 'completed':
+        return 'Selesai';
+      case 'rejected':
+        return 'Ditolak';
+      case 'expired':
+        return 'Kadaluarsa';
+      case 'failed':
+        return 'Gagal';
+      default:
+        return status;
+    }
+  }
+
+  /// ✅ NEW: Get formatted time remaining for code
+  String get formattedTimeRemaining {
+    if (codeExpiresAt == null) return 'N/A';
+    
+    final now = DateTime.now();
+    if (now.isAfter(codeExpiresAt!)) return 'Sudah Kadaluarsa';
+    
+    final remaining = codeExpiresAt!.difference(now);
+    final days = remaining.inDays;
+    final hours = remaining.inHours.remainder(24);
+    final minutes = remaining.inMinutes.remainder(60);
+    final seconds = remaining.inSeconds.remainder(60);
+    
+    if (days > 0) {
+      return '$days HARI, ${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    } else {
+      return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    }
+  }
+  
+  /// ✅ NEW: Check if code is expired
+  bool get isCodeExpired {
+    if (codeExpiresAt == null) return false;
+    return DateTime.now().isAfter(codeExpiresAt!);
   }
 
   /// Check if confirmation is still pending
@@ -80,12 +152,6 @@ class DonorConfirmationModel {
     return status == 'rejected';
   }
 
-  /// Check if code expired
-  bool get isCodeExpired {
-    if (codeExpiresAt == null) return false;
-    return DateTime.now().isAfter(codeExpiresAt!);
-  }
-
   /// Calculate days remaining for code
   int? get daysRemainingForCode {
     if (codeExpiresAt == null) return null;
@@ -101,6 +167,7 @@ class DonorConfirmationModel {
       donorId: json['donor_id'] ?? '',
       donorName: json['donor_name'] ?? json['donor']?['full_name'],
       bloodType: json['blood_type'] ?? json['donor']?['blood_type'],
+      patientBloodType: json['fulfillment_request']?['blood_type'], // ✅ NEW: Get from fulfillment_request
       status: json['status'] ?? 'pending',
       uniqueCode: json['unique_code'],
       codeGeneratedAt: json['code_generated_at'] != null 
@@ -133,7 +200,168 @@ class DonorConfirmationModel {
       notes: json['notes'],
       createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
       updatedAt: DateTime.tryParse(json['updated_at'] ?? '') ?? DateTime.now(),
+      // ✅ NEW: Extract patient info from nested fulfillment_request
+      patientName: json['fulfillment_request']?['patient_name'] ?? json['patient_name'],
+      // ✅ UPDATED: Try to get campaign data from fulfillment_request.campaign first, then fallback to direct campaign
+      campaignLocation: json['fulfillment_request']?['campaign']?['location'] ?? json['campaign']?['location'],
+      campaignAddress: json['fulfillment_request']?['campaign']?['address'] ?? json['campaign']?['address'],
+      campaignLatitude: _extractLatitudeFromGeography(
+        json['fulfillment_request']?['campaign']?['campaign_location'] ?? 
+        json['campaign']?['campaign_location']
+      ),
+      campaignLongitude: _extractLongitudeFromGeography(
+        json['fulfillment_request']?['campaign']?['campaign_location'] ?? 
+        json['campaign']?['campaign_location']
+      ),
+      distanceKm: json['distance_km'] is num ? (json['distance_km'] as num).toDouble() : null,
+      fulfillmentRequest: json['fulfillment_request'] != null
+          ? FulfillmentRequestData.fromJson(json['fulfillment_request'])
+          : null,
+      // ✅ UPDATED: Use campaign from fulfillment_request if available, otherwise use direct campaign
+      campaign: json['fulfillment_request']?['campaign'] != null
+          ? CampaignData.fromJson(json['fulfillment_request']['campaign'])
+          : (json['campaign'] != null ? CampaignData.fromJson(json['campaign']) : null),
     );
+  }
+
+  /// ✅ NEW: Extract latitude from GEOGRAPHY/EWKB format
+  static double? _extractLatitudeFromGeography(dynamic geoData) {
+    if (geoData == null) return null;
+    
+    try {
+      print("🔍 [GEO] Raw geoData type: ${geoData.runtimeType}");
+      print("🔍 [GEO] Raw geoData: $geoData");
+      
+      // Handle EWKB format (hexadecimal string)
+      if (geoData is String) {
+        print("🔍 [GEO] Parsing EWKB string format");
+        return _parseEWKBLatitude(geoData);
+      }
+      
+      // Handle GeoJSON format (Map)
+      if (geoData is Map<String, dynamic>) {
+        print("🔍 [GEO] Parsing GeoJSON format");
+        final coordinates = geoData['coordinates'];
+        print("🔍 [GEO] Coordinates type: ${coordinates.runtimeType}");
+        print("🔍 [GEO] Coordinates: $coordinates");
+        
+        if (coordinates is List && coordinates.length >= 2) {
+          final lat = coordinates[1] as double; // [longitude, latitude]
+          print("✅ [GEO] Extracted latitude from GeoJSON: $lat");
+          return lat;
+        }
+      }
+    } catch (e) {
+      print('❌ [GEO] Error parsing latitude: $e');
+      print('❌ [GEO] Stack trace: ${e}');
+    }
+    print("⚠️ [GEO] Failed to extract latitude, returning null");
+    return null;
+  }
+
+  /// ✅ NEW: Extract longitude from GEOGRAPHY/EWKB format
+  static double? _extractLongitudeFromGeography(dynamic geoData) {
+    if (geoData == null) return null;
+    
+    try {
+      print("🔍 [GEO] Raw geoData type: ${geoData.runtimeType}");
+      print("🔍 [GEO] Raw geoData: $geoData");
+      
+      // Handle EWKB format (hexadecimal string)
+      if (geoData is String) {
+        print("🔍 [GEO] Parsing EWKB string format");
+        return _parseEWKBLongitude(geoData);
+      }
+      
+      // Handle GeoJSON format (Map)
+      if (geoData is Map<String, dynamic>) {
+        print("🔍 [GEO] Parsing GeoJSON format");
+        final coordinates = geoData['coordinates'];
+        print("🔍 [GEO] Coordinates type: ${coordinates.runtimeType}");
+        print("🔍 [GEO] Coordinates: $coordinates");
+        
+        if (coordinates is List && coordinates.length >= 2) {
+          final lng = coordinates[0] as double; // [longitude, latitude]
+          print("✅ [GEO] Extracted longitude from GeoJSON: $lng");
+          return lng;
+        }
+      }
+    } catch (e) {
+      print('❌ [GEO] Error parsing longitude: $e');
+      print('❌ [GEO] Stack trace: ${e}');
+    }
+    print("⚠️ [GEO] Failed to extract longitude, returning null");
+    return null;
+  }
+  
+  /// ✅ NEW: Parse EWKB hexadecimal string to extract latitude (Y coordinate)
+  static double? _parseEWKBLatitude(String ewkbHex) {
+    try {
+      // EWKB format: 01 (byte order) + 01000020 (type) + E6100000 (SRID) + 8 bytes (X/longitude) + 8 bytes (Y/latitude)
+      // Positions: 0-2 (byte order), 2-10 (type), 10-18 (SRID), 18-34 (longitude), 34-50 (latitude)
+      
+      if (ewkbHex.length < 50) {
+        print("❌ [EWKB] Invalid EWKB hex string length: ${ewkbHex.length}");
+        return null;
+      }
+      
+      // Extract latitude (Y coordinate) - last 16 characters (8 bytes as hex)
+      final latHex = ewkbHex.substring(34, 50);
+      print("🔍 [EWKB] Latitude hex: $latHex");
+      
+      // Convert hex string to double (little-endian)
+      final latBytes = _hexToBytes(latHex);
+      final latitude = _bytesToDouble(latBytes);
+      print("✅ [EWKB] Extracted latitude: $latitude");
+      
+      return latitude;
+    } catch (e) {
+      print('❌ [EWKB] Error parsing latitude: $e');
+      return null;
+    }
+  }
+  
+  /// ✅ NEW: Parse EWKB hexadecimal string to extract longitude (X coordinate)
+  static double? _parseEWKBLongitude(String ewkbHex) {
+    try {
+      // EWKB format: 01 (byte order) + 01000020 (type) + E6100000 (SRID) + 8 bytes (X/longitude) + 8 bytes (Y/latitude)
+      // Positions: 0-2 (byte order), 2-10 (type), 10-18 (SRID), 18-34 (longitude), 34-50 (latitude)
+      
+      if (ewkbHex.length < 50) {
+        print("❌ [EWKB] Invalid EWKB hex string length: ${ewkbHex.length}");
+        return null;
+      }
+      
+      // Extract longitude (X coordinate) - characters 18-34 (8 bytes as hex)
+      final lngHex = ewkbHex.substring(18, 34);
+      print("🔍 [EWKB] Longitude hex: $lngHex");
+      
+      // Convert hex string to double (little-endian)
+      final lngBytes = _hexToBytes(lngHex);
+      final longitude = _bytesToDouble(lngBytes);
+      print("✅ [EWKB] Extracted longitude: $longitude");
+      
+      return longitude;
+    } catch (e) {
+      print('❌ [EWKB] Error parsing longitude: $e');
+      return null;
+    }
+  }
+  
+  /// ✅ NEW: Convert hex string to bytes
+  static List<int> _hexToBytes(String hex) {
+    final List<int> bytes = [];
+    for (int i = 0; i < hex.length; i += 2) {
+      final hexPair = hex.substring(i, i + 2);
+      bytes.add(int.parse(hexPair, radix: 16));
+    }
+    return bytes;
+  }
+  
+  /// ✅ NEW: Convert bytes to double (little-endian)
+  static double _bytesToDouble(List<int> bytes) {
+    final ByteData bd = ByteData.view(Uint8List.fromList(bytes).buffer);
+    return bd.getFloat64(0, Endian.little);
   }
 
   /// Convert to JSON
@@ -145,6 +373,7 @@ class DonorConfirmationModel {
       'donor_id': donorId,
       'donor_name': donorName,
       'blood_type': bloodType,
+      'patient_blood_type': patientBloodType, // ✅ NEW
       'status': status,
       'unique_code': uniqueCode,
       'code_generated_at': codeGeneratedAt?.toIso8601String(),
@@ -163,6 +392,11 @@ class DonorConfirmationModel {
       'notes': notes,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
+      'patient_name': patientName,
+      'campaign_location': campaignLocation,
+      'campaign_address': campaignAddress,
+      'campaign_latitude': campaignLatitude,
+      'campaign_longitude': campaignLongitude,
     };
   }
 
@@ -174,6 +408,7 @@ class DonorConfirmationModel {
     String? donorId,
     String? donorName,
     String? bloodType,
+    String? patientBloodType,
     String? status,
     String? uniqueCode,
     DateTime? codeGeneratedAt,
@@ -192,6 +427,11 @@ class DonorConfirmationModel {
     String? notes,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? patientName,
+    String? campaignLocation,
+    String? campaignAddress,
+    double? campaignLatitude,
+    double? campaignLongitude,
   }) {
     return DonorConfirmationModel(
       id: id ?? this.id,
@@ -200,6 +440,7 @@ class DonorConfirmationModel {
       donorId: donorId ?? this.donorId,
       donorName: donorName ?? this.donorName,
       bloodType: bloodType ?? this.bloodType,
+      patientBloodType: patientBloodType ?? this.patientBloodType,
       status: status ?? this.status,
       uniqueCode: uniqueCode ?? this.uniqueCode,
       codeGeneratedAt: codeGeneratedAt ?? this.codeGeneratedAt,
@@ -218,11 +459,91 @@ class DonorConfirmationModel {
       notes: notes ?? this.notes,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      patientName: patientName ?? this.patientName,
+      campaignLocation: campaignLocation ?? this.campaignLocation,
+      campaignAddress: campaignAddress ?? this.campaignAddress,
+      campaignLatitude: campaignLatitude ?? this.campaignLatitude,
+      campaignLongitude: campaignLongitude ?? this.campaignLongitude,
     );
   }
 
   @override
   String toString() {
     return 'DonorConfirmationModel(id: $id, donorId: $donorId, status: $status, uniqueCode: $uniqueCode)';
+  }
+}
+
+/// ✅ NEW: Nested model for fulfillment_request data
+class FulfillmentRequestData {
+  final String? id;
+  final String? campaignId;
+  final String? patientName;
+  final String? bloodType;
+  final DateTime? createdAt;
+  final int? quantityNeeded;
+  final int? quantityCollected;
+  final CampaignData? campaign; // ✅ NEW: Nested campaign data
+
+  FulfillmentRequestData({
+    this.id,
+    this.campaignId,
+    this.patientName,
+    this.bloodType,
+    this.createdAt,
+    this.quantityNeeded,
+    this.quantityCollected,
+    this.campaign, // ✅ NEW
+  });
+
+  factory FulfillmentRequestData.fromJson(Map<String, dynamic> json) {
+    return FulfillmentRequestData(
+      id: json['id'],
+      campaignId: json['campaign_id'],
+      patientName: json['patient_name'],
+      bloodType: json['blood_type'],
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'])
+          : null,
+      quantityNeeded: json['quantity_needed'] is int
+          ? json['quantity_needed']
+          : int.tryParse(json['quantity_needed']?.toString() ?? '0'),
+      quantityCollected: json['quantity_collected'] is int
+          ? json['quantity_collected']
+          : int.tryParse(json['quantity_collected']?.toString() ?? '0'),
+      // ✅ NEW: Parse nested campaign data
+      campaign: json['campaign'] != null
+          ? CampaignData.fromJson(json['campaign'])
+          : null,
+    );
+  }
+}
+
+/// ✅ NEW: Nested model for campaign/blood_campaign data
+class CampaignData {
+  final String? id;
+  final String? title;
+  final String? location;
+  final String? address;
+  final dynamic campaignLocation; // GEOGRAPHY type
+  final String? description;
+
+  CampaignData({
+    this.id,
+    this.title,
+    this.location,
+    this.address,
+    this.campaignLocation,
+    this.description,
+  });
+
+  factory CampaignData.fromJson(Map<String, dynamic> json) {
+    return CampaignData(
+      id: json['id'],
+      title: json['title'],
+      location: json['location'],
+      address: json['address'],
+      campaignLocation: json['campaign_location'],
+      description: json['description'],
+    );
   }
 }

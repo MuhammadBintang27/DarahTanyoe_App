@@ -1,8 +1,12 @@
 import 'package:darahtanyoe_app/components/background_widget.dart';
+import 'package:darahtanyoe_app/pages/detail_permintaan/detail_permintaan_darah.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../../service/auth_service.dart';
+import '../../service/animation_service.dart';
 import '../../service/notification_service.dart' as NotifService;
 import '../../models/notification_model.dart';
 
@@ -120,12 +124,6 @@ class _NotificationPageState extends State<NotificationPage> {
     }
   }
 
-  // Reset flag untuk reload
-  void _reloadNotifications(String userId) {
-    _hasLoaded = false;
-    _loadNotifications(userId);
-  }
-
   // Mark notification as read
   Future<void> _markAsRead(String notificationId, String userId) async {
     // Call API to mark as read
@@ -167,6 +165,77 @@ class _NotificationPageState extends State<NotificationPage> {
       }
     } catch (e) {
       debugPrint('Error marking notification as read: $e');
+    }
+  }
+
+  // Handle notification tap - check campaign status
+  Future<void> _handleNotificationTap(NotificationModel notification, String userId) async {
+    // Mark as read
+    _markAsRead(notification.id, userId);
+
+    if (notification.relatedType == 'blood_campaign' && notification.relatedId != null) {
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFAB4545)),
+          ),
+        ),
+      );
+
+      try {
+        // Fetch campaign details from API
+        final baseUrl = 'http://10.0.2.2:4000'; // Adjust as needed
+        final response = await http.get(
+          Uri.parse('$baseUrl/campaigns/${notification.relatedId}'),
+        );
+
+        // Dismiss loading dialog
+        if (mounted) Navigator.of(context).pop();
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body)['data'];
+          final status = data['status'] ?? 'unknown';
+
+          if (status == 'completed' || status == 'cancelled') {
+            // Campaign sudah tidak active
+            AnimationService.showCampaignUnavailable(context, status: status);
+          } else if (status == 'active' || status == 'draft') {
+            // Campaign masih active, navigate to detail
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Membuka detail permintaan darah...'),
+                backgroundColor: Color(0xFF4CAF50),
+              ),
+            );
+            // TODO: Implement navigation ke campaign detail page
+            // Bisa fetch PermintaanDarahModel dari API dan navigate
+          }
+        } else {
+          // API error
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Gagal memuat data permintaan darah'),
+              backgroundColor: Color(0xFFAB4545),
+            ),
+          );
+        }
+      } catch (e) {
+        // Dismiss loading dialog jika masih ada
+        if (mounted && Navigator.canPop(context)) {
+          Navigator.of(context).pop();
+        }
+
+        debugPrint('❌ Error fetching campaign: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Color(0xFFAB4545),
+          ),
+        );
+      }
     }
   }
 
@@ -540,10 +609,7 @@ class _NotificationPageState extends State<NotificationPage> {
                 // Card content
                 InkWell(
                   onTap: () {
-                    // Mark notification as read when tapped
-                    _markAsRead(notification.id, userId);
-
-                    // Handle notification tap - navigate to detail page etc.
+                    _handleNotificationTap(notification, userId);
                   },
                   child: Padding(
                     padding: const EdgeInsets.symmetric(

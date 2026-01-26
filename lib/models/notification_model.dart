@@ -61,6 +61,11 @@ class NotificationModel {
     return type == 'campaign' && relatedType == 'campaign';
   }
 
+  /// Get confirmation ID from metadata (if available)
+  String? get confirmationId {
+    return metadata?['confirmationId'] as String?;
+  }
+
   /// Parse from JSON API response
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
     return NotificationModel(

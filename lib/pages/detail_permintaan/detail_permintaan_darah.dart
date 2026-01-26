@@ -9,13 +9,19 @@ import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class DetailPermintaanDarah extends StatefulWidget {
   final PermintaanDarahModel permintaan;
+  final String? confirmationId;  // From notification
 
   const DetailPermintaanDarah({
     Key? key,
     required this.permintaan,
+    this.confirmationId,
   }) : super(key: key);
 
   @override
@@ -24,11 +30,78 @@ class DetailPermintaanDarah extends StatefulWidget {
 
 class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
   double? _distance;
+  String? _confirmationId;  // ✅ Store confirmation ID
+  bool _preCheckLoading = false;
+  final _storage = FlutterSecureStorage();
 
   @override
   void initState() {
     super.initState();
     _calculateDistance();
+    _preCheckConfirmation();  // ✅ Call pre-check on page load
+  }
+
+  // ✅ NEW: Pre-check confirmation for direct access flow
+  Future<void> _preCheckConfirmation() async {
+    // If coming from notification, already have confirmationId
+    if (widget.confirmationId != null) {
+      setState(() {
+        _confirmationId = widget.confirmationId;
+      });
+      print("✅ [DEBUG] Using confirmationId from notification: ${widget.confirmationId}");
+      return;
+    }
+
+    // For "Permintaan Terdekat" flow, call pre-check endpoint
+    print("🔍 [DEBUG] Pre-check called for permintaan terdekat");
+    
+    setState(() {
+      _preCheckLoading = true;
+    });
+
+    try {
+      final userDataString = await _storage.read(key: 'userData');
+      if (userDataString == null) {
+        print("❌ [DEBUG] User not logged in");
+        return;
+      }
+
+      final userData = jsonDecode(userDataString);
+      final donorId = userData['id'];
+      final campaignId = widget.permintaan.id;
+
+      print("🔍 [DEBUG] Pre-check params - campaignId: $campaignId, donorId: $donorId");
+
+      final response = await http.get(
+        Uri.parse('${dotenv.env['BASE_URL']}/fulfillment/donor/pre-check')
+            .replace(queryParameters: {
+          'campaign_id': campaignId,
+          'donor_id': donorId,
+        }),
+      );
+
+      print("🔍 [DEBUG] Pre-check response status: ${response.statusCode}");
+      print("🔍 [DEBUG] Pre-check response body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final confirmationId = data['data']['confirmationId'];
+        
+        setState(() {
+          _confirmationId = confirmationId;
+        });
+        
+        print("✅ [DEBUG] Pre-check successful, confirmationId: $confirmationId");
+      } else {
+        print("❌ [DEBUG] Pre-check failed: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("❌ [DEBUG] Pre-check error: $e");
+    } finally {
+      setState(() {
+        _preCheckLoading = false;
+      });
+    }
   }
 
   Future<void> _calculateDistance() async {
@@ -260,19 +333,39 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
                   borderRadius: BorderRadius.circular(20),
                   child: InkWell(
                     onTap: () {
+                      // ✅ Use pre-checked confirmation ID if available
+                      final confirmId = _confirmationId ?? widget.confirmationId;
+                      
+                      if (confirmId == null && !_preCheckLoading) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Gagal mempersiapkan konfirmasi. Silakan refresh halaman.')),
+                        );
+                        return;
+                      }
+
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => DataPendonoranDarah(
-                            requestId: widget.permintaan.id,
+                            confirmationId: confirmId,  // ✅ Use pre-checked ID
+                            campaignId: widget.permintaan.id,
                             golonganDarah: widget.permintaan.bloodType ?? '-',
                           ),
                         ),
                       );
                     },
                     borderRadius: BorderRadius.circular(20),
-                    child: const Center(
-                      child: Text(
+                    child: Center(
+                      child: _preCheckLoading
+                          ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          strokeWidth: 2,
+                        ),
+                      )
+                          : const Text(
                         'Donor Sekarang',
                         style: TextStyle(
                           color: Colors.white,

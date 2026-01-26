@@ -14,7 +14,7 @@ class HeaderWidget extends StatefulWidget {
 class _HeaderWidgetState extends State<HeaderWidget> {
   int _unreadCount = 0;
   bool _isLoading = true;
-
+  
   @override
   void initState() {
     super.initState();

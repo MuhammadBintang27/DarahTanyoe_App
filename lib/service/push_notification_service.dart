@@ -99,12 +99,10 @@ class PushNotificationService {
 
       // Get FCM token
       String? token = await _firebaseMessaging.getToken();
-      print('✅ FCM Token: $token');
+      print('✅ FCM Token obtained: $token');
 
-      // Save token to backend
-      if (token != null) {
-        await _saveFCMToken(token);
-      }
+      // DON'T save token yet - wait until user logs in
+      // Token akan disimpan di verifyOTP() atau savePersonalInfo()
 
       // Handle foreground notifications
       FirebaseMessaging.onMessage.listen(_handleForegroundNotification);
@@ -112,8 +110,11 @@ class PushNotificationService {
       // Handle background notifications (when app is in background/terminated)
       FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
 
-      // Handle token refresh
-      _firebaseMessaging.onTokenRefresh.listen(_saveFCMToken);
+      // Handle token refresh - update backend when token changes
+      _firebaseMessaging.onTokenRefresh.listen((newToken) {
+        print('🔄 FCM Token refreshed: $newToken');
+        _updateFCMTokenForCurrentUser(newToken);
+      });
 
       print('✅ Push Notification Service initialized');
     } catch (e) {
@@ -121,7 +122,7 @@ class PushNotificationService {
     }
   }
 
-  /// Save FCM token to backend
+  /// Save FCM token to backend (internal, for backward compat)
   Future<void> _saveFCMToken(String token) async {
     try {
       final user = await AuthService().getCurrentUser();
@@ -134,10 +135,10 @@ class PushNotificationService {
       final String apiUrl = dotenv.env['BASE_URL'] ?? 'http://10.0.2.2:4000';
 
       final response = await http.post(
-        Uri.parse('$apiUrl/notification/save-token'),
+        Uri.parse('$apiUrl/notifications/push-token/register'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'user_id': userId,
+          'userId': userId,
           'fcm_token': token,
           'platform': Platform.isAndroid ? 'android' : 'ios',
         }),
@@ -150,6 +151,106 @@ class PushNotificationService {
       }
     } catch (e) {
       print('⚠️ Error saving FCM token: $e');
+    }
+  }
+
+  /// Register FCM token for specific user (called after login/profile complete)
+  Future<void> registerFCMTokenForUser(String userId) async {
+    try {
+      String? token = await _firebaseMessaging.getToken();
+      if (token == null) {
+        print('⚠️ FCM token is null, cannot register');
+        return;
+      }
+
+      final String apiUrl = dotenv.env['BASE_URL'] ?? 'http://10.0.2.2:4000';
+      
+      print('🔔 Registering FCM token:');
+      print('   URL: $apiUrl/notifications/push-token/register');
+      print('   userId: $userId');
+      print('   token: ${token.substring(0, 20)}...');
+
+      final response = await http.post(
+        Uri.parse('$apiUrl/notifications/push-token/register'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'userId': userId,
+          'fcm_token': token,
+          'platform': Platform.isAndroid ? 'android' : 'ios',
+        }),
+      );
+
+      print('📊 Response status: ${response.statusCode}');
+      print('📊 Response body: ${response.body}');
+      
+      if (response.statusCode == 200) {
+        print('✅ FCM token registered for user $userId');
+      } else {
+        print('❌ Failed to register FCM token: ${response.statusCode}');
+        print('❌ Error response: ${response.body}');
+      }
+    } catch (e) {
+      print('⚠️ Error registering FCM token for user: $e');
+    }
+  }
+
+  /// Update FCM token for current logged-in user (when token is refreshed)
+  Future<void> _updateFCMTokenForCurrentUser(String newToken) async {
+    try {
+      final user = await AuthService().getCurrentUser();
+      if (user == null) {
+        print('⚠️ User not authenticated, skipping token update');
+        return;
+      }
+
+      final userId = user['id'];
+      final String apiUrl = dotenv.env['BASE_URL'] ?? 'http://10.0.2.2:4000';
+
+      final response = await http.post(
+        Uri.parse('$apiUrl/notifications/push-token/register'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'userId': userId,
+          'fcm_token': newToken,
+          'platform': Platform.isAndroid ? 'android' : 'ios',
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        print('✅ FCM token updated for user $userId');
+      } else {
+        print('❌ Failed to update FCM token: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('⚠️ Error updating FCM token: $e');
+    }
+  }
+
+  /// Unregister FCM token (called on logout)
+  Future<void> unregisterFCMTokenForUser(String userId) async {
+    try {
+      String? token = await _firebaseMessaging.getToken();
+      if (token == null) {
+        print('⚠️ FCM token is null, cannot unregister');
+        return;
+      }
+
+      final String apiUrl = dotenv.env['BASE_URL'] ?? 'http://10.0.2.2:4000';
+
+      // Delete push token from backend
+      final response = await http.post(
+        Uri.parse('$apiUrl/notifications/push-token/unregister'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'token': token}),
+      );
+
+      if (response.statusCode == 200) {
+        print('✅ FCM token unregistered for user $userId');
+      } else {
+        print('❌ Failed to unregister FCM token: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('⚠️ Error unregistering FCM token: $e');
     }
   }
 
