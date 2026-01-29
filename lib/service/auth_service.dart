@@ -556,5 +556,28 @@ class AuthService {
       return null;
     }
   }
+
+  /// **🔹 Update User Data** - Merge update dengan data user existing (jangan timpa)
+  Future<void> updateUserData(Map<String, dynamic> updates) async {
+    try {
+      // Get current userData
+      final currentUserString = await storage.read(key: 'userData');
+      Map<String, dynamic> currentUser = {};
+      
+      if (currentUserString != null) {
+        currentUser = jsonDecode(currentUserString) as Map<String, dynamic>;
+      }
+      
+      // Merge updates dengan current data
+      final mergedData = {...currentUser, ...updates};
+      
+      final userDataString = jsonEncode(mergedData);
+      await storage.write(key: 'userData', value: userDataString);
+      print("✅ User data updated in localStorage (merged)");
+      print("🔍 Updated fields: ${updates.keys.toList()}");
+    } catch (e) {
+      print("Error updating user data: $e");
+    }
+  }
   
 }

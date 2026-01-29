@@ -11,7 +11,7 @@ Future<int?> fetchTotalPoints() async {
 
   if (userId == null) return null;
   String baseUrl = dotenv.env['BASE_URL'] ?? 'https://default-url.com';
-  final url = Uri.parse('h$baseUrl/users/points/$userId');
+  final url = Uri.parse('$baseUrl/users/poin/$userId');
   print(url);
 
   try {
