@@ -4,6 +4,7 @@ import 'package:darahtanyoe_app/service/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:dotted_border/dotted_border.dart';
+import 'dart:async';
 
 class DonorConfirmationDetail extends StatefulWidget {
   final DonorConfirmationModel confirmation;
@@ -20,12 +21,31 @@ class DonorConfirmationDetail extends StatefulWidget {
 
 class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
   late DonorConfirmationModel _confirmation;
+  late Timer _timerUpdate;
+  late ValueNotifier<String> _timeRemaining;
 
   @override
   void initState() {
     super.initState();
     _confirmation = widget.confirmation;
+    _timeRemaining = ValueNotifier<String>(_confirmation.formattedTimeRemaining);
+    _startTimer();
     _logConfirmationData();
+  }
+
+  void _startTimer() {
+    _timerUpdate = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        _timeRemaining.value = _confirmation.formattedTimeRemaining;
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timerUpdate.cancel();
+    _timeRemaining.dispose();
+    super.dispose();
   }
 
   void _logConfirmationData() {
@@ -121,7 +141,7 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
                                 const SizedBox(height: 12),
 
                                 // Deskripsi Campaign
-                                _buildField('Deskripsi', _confirmation.campaign?.description ?? 'Tidak ada deskripsi'),
+                                _buildField('Deskripsi', _confirmation.campaign?.description ?? 'Tidak ada deskripsi', maxLines: 2),
                                 const SizedBox(height: 12),
 
                                 // Lokasi & Donor Sebelum (2 kolom)
@@ -131,6 +151,7 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
                                       child: _buildField(
                                         'Lokasi Pendonoran',
                                         '${_confirmation.campaign?.location?.split(',').first ?? 'RSUD Zainal Abidin'} (${_confirmation.distanceKm?.toStringAsFixed(1) ?? '2.0'} KM)',
+                                        maxLines: 2,
                                       ),
                                     ),
                                     const SizedBox(width: 12),
@@ -222,28 +243,11 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
                         ),
                         const SizedBox(height: 16),
 
-                        // Warning Message
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFECEC),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.red.withOpacity(0.3)),
-                          ),
-                          child: Text(
-                            'Akan ada pemeriksaan kesehatan di lokasi pendonoran, pastikan diri anda dalam kondisi fit dan siap donor!',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.red[700],
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
+                        
 
                         // Status Section
                         _buildStatusSection(statusColor, statusText),
-                        const SizedBox(height: 40),
+                        const SizedBox(height: 20),
 
                         // Copyright
                         Center(
@@ -260,7 +264,7 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
     );
   }
 
-  Widget _buildField(String label, String value) {
+  Widget _buildField(String label, String value, {int maxLines = 1}) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
@@ -301,7 +305,7 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
               color: Color(0xFF565656),
               height: 1.33, // 16px / 12px
             ),
-            maxLines: 1,
+            maxLines: maxLines,
             overflow: TextOverflow.ellipsis,
           ),
         ],
@@ -365,72 +369,281 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
   }
 
   Widget _buildStatusSection(Color statusColor, String statusText) {
-    final isActive =
-        _confirmation.status == 'confirmed' || _confirmation.status == 'code_verified';
-
-    return Container(
-      width: 299,
-      height: 54,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color.fromRGBO(171, 69, 69, 0.18),
-        border: Border.all(
-          color: const Color.fromRGBO(171, 69, 69, 0.37),
-          width: 0.8,
-        ),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
-          BoxShadow(
-            color: Color.fromRGBO(0, 0, 0, 0.1),
-            offset: Offset(0, 4),
-            blurRadius: 4,
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    // Status Sedang Berjalan (confirmed/code_verified) - dengan timer countdown
+    if (_confirmation.status == 'confirmed' || _confirmation.status == 'code_verified') {
+      return Column(
         children: [
-          Expanded(
+          // Warning text dengan divider
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  'STATUS PENDONORAN',
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: statusColor,
-                    fontWeight: FontWeight.w600,
+                RichText(
+                  textAlign: TextAlign.center,
+                  text: TextSpan(
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF8B4545),
+                      fontWeight: FontWeight.w500,
+                      height: 1.4,
+                    ),
+                    children: const [
+                      TextSpan(text: 'Akan ada '),
+                      TextSpan(
+                        text: 'pemeriksaan kesehatan',
+                        style: TextStyle(fontWeight: FontWeight.w900),
+                      ),
+                      TextSpan(text: ' di lokasi pendonoran, pastikan diri anda dalam '),
+                      TextSpan(
+                        text: 'kondisi fit dan siap donor!',
+                        style: TextStyle(fontWeight: FontWeight.w900),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  statusText,
+                const SizedBox(height: 12),
+                const Divider(
+                  color: Color.fromRGBO(171, 69, 69, 0.2),
+                  thickness: 1,
+                  height: 1,
+                ),
+              ],
+            ),
+          ),
+          // Timer Section
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(
+                color: const Color.fromRGBO(171, 69, 69, 0.2),
+                width: 1,
+              ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'SISA WAKTU SEBELUM PENDONORAN BERAKHIR',
                   style: TextStyle(
-                    fontSize: 14,
-                    color: statusColor,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    color: Color(0xFF8B4545),
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ValueListenableBuilder<String>(
+                  valueListenable: _timeRemaining,
+                  builder: (context, timeValue, child) {
+                    return Text(
+                      timeValue,
+                      style: const TextStyle(
+                        fontSize: 36,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF8B4545),
+                        letterSpacing: 1,
+                        height: 1.2,
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+                // Tombol Batalkan
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: () {},
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF8B4545),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      'Batalkan',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-          if (isActive)
-            ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: statusColor,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+        ],
+      );
+    }
+
+    // Status Dibatalkan/Ditolak - dengan container border sama
+    if (_confirmation.status == 'rejected' || _confirmation.status == 'expired' || _confirmation.status == 'failed') {
+      return Column(
+        children: [
+          // Warning text dengan divider (spacing kosong)
+          const Padding(
+            padding: EdgeInsets.only(bottom: 16),
+            child: Column(
+              children: [
+                SizedBox(height: 24),
+                Divider(
+                  color: Color.fromRGBO(171, 69, 69, 0.2),
+                  thickness: 1,
+                  height: 1,
                 ),
-              ),
-              child: const Text('Batalkan'),
+              ],
             ),
+          ),
+          // Status content container
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(
+                color: const Color.fromRGBO(171, 69, 69, 0.2),
+                width: 1,
+              ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Icon X
+                    Image.asset(
+                      'assets/images/icon_error_x.png',
+                      width: 40,
+                      height: 40,
+                      fit: BoxFit.contain,
+                    ),
+                    const SizedBox(width: 12),
+                    // Title text
+                    const Expanded(
+                      child: Text(
+                        'PENDONORAN DARAH DIBATALKAN',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF8B4545),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    // Status Selesai - dengan container border sama
+    if (_confirmation.status == 'completed') {
+      return Column(
+        children: [
+          // Warning text dengan divider (spacing kosong)
+          const Padding(
+            padding: EdgeInsets.only(bottom: 16),
+            child: Column(
+              children: [
+                SizedBox(height: 24),
+                Divider(
+                  color: Color.fromRGBO(171, 69, 69, 0.2),
+                  thickness: 1,
+                  height: 1,
+                ),
+              ],
+            ),
+          ),
+          // Status content container
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(
+                color: const Color.fromRGBO(53, 155, 94, 0.2),
+                width: 1,
+              ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Icon Checkmark
+                Image.asset(
+                  'assets/images/icon_success_checkmark.png',
+                  width: 40,
+                  height: 40,
+                  fit: BoxFit.contain,
+                ),
+                const SizedBox(width: 12),
+                // Text
+                const Expanded(
+                  child: Text(
+                    'PENDONORAN DARAH SELESAI',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF359B5E),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    // Status Default/Pending
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(
+          color: const Color.fromRGBO(171, 69, 69, 0.2),
+          width: 1,
+        ),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'STATUS PENDONORAN',
+            style: TextStyle(
+              fontSize: 10,
+              color: Color(0xFF565656),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            statusText,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Color(0xFF565656),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
 
   Color _getStatusColor(String? status) {

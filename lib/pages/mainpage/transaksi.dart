@@ -1,15 +1,11 @@
 import 'dart:convert';
 import 'package:darahtanyoe_app/components/background_widget.dart';
-import 'package:darahtanyoe_app/components/bloodCard.dart';
 import 'package:darahtanyoe_app/components/loadingIndicator.dart';
-import 'package:darahtanyoe_app/helpers/formatDateTime.dart';
-import 'package:darahtanyoe_app/pages/detail_permintaan/detail_permintaan_darah.dart';
 import 'package:darahtanyoe_app/pages/detail_donor_confirmation/donor_confirmation_detail.dart';
 import 'package:darahtanyoe_app/service/auth_service.dart';
 import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:darahtanyoe_app/widget/header_widget.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import '../../models/permintaan_darah_model.dart';
 import 'package:darahtanyoe_app/models/donor_confirmation_model.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -26,134 +22,29 @@ class TransactionBlood extends StatefulWidget {
 
 class _TransactionBloodState extends State<TransactionBlood> {
   // Track which tab is selected
-  // Change: true = "Sedang Berlangsung" (active confirmations), false = "Selesai" (completed confirmations)
+  // true = "Sedang Berlangsung" (active confirmations), false = "Selesai" (completed confirmations)
   bool isBerlangsungTab = true;
   bool isLoading = false;
 
-  // Lists for storing actual data from the service
-  List<PermintaanDarahModel> permintaanList = [];
+  // Lists for storing donor confirmation data
   List<DonorConfirmationModel> berlangsungList = [];
   List<DonorConfirmationModel> selesaiList = [];
 
   @override
   void initState() {
     super.initState();
-    _loadDefaultTab();
-  }
-
-  Future<void> _loadDefaultTab() async {
-    // Default to "Sedang Berlangsung" tab (new flow)
     _loadBerlangsung();
   }
 
-
-  static Future<List<PermintaanDarahModel>> fetchPermintaanData(String userId) async {
-    final String baseUrl = dotenv.env['BASE_URL'] ?? 'https://default-url.com';
-
-    final url = Uri.parse('$baseUrl/bloodReq/$userId');
-
-    try {
-      final response = await http.get(url);
-      if (response.statusCode == 200) {
-        Map<String, dynamic> jsonResponse = json.decode(response.body);
-        List<dynamic> jsonData = jsonResponse['data'];
-        return jsonData
-            .map((item) => PermintaanDarahModel.fromJson(item))
-            .toList();
-      } else {
-        throw Exception('Gagal mengambil data: ${response.statusCode}');
-      }
-    } catch (e) {
-      throw Exception('Terjadi kesalahan: $e');
-    }
-  }
-
-  Future<void> _loadPermintaan() async {
-    setState(() => isLoading = true);
-
-    try {
-      final user = await AuthService().getCurrentUser();
-
-      if (user?['id'] == null) {
-        _showError("Anda belum login atau pengguna tidak ditemukan.");
-        setState(() => isLoading = false);
-        return;
-      }
-
-      final userId = user!['id'] as String;
-      final data = await fetchPermintaanData(userId);
-
-      if (!mounted) return;
-
-      setState(() {
-        permintaanList = data;
-        isLoading = false;
-      });
-
-      // Scroll ke permintaan berdasarkan kode unik jika tersedia
-      if (widget.uniqueCode != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _highlightRequest(widget.uniqueCode!);
-        });
-      }
-
-    } catch (e) {
-      if (mounted) {
-        setState(() => isLoading = false);
-        _showError("Gagal memuat data permintaan: $e");
-      }
-    }
-  }
-
+  // ✅ Show error message via SnackBar
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
         backgroundColor: Colors.red,
+        duration: const Duration(seconds: 4),
       ),
     );
-  }
-
-
-  Future<void> _loadPendonoran() async {
-    setState(() {
-      isLoading = true;
-    });
-
-    try {
-      final user = await AuthService().getCurrentUser();
-      if (user?['id'] == null) {
-        _showError("Anda belum login atau pengguna tidak ditemukan.");
-        setState(() => isLoading = false);
-        return;
-      }
-
-      // DEPRECATED: Donor history feature no longer available
-      // Will be replaced with DonorConfirmationService in future update
-      if (mounted) {
-        setState(() {
-          isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          isLoading = false;
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Fitur sedang diperbarui: $e"),
-            backgroundColor: Colors.orange,
-          ),
-        );
-      }
-    }
-  }
-
-  void _highlightRequest(String uniqueCode) {
-    // DEPRECATED: uniqueCode feature removed from new schema
-    // In new architecture: DonorConfirmationModel tracks confirmation status instead
   }
 
   // ✅ NEW: Load active confirmations (Sedang Berlangsung)
@@ -397,105 +288,7 @@ class _TransactionBloodState extends State<TransactionBlood> {
     );
   }
 
-  Widget _buildRequestContent() {
-    if (isLoading) {
-      return const LoadingIndicator();
-    }
-    if (permintaanList.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.bloodtype_outlined, size: 64, color: Colors.grey),
-              SizedBox(height: 16),
-              Text(
-                "Belum ada permintaan darah",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 8),
-              Text(
-                "Permintaan darah yang Anda buat akan muncul di sini",
-                style: TextStyle(fontSize: 14, color: Colors.grey),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        children: [
-          ...permintaanList.map((permintaan) {
-            String formattedDate = formatDateTime(permintaan.endDate.toIso8601String());
-
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 18),
-              child: BloodCard(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => DetailPermintaanDarah(permintaan: permintaan),
-                    ),
-                  );
-                },
-                status: permintaan.status,
-                bloodType: permintaan.bloodType ?? '-',
-                date: formattedDate,
-                hospital: permintaan.organiser?.institutionName ?? 'N/A',
-                createdAt: formatDateTime(permintaan.createdAt.toIso8601String()),
-                bagCount: permintaan.currentQuantity,
-                totalBags: permintaan.relatedBloodRequest?.quantity ?? 0,
-                isRequest: true,
-                uniqueCode: permintaan.id,
-                description: (permintaan.description?.isNotEmpty == true)
-                    ? permintaan.description ?? '-'
-                    : '-',
-              ),
-            );
-          }).toList(),
-          const SizedBox(height: 60),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDonationContent() {
-    // DEPRECATED: Donation history feature uses old PendonoranDarahModel which no longer exists
-    // In new architecture: notifications → donor confirms → DonorConfirmationModel tracks status
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.volunteer_activism, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text(
-              "Belum ada pendonoran darah",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 8),
-            Text(
-              "Fitur riwayat pendonaran sedang diperbarui",
-              style: TextStyle(fontSize: 14, color: Colors.grey),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-
-  // ✅ NEW: Build Sedang Berlangsung content
+  // Build Sedang Berlangsung content
   Widget _buildBerlangsungContent() {
     if (isLoading) {
       return const LoadingIndicator();
@@ -535,7 +328,7 @@ class _TransactionBloodState extends State<TransactionBlood> {
     );
   }
 
-  // ✅ NEW: Build Selesai content
+  // Build Selesai content
   Widget _buildSelesaiContent() {
     if (isLoading) {
       return const LoadingIndicator();
@@ -574,8 +367,6 @@ class _TransactionBloodState extends State<TransactionBlood> {
       },
     );
   }
-
-  // ✅ NEW: Build donation card widget - using BloodCard style
   Widget _buildDonationCard(DonorConfirmationModel confirmation) {
     // Determine colors based on status
     Color titleColor;
@@ -734,7 +525,7 @@ class _TransactionBloodState extends State<TransactionBlood> {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 Text(
-                                  '→ ${confirmation.distanceKm?.toStringAsFixed(1) ?? '?'} KM dari lokasi anda',
+                                  '${confirmation.distanceKm?.toStringAsFixed(1) ?? '?'} KM dari lokasi anda',
                                   style: TextStyle(
                                     fontWeight: FontWeight.normal,
                                     fontSize: 11,
