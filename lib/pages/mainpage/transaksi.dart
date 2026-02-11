@@ -9,6 +9,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:darahtanyoe_app/models/donor_confirmation_model.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:darahtanyoe_app/service/institution_service.dart';
 
 class TransactionBlood extends StatefulWidget {
   final String? defaultTab;
@@ -25,6 +26,10 @@ class _TransactionBloodState extends State<TransactionBlood> {
   // true = "Sedang Berlangsung" (active confirmations), false = "Selesai" (completed confirmations)
   bool isBerlangsungTab = true;
   bool isLoading = false;
+  // Cache nama PMI berdasarkan pmiId untuk Donor Biasa
+  final Map<String, String> _pmiNameCache = {};
+  // Golongan darah pendonor (untuk Donor Biasa)
+  String? _currentUserBloodType;
 
   // Lists for storing donor confirmation data
   List<DonorConfirmationModel> berlangsungList = [];
@@ -33,7 +38,21 @@ class _TransactionBloodState extends State<TransactionBlood> {
   @override
   void initState() {
     super.initState();
+    _ensureCurrentUserBloodType();
     _loadBerlangsung();
+  }
+
+  Future<void> _ensureCurrentUserBloodType() async {
+    try {
+      final user = await AuthService().getCurrentUser();
+      if (mounted) {
+        setState(() {
+          _currentUserBloodType = user?['blood_type']?.toString();
+        });
+      }
+    } catch (_) {
+      // ignore
+    }
   }
 
   // ✅ Show error message via SnackBar
@@ -81,6 +100,15 @@ class _TransactionBloodState extends State<TransactionBlood> {
             berlangsungList = data
                 .map((item) => DonorConfirmationModel.fromJson(item))
                 .toList();
+            // Prefetch nama PMI untuk donor biasa
+            final ids = berlangsungList
+                .map((c) => c.pmiId)
+                .where((id) => id != null && id!.isNotEmpty)
+                .cast<String>()
+                .toSet();
+            for (final id in ids) {
+              _ensurePmiName(id);
+            }
             isLoading = false;
           });
         }
@@ -130,6 +158,14 @@ class _TransactionBloodState extends State<TransactionBlood> {
             selesaiList = data
                 .map((item) => DonorConfirmationModel.fromJson(item))
                 .toList();
+            final ids = selesaiList
+                .map((c) => c.pmiId)
+                .where((id) => id != null && id!.isNotEmpty)
+                .cast<String>()
+                .toSet();
+            for (final id in ids) {
+              _ensurePmiName(id);
+            }
             isLoading = false;
           });
         }
@@ -368,6 +404,11 @@ class _TransactionBloodState extends State<TransactionBlood> {
     );
   }
   Widget _buildDonationCard(DonorConfirmationModel confirmation) {
+    final bool isDonorBiasa = (confirmation.confirmationOrigin == 'donor_biasa');
+    final String pmiName = isDonorBiasa ? (_pmiNameCache[confirmation.pmiId] ?? 'PMI Tujuan') : '';
+    final String displayBloodType = isDonorBiasa
+        ? (_currentUserBloodType ?? 'N/A')
+        : (confirmation.patientBloodType ?? 'N/A');
     // Determine colors based on status
     Color titleColor;
     Color borderColor;
@@ -379,11 +420,17 @@ class _TransactionBloodState extends State<TransactionBlood> {
       borderColor = const Color(0xFF359B5E);
       backgroundColor = const Color(0xFFDBE6DF);
       statusText = 'Pendonoran Selesai';
-    } else if (confirmation.status == 'rejected' || confirmation.status == 'expired') {
+    } else if (confirmation.status == 'rejected' || confirmation.status == 'expired' || confirmation.status == 'cancelled') {
       titleColor = const Color(0xFFAB4545); // Red
       borderColor = const Color(0xFFAB4545);
       backgroundColor = const Color(0xFFEAE2E2);
-      statusText = confirmation.status == 'rejected' ? 'Pendonoran Ditolak' : 'Kadaluarsa';
+      if (confirmation.status == 'rejected') {
+        statusText = 'Pendonoran Ditolak';
+      } else if (confirmation.status == 'cancelled') {
+        statusText = 'Pendonoran Dibatalkan';
+      } else {
+        statusText = 'Kadaluarsa';
+      }
     } else {
       // Active/pending - Yellow
       titleColor = const Color(0xFFCB9B0A);
@@ -432,7 +479,7 @@ class _TransactionBloodState extends State<TransactionBlood> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          confirmation.patientName ?? 'Nama Pasien',
+                          isDonorBiasa ? 'Donor Biasa' : (confirmation.patientName ?? 'Nama Pasien'),
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
@@ -472,7 +519,7 @@ class _TransactionBloodState extends State<TransactionBlood> {
                               ),
                               const SizedBox(width: 6),
                               Text(
-                                confirmation.patientBloodType ?? 'N/A',
+                                displayBloodType,
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -513,9 +560,11 @@ class _TransactionBloodState extends State<TransactionBlood> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  confirmation.campaignLocation != null
+                                  isDonorBiasa
+                                    ? pmiName
+                                    : (confirmation.campaignLocation != null
                                       ? confirmation.campaignLocation!.split(',').first
-                                      : 'Lokasi',
+                                      : 'Lokasi'),
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.bold,
@@ -525,7 +574,9 @@ class _TransactionBloodState extends State<TransactionBlood> {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 Text(
-                                  '${confirmation.distanceKm?.toStringAsFixed(1) ?? '?'} KM dari lokasi anda',
+                                  isDonorBiasa
+                                    ? '${confirmation.distanceKm?.toStringAsFixed(1) ?? '?'} KM dari lokasi anda'
+                                    : '${confirmation.distanceKm?.toStringAsFixed(1) ?? '?'} KM dari lokasi anda',
                                   style: TextStyle(
                                     fontWeight: FontWeight.normal,
                                     fontSize: 11,
@@ -604,7 +655,9 @@ class _TransactionBloodState extends State<TransactionBlood> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              confirmation.campaign?.description ?? 'Deskripsi tidak tersedia',
+                              isDonorBiasa
+                                  ? 'Donor terjadwal di PMI yang Anda pilih. Mohon hadir sesuai jadwal, membawa identitas, dan pastikan kondisi sehat sebelum donor.'
+                                  : (confirmation.campaign?.description ?? 'Deskripsi tidak tersedia'),
                               style: TextStyle(
                                 fontSize: 11,
                                 color: AppTheme.neutral_01,
@@ -707,6 +760,21 @@ class _TransactionBloodState extends State<TransactionBlood> {
         ],
       ),
     );
+  }
+
+  Future<void> _ensurePmiName(String id) async {
+    if (_pmiNameCache.containsKey(id)) return;
+    try {
+      final inst = await InstitutionService.getInstitutionById(id);
+      final name = inst?['institution_name']?.toString();
+      if (name != null && name.isNotEmpty && mounted) {
+        setState(() {
+          _pmiNameCache[id] = name;
+        });
+      }
+    } catch (e) {
+      // ignore
+    }
   }
 
   // ✅ NEW: Navigate to donation detail page

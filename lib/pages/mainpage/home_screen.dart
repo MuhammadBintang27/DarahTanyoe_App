@@ -8,6 +8,9 @@ import 'package:darahtanyoe_app/pages/mainpage/transaksi.dart';
 import 'package:darahtanyoe_app/pages/detail_permintaan/detail_permintaan_darah.dart';
 import 'package:darahtanyoe_app/pages/mainpage/main_screen.dart';
 import 'package:darahtanyoe_app/pages/mainpage/informasi_pmi.dart';
+import 'package:darahtanyoe_app/pages/donor_darah/data_donor_biasa.dart';
+import 'package:darahtanyoe_app/pages/detail_donor_confirmation/donor_confirmation_detail.dart';
+import 'package:darahtanyoe_app/models/donor_confirmation_model.dart';
 import 'package:darahtanyoe_app/service/auth_service.dart';
 import 'package:darahtanyoe_app/service/campaign_service.dart';
 import 'package:darahtanyoe_app/theme/theme.dart';
@@ -217,15 +220,8 @@ Widget _buildActionButtons() {
           color: AppTheme.brand_03,
           textColor: Colors.white,
           icon: Icons.local_hospital,
-          onPressed: () {
-            SharedPreferences.getInstance().then((prefs) {
-              prefs.setInt('selectedIndex', 1);
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (context) => MainScreen()),
-                    (route) => false,
-              );
-            });
+          onPressed: () async {
+            await _handleDonorPressed();
           },
           isOutlined: false,
         ),
@@ -647,4 +643,50 @@ Widget _buildPendingDonations() {
       ),
     );
   }
-}
+
+  Future<void> _handleDonorPressed() async {
+    try {
+      final user = await AuthService().getCurrentUser();
+      final donorId = user?['id'];
+      final baseUrl = dotenv.env['BASE_URL'] ?? 'https://default-url.com';
+      if (donorId == null) {
+        if (!mounted) return;
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const DataPendonoranBiasa()),
+        );
+        return;
+      }
+
+      final uri = Uri.parse('$baseUrl/janji-donor/active').replace(queryParameters: {
+        'donor_id': donorId,
+      });
+      final resp = await http.get(uri);
+      if (resp.statusCode == 200) {
+        final json = jsonDecode(resp.body) as Map<String, dynamic>;
+        final active = json['active'];
+        if (active != null) {
+          final model = DonorConfirmationModel.fromJson(active as Map<String, dynamic>);
+          if (!mounted) return;
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => DonorConfirmationDetail(confirmation: model)),
+          );
+          return;
+        }
+      }
+
+      if (!mounted) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const DataPendonoranBiasa()),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const DataPendonoranBiasa()),
+      );
+    }
+  }
+  }

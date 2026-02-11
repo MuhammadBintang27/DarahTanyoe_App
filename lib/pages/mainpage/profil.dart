@@ -9,10 +9,164 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-class ProfileScreen extends StatelessWidget {
-  final AuthService _authService = AuthService();
-
+class ProfileScreen extends StatefulWidget {
   ProfileScreen({Key? key}) : super(key: key);
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  final AuthService _authService = AuthService();
+  Map<String, dynamic>? _userData;
+  bool _loadingUser = true;
+  bool _notificationsEnabled = true;
+  bool _isWithin3Months = false;
+  int _daysLeft = 0;
+  
+  bool? _boolFrom(dynamic v) {
+    try {
+      if (v == null) return null;
+      if (v is bool) return v;
+      if (v is String) {
+        final s = v.trim().toLowerCase();
+        if (s == 'true') return true;
+        if (s == 'false') return false;
+      }
+      if (v is num) return v != 0;
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+  
+  DateTime? _extractLastDonationDate(dynamic raw) {
+    try {
+      if (raw == null) return null;
+      // String ISO date
+      if (raw is String && raw.isNotEmpty) {
+        final dt = DateTime.tryParse(raw);
+        if (dt != null) return dt.toLocal();
+      }
+      // Numeric timestamp (seconds or milliseconds)
+      if (raw is int) {
+        final isMillis = raw > 100000000000; // > 10^11 indicates ms
+        return isMillis
+            ? DateTime.fromMillisecondsSinceEpoch(raw).toLocal()
+            : DateTime.fromMillisecondsSinceEpoch(raw * 1000).toLocal();
+      }
+      if (raw is double) {
+        final v = raw.toInt();
+        final isMillis = v > 100000000000;
+        return isMillis
+            ? DateTime.fromMillisecondsSinceEpoch(v).toLocal()
+            : DateTime.fromMillisecondsSinceEpoch(v * 1000).toLocal();
+      }
+      // Nested map patterns
+      if (raw is Map) {
+        final candidate = raw['date'] ?? raw['last_donation_date'] ?? raw['value'];
+        return _extractLastDonationDate(candidate);
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUser();
+  }
+
+  Future<void> _loadUser() async {
+    try {
+      // Get user id from secure storage (identity only)
+      final current = await _authService.getCurrentUser();
+      final userId = current?['id'] as String?;
+
+      if (userId == null || userId.isEmpty) {
+        if (!mounted) return;
+        setState(() {
+          _userData = null;
+          _loadingUser = false;
+        });
+        return;
+      }
+
+      // Fetch realtime user profile from API (include token if available)
+      final baseUrl = dotenv.env['BASE_URL'] ?? '';
+      final cacheBust = DateTime.now().millisecondsSinceEpoch;
+      final url = Uri.parse('$baseUrl/users/$userId?_=$cacheBust');
+      final token = await _authService.getAccessToken();
+      final headers = {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
+        if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+      };
+
+      final resp = await http.get(url, headers: headers);
+
+      Map<String, dynamic>? fetched;
+      if (resp.statusCode == 200) {
+        final decoded = jsonDecode(resp.body);
+        if (decoded is Map<String, dynamic>) {
+          // Prefer 'user' key if present
+          final userField = decoded['user'];
+          if (userField is Map) {
+            fetched = Map<String, dynamic>.from(userField);
+          } else if (userField is List && userField.isNotEmpty && userField.first is Map) {
+            fetched = Map<String, dynamic>.from(userField.first as Map);
+          } else {
+            // Also support 'data' wrapper or plain object
+            final dataField = decoded['data'];
+            if (dataField is Map) {
+              fetched = Map<String, dynamic>.from(dataField);
+            } else if (dataField is List && dataField.isNotEmpty && dataField.first is Map) {
+              fetched = Map<String, dynamic>.from(dataField.first as Map);
+            } else {
+              fetched = Map<String, dynamic>.from(decoded);
+            }
+          }
+        } else if (decoded is List && decoded.isNotEmpty && decoded.first is Map) {
+          fetched = Map<String, dynamic>.from(decoded.first as Map);
+        }
+      } else {
+        // fallback: use local storage data if API fails
+        fetched = current;
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _userData = fetched ?? {};
+        _loadingUser = false;
+        _notificationsEnabled = _boolFrom(_userData?['notifications_enabled']) ?? true;
+        _isWithin3Months = false;
+        _daysLeft = 0;
+        final rawLast = _userData?['last_donation_date'] ??
+            _userData?['lastDonationDate'] ??
+            _userData?['last_donation_at'] ??
+            _userData?['lastDonationAt'];
+        final lastDonation = _extractLastDonationDate(rawLast);
+        if (lastDonation != null) {
+          final nextEligible = lastDonation.add(const Duration(days: 90));
+          final today = DateTime.now();
+          if (nextEligible.isAfter(today)) {
+            _isWithin3Months = true;
+            _daysLeft = nextEligible.difference(today).inDays;
+            _notificationsEnabled = false;
+          }
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _userData = null;
+        _loadingUser = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,42 +179,31 @@ class ProfileScreen extends StatelessWidget {
             children: [
               HeaderWidget(),
               Expanded(
-                child: SingleChildScrollView(
-                  child: FutureBuilder<Map<String, dynamic>?>(
-                    future: _authService.getCurrentUser(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-
-                      if (snapshot.hasError) {
-                        return Center(
-                          child: Text(
-                            'Error: ${snapshot.error}',
-                            style: const TextStyle(fontFamily: 'DM Sans'),
-                          ),
-                        );
-                      }
-
-                      if (!snapshot.hasData || snapshot.data == null) {
-                        return const Center(
-                          child: Text(
-                            'Data pengguna tidak tersedia',
-                            style: TextStyle(fontFamily: 'DM Sans'),
-                          ),
-                        );
-                      }
-
-                      final userData = snapshot.data!;
-                      String formattedDate = 'Tidak tersedia';
-                      if (userData['last_donation_date'] != null) {
-                        try {
-                          final date = DateTime.parse(userData['last_donation_date']);
-                          formattedDate = DateFormat('dd MMM yyyy').format(date);
-                        } catch (e) {
-                          formattedDate = userData['last_donation_date'];
-                        }
-                      }
+                child: RefreshIndicator(
+                  onRefresh: () async {
+                    await _loadUser();
+                  },
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: _loadingUser
+                      ? const Center(child: CircularProgressIndicator())
+                      : (_userData == null
+                          ? const Center(
+                              child: Text(
+                                'Data pengguna tidak tersedia',
+                                style: TextStyle(fontFamily: 'DM Sans'),
+                              ),
+                            )
+                          : Builder(builder: (context) {
+                              final userData = _userData!;
+                      final rawLast = userData['last_donation_date'] ??
+                          userData['lastDonationDate'] ??
+                          userData['last_donation_at'] ??
+                          userData['lastDonationAt'];
+                      final dtLast = _extractLastDonationDate(rawLast);
+                        final String formattedDate = dtLast != null
+                          ? DateFormat('dd MMM yyyy', 'id').format(dtLast)
+                          : 'Tidak tersedia';
 
                       // Hitung usia dari date_of_birth
                       int? age;
@@ -131,7 +274,8 @@ class ProfileScreen extends StatelessWidget {
                               _buildInfoItem(context, 'Catatan Kesehatan', userData['health_notes'] ?? 'Tidak ada'),
                             ]),
                             const SizedBox(height: 16),
-                            _buildNotificationSettings(context, userData),
+                            _buildNotificationSettings(context),
+                            // Debug panel removed in production
                             
                             const SizedBox(height: 24),
                             Padding(
@@ -200,10 +344,10 @@ class ProfileScreen extends StatelessWidget {
                             const SizedBox(height: 20),
                           ],
                         ),
-                      );
-                    },
-                  ),
-                ),
+                              );
+                            }))
+                  )
+                )
               ),
             ],
           ),
@@ -212,190 +356,178 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildNotificationSettings(BuildContext context, Map<String, dynamic> userData) {
-    // Hitung apakah user dalam periode 3 bulan setelah donor
-    bool isWithin3Months = false;
-    int daysLeft = 0;
-    
-    if (userData['last_donation_date'] != null) {
-      try {
-        final lastDonation = DateTime.parse(userData['last_donation_date']);
-        final nextEligible = lastDonation.add(const Duration(days: 90));
-        final today = DateTime.now();
-        
-        if (nextEligible.isAfter(today)) {
-          isWithin3Months = true;
-          daysLeft = nextEligible.difference(today).inDays;
-        }
-      } catch (e) {
-        print('Error calculating donation period: $e');
-      }
-    }
+  
 
-    return StatefulBuilder(
-      builder: (context, setState) {
-        // Get notifications_enabled from userData, default true
-        bool notificationsEnabled = userData['notifications_enabled'] ?? true;
-        
-        // Jika dalam periode 3 bulan, force notifikasi menjadi false
-        if (isWithin3Months) {
-          notificationsEnabled = false;
-        }
-
-        return Container(
-          width: double.infinity,
-          margin: const EdgeInsets.symmetric(horizontal: 20),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: const Color.fromARGB(228, 255, 255, 255),
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withValues(alpha: 0.25),
-                spreadRadius: 1,
-                blurRadius: 8,
-                offset: const Offset(0, 3),
+  Widget _buildNotificationSettings(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color.fromARGB(228, 255, 255, 255),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withValues(alpha: 0.25),
+            spreadRadius: 1,
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Pengaturan Notifikasi',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'DM Sans',
+                ),
+              ),
+              Transform.scale(
+                scale: 0.9,
+                child: Switch(
+                  value: _notificationsEnabled,
+                  onChanged: _isWithin3Months
+                      ? null
+                      : (value) async {
+                          // Optimistic UI
+                          setState(() {
+                            _notificationsEnabled = value;
+                          });
+                          final ok = await _updateNotificationPreference(
+                            context,
+                            value,
+                            _userData?['id'],
+                          );
+                          if (!ok && mounted) {
+                            // Revert on failure
+                            setState(() {
+                              _notificationsEnabled = !value;
+                            });
+                          }
+                          // Refresh from API to keep in sync
+                          if (ok) {
+                            await _loadUser();
+                          }
+                        },
+                  activeColor: AppTheme.brand_01,
+                  inactiveTrackColor: Colors.grey[300],
+                ),
               ),
             ],
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Pengaturan Notifikasi',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+          const SizedBox(height: 6),
+          Text(
+            'Permintaan darah dari PMI akan dikirim sesuai preferensi Anda.',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[600],
+              fontFamily: 'DM Sans',
+            ),
+          ),
+          const Divider(height: 24),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: _isWithin3Months
+                  ? Colors.orange.withValues(alpha: 0.08)
+                  : (_notificationsEnabled
+                      ? Colors.green.withValues(alpha: 0.08)
+                      : Colors.grey.withValues(alpha: 0.08)),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: _isWithin3Months
+                    ? Colors.orange.withValues(alpha: 0.3)
+                    : (_notificationsEnabled
+                        ? Colors.green.withValues(alpha: 0.3)
+                        : Colors.grey.withValues(alpha: 0.3)),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      _isWithin3Months
+                          ? Icons.info_outline
+                          : (_notificationsEnabled
+                              ? Icons.notifications_active_outlined
+                              : Icons.notifications_off_outlined),
+                      size: 20,
+                      color: _isWithin3Months
+                          ? Colors.orange[700]
+                          : (_notificationsEnabled
+                              ? Colors.green[700]
+                              : Colors.grey[700]),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _isWithin3Months
+                            ? 'Istirahat Donor'
+                            : (_notificationsEnabled
+                                ? 'Notifikasi Aktif'
+                                : 'Notifikasi Dimatikan'),
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'DM Sans',
+                          color: _isWithin3Months
+                              ? Colors.orange[700]
+                              : (_notificationsEnabled
+                                  ? Colors.green[700]
+                                  : Colors.grey[700]),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                if (_isWithin3Months) ...[
+                  Text(
+                    'Notifikasi dimatikan otomatis selama masa istirahat donor.',
+                    style: const TextStyle(
+                      fontSize: 13,
                       fontFamily: 'DM Sans',
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                  Transform.scale(
-                    scale: 0.8,
-                    child: Switch(
-                      value: notificationsEnabled,
-                      onChanged: isWithin3Months
-                          ? null // Disable toggle jika dalam 3 bulan
-                          : (value) {
-                              // Update local state immediately
-                              setState(() {
-                                notificationsEnabled = value;
-                              });
-                              // Update API + localStorage
-                              _updateNotificationPreference(
-                                context,
-                                value,
-                                userData['id'],
-                                userData,
-                              );
-                            },
-                      activeColor: AppTheme.brand_01,
-                      inactiveTrackColor: Colors.grey[300],
+                  const SizedBox(height: 6),
+                  Text(
+                    'Hingga ${DateFormat('dd MMM yyyy', 'id').format(DateTime.now().add(Duration(days: _daysLeft)))}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontFamily: 'DM Sans',
+                      color: Colors.grey,
+                    ),
+                  ),
+                ] else ...[
+                  Text(
+                    _notificationsEnabled
+                        ? 'Anda akan menerima permintaan darah di sekitar Anda.'
+                        : 'Anda tidak akan menerima permintaan darah saat ini.',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontFamily: 'DM Sans',
+                      color: Colors.grey,
                     ),
                   ),
                 ],
-              ),
-              const Divider(height: 24),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: isWithin3Months
-                      ? Colors.orange.withValues(alpha: 0.1)
-                      : Colors.blue.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isWithin3Months
-                        ? Colors.orange.withValues(alpha: 0.3)
-                        : Colors.blue.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          isWithin3Months ? Icons.info_outline : Icons.check_circle_outline,
-                          size: 20,
-                          color: isWithin3Months ? Colors.orange[700] : Colors.blue[700],
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            isWithin3Months
-                                ? 'Periode Istirahat Donor'
-                                : 'Status Notifikasi',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              fontFamily: 'DM Sans',
-                              color: isWithin3Months ? Colors.orange[700] : Colors.blue[700],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    if (isWithin3Months) ...[
-                      Text(
-                        '⏸️ Notifikasi sedang dimatikan otomatis',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontFamily: 'DM Sans',
-                          color: Colors.grey[700],
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Anda dapat menerima notifikasi dalam $daysLeft hari lagi (${DateTime.parse(userData['last_donation_date']!).add(const Duration(days: 90)).toString().split(' ')[0]})',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontFamily: 'DM Sans',
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Terima kasih telah mendonor! Anda perlu istirahat 3 bulan sebelum dapat mendonor lagi.',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontFamily: 'DM Sans',
-                          color: Colors.grey[600],
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                    ] else ...[
-                      Text(
-                        notificationsEnabled ? '✅ Notifikasi aktif' : '❌ Notifikasi dimatikan',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontFamily: 'DM Sans',
-                          color: Colors.grey[700],
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Anda siap menerima notifikasi permintaan darah',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontFamily: 'DM Sans',
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
+  
 
   Widget _buildInfoSection(BuildContext context, String title, List<Widget> items) {
     return Container(
@@ -523,62 +655,90 @@ class ProfileScreen extends StatelessWidget {
     }
   }
 
-  Future<void> _updateNotificationPreference(
+  Future<bool> _updateNotificationPreference(
     BuildContext context,
     bool enabled,
-    String userId,
-    Map<String, dynamic> userData,
+    String? userId,
   ) async {
+    if (userId == null || userId.isEmpty) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('ID pengguna tidak tersedia'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return false;
+    }
     try {
       final baseUrl = dotenv.env['BASE_URL'] ?? '';
       final url = Uri.parse('$baseUrl/users/update/$userId');
-
-      print('🔄 Sending notification update: enabled=$enabled');
+      final token = await _authService.getAccessToken();
 
       final response = await http.patch(
         url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'notifications_enabled': enabled,
-        }),
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'notifications_enabled': enabled}),
       );
 
-      print('🔍 DEBUG: Notification update response status: ${response.statusCode}');
-
       if (response.statusCode == 200) {
-        print('✅ Notification update successful');
-        
-        // Update userData map untuk reflect changes immediately
-        userData['notifications_enabled'] = enabled;
-        
-        // Update localStorage
-        await AuthService().updateUserData({
-          'notifications_enabled': enabled,
-        });
-
-        // Handle FCM subscription based on enabled status
-        if (!enabled) {
-          print('✅ User unsubscribed from notification topics');
-        } else {
-          print('✅ User subscribed to notification topics');
+        // Update local state and storage
+        // Try to use server response to avoid stale local data
+        try {
+          final body = jsonDecode(response.body);
+          final serverUser = (body is Map && body['user'] is Map)
+              ? Map<String, dynamic>.from(body['user'])
+              : null;
+          if (serverUser != null) {
+            setState(() {
+              _userData = serverUser;
+              _notificationsEnabled = _boolFrom(serverUser['notifications_enabled']) ?? enabled;
+            });
+            await AuthService().updateUserData(serverUser);
+          } else {
+            setState(() {
+              _userData?['notifications_enabled'] = enabled;
+              _notificationsEnabled = enabled;
+            });
+            await AuthService().updateUserData({'notifications_enabled': enabled});
+          }
+        } catch (_) {
+          setState(() {
+            _userData?['notifications_enabled'] = enabled;
+            _notificationsEnabled = enabled;
+          });
+          await AuthService().updateUserData({'notifications_enabled': enabled});
         }
 
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(enabled 
-                  ? 'Notifikasi diaktifkan ✓' 
+              content: Text(enabled
+                  ? 'Notifikasi diaktifkan ✓'
                   : 'Notifikasi dimatikan ✓'),
               backgroundColor: Colors.green,
               duration: const Duration(seconds: 2),
             ),
           );
         }
+        return true;
       } else {
-        throw Exception('Failed to update notification settings: ${response.statusCode}');
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                  'Gagal memperbarui pengaturan: ${response.statusCode}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return false;
       }
     } catch (e) {
-      print('❌ ERROR updating notifications: $e');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -587,6 +747,7 @@ class ProfileScreen extends StatelessWidget {
           ),
         );
       }
+      return false;
     }
   }
 }

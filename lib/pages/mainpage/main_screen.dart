@@ -12,7 +12,8 @@ import 'package:darahtanyoe_app/service/campaign_service.dart';
 import '../../components/my_navbar.dart';
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+  final int initialIndex;
+  const MainScreen({super.key, this.initialIndex = 0});
 
   @override
   MainScreenState createState() => MainScreenState();
@@ -29,12 +30,13 @@ class MainScreen extends StatefulWidget {
 }
 
 class MainScreenState extends State<MainScreen> {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
   String? _uniqueCode;
 
   @override
   void initState() {
     super.initState();
+    _selectedIndex = widget.initialIndex;
     _loadSelectedIndex();
     _setupNotificationCallback();
   }
@@ -127,10 +129,16 @@ class MainScreenState extends State<MainScreen> {
   }
 
   Future<void> _loadSelectedIndex() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _selectedIndex = prefs.getInt('selectedIndex') ?? 0;
-    });
+    // Only load from SharedPreferences if initialIndex was not explicitly set
+    if (widget.initialIndex == 0) {
+      final prefs = await SharedPreferences.getInstance();
+      final savedIndex = prefs.getInt('selectedIndex') ?? 0;
+      if (savedIndex != _selectedIndex) {
+        setState(() {
+          _selectedIndex = savedIndex;
+        });
+      }
+    }
   }
 
   Future<void> changeTab(int index) async {

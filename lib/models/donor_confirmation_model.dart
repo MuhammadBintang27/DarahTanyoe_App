@@ -28,6 +28,10 @@ class DonorConfirmationModel {
   final String? notes;
   final DateTime createdAt;
   final DateTime updatedAt;
+  // ✅ NEW: Origin and PMI info for donor biasa
+  final String? confirmationOrigin; // 'donor_biasa' or 'fulfillment'
+  final String? pmiId; // target PMI for donor biasa
+  final DateTime? scheduledAt; // donor biasa scheduled time if present
   
   // ✅ NEW: Patient info from fulfillment request
   final String? patientName;
@@ -75,6 +79,9 @@ class DonorConfirmationModel {
     this.distanceKm,
     this.fulfillmentRequest,
     this.campaign,
+    this.confirmationOrigin,
+    this.pmiId,
+    this.scheduledAt,
   });
 
   /// Check if code is still valid
@@ -221,6 +228,10 @@ class DonorConfirmationModel {
       campaign: json['fulfillment_request']?['campaign'] != null
           ? CampaignData.fromJson(json['fulfillment_request']['campaign'])
           : (json['campaign'] != null ? CampaignData.fromJson(json['campaign']) : null),
+      // ✅ NEW: origin + PMI info
+      confirmationOrigin: json['confirmation_origin'],
+      pmiId: json['pmi_id'],
+      scheduledAt: json['scheduled_at'] != null ? DateTime.tryParse(json['scheduled_at']) : null,
     );
   }
 
@@ -397,6 +408,9 @@ class DonorConfirmationModel {
       'campaign_address': campaignAddress,
       'campaign_latitude': campaignLatitude,
       'campaign_longitude': campaignLongitude,
+      'confirmation_origin': confirmationOrigin,
+      'pmi_id': pmiId,
+      'scheduled_at': scheduledAt?.toIso8601String(),
     };
   }
 
@@ -432,6 +446,9 @@ class DonorConfirmationModel {
     String? campaignAddress,
     double? campaignLatitude,
     double? campaignLongitude,
+    String? confirmationOrigin,
+    String? pmiId,
+    DateTime? scheduledAt,
   }) {
     return DonorConfirmationModel(
       id: id ?? this.id,
@@ -464,6 +481,9 @@ class DonorConfirmationModel {
       campaignAddress: campaignAddress ?? this.campaignAddress,
       campaignLatitude: campaignLatitude ?? this.campaignLatitude,
       campaignLongitude: campaignLongitude ?? this.campaignLongitude,
+      confirmationOrigin: confirmationOrigin ?? this.confirmationOrigin,
+      pmiId: pmiId ?? this.pmiId,
+      scheduledAt: scheduledAt ?? this.scheduledAt,
     );
   }
 

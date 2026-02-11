@@ -5,6 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'dart:async';
+import 'dart:typed_data';
+import 'package:darahtanyoe_app/service/institution_service.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'dart:convert';
 
 class DonorConfirmationDetail extends StatefulWidget {
   final DonorConfirmationModel confirmation;
@@ -23,6 +28,9 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
   late DonorConfirmationModel _confirmation;
   late Timer _timerUpdate;
   late ValueNotifier<String> _timeRemaining;
+  Map<String, dynamic>? _pmi;
+  double? _pmiLat;
+  double? _pmiLng;
 
   @override
   void initState() {
@@ -31,6 +39,7 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
     _timeRemaining = ValueNotifier<String>(_confirmation.formattedTimeRemaining);
     _startTimer();
     _logConfirmationData();
+    _maybeFetchPmi();
   }
 
   void _startTimer() {
@@ -59,10 +68,65 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
     print('🔍 Campaign Longitude: ${_confirmation.campaignLongitude}');
   }
 
+  Future<void> _maybeFetchPmi() async {
+    if ((_confirmation.confirmationOrigin == 'donor_biasa') && (_confirmation.pmiId != null && _confirmation.pmiId!.isNotEmpty)) {
+      try {
+        final inst = await InstitutionService.getInstitutionById(_confirmation.pmiId!);
+        if (mounted) {
+          setState(() {
+            _pmi = inst;
+            final loc = inst?['location'];
+            if (loc is String) {
+              _pmiLat = _parseEWKBLatitude(loc);
+              _pmiLng = _parseEWKBLongitude(loc);
+            }
+          });
+        }
+      } catch (e) {
+        print('Error fetching PMI detail: $e');
+      }
+    }
+  }
+
+  // Minimal EWKB parsers for POINT with SRID
+  double? _parseEWKBLatitude(String ewkbHex) {
+    try {
+      if (ewkbHex.length < 50) return null;
+      final latHex = ewkbHex.substring(34, 50);
+      return _bytesToDouble(_hexToBytes(latHex));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  double? _parseEWKBLongitude(String ewkbHex) {
+    try {
+      if (ewkbHex.length < 50) return null;
+      final lngHex = ewkbHex.substring(18, 34);
+      return _bytesToDouble(_hexToBytes(lngHex));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  List<int> _hexToBytes(String hex) {
+    final List<int> bytes = [];
+    for (int i = 0; i < hex.length; i += 2) {
+      bytes.add(int.parse(hex.substring(i, i + 2), radix: 16));
+    }
+    return bytes;
+  }
+
+  double _bytesToDouble(List<int> bytes) {
+    final bd = ByteData.view(Uint8List.fromList(bytes).buffer);
+    return bd.getFloat64(0, Endian.little);
+  }
+
   @override
   Widget build(BuildContext context) {
     final statusColor = _getStatusColor(_confirmation.status);
     final statusText = _getStatusText(_confirmation.status);
+    final bool isDonorBiasa = (_confirmation.confirmationOrigin == 'donor_biasa');
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -119,9 +183,11 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
                                 ),
                                 const SizedBox(height: 12),
 
-                                // Nama Pasien
-                                _buildField('Nama Pasien', _confirmation.patientName ?? 'N/A'),
-                                const SizedBox(height: 12),
+                                // Nama Pasien (sembunyikan jika Donor Biasa)
+                                if (!isDonorBiasa) ...[
+                                  _buildField('Nama Pasien', _confirmation.patientName ?? 'N/A'),
+                                  const SizedBox(height: 12),
+                                ],
 
                                 // Golongan Darah & Telah Terisi (2 kolom)
                                 Row(
@@ -140,8 +206,14 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
                                 ),
                                 const SizedBox(height: 12),
 
-                                // Deskripsi Campaign
-                                _buildField('Deskripsi', _confirmation.campaign?.description ?? 'Tidak ada deskripsi', maxLines: 2),
+                                // Deskripsi (Donor Biasa pakai hardcode)
+                                _buildField(
+                                  'Deskripsi',
+                                  isDonorBiasa
+                                      ? 'Donor terjadwal di PMI yang Anda pilih. Mohon hadir sesuai jadwal, membawa identitas, dan pastikan kondisi sehat sebelum donor.'
+                                      : (_confirmation.campaign?.description ?? 'Tidak ada deskripsi'),
+                                  maxLines: 2,
+                                ),
                                 const SizedBox(height: 12),
 
                                 // Lokasi & Donor Sebelum (2 kolom)
@@ -150,7 +222,9 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
                                     Expanded(
                                       child: _buildField(
                                         'Lokasi Pendonoran',
-                                        '${_confirmation.campaign?.location?.split(',').first ?? 'RSUD Zainal Abidin'} (${_confirmation.distanceKm?.toStringAsFixed(1) ?? '2.0'} KM)',
+                                        isDonorBiasa
+                                            ? '${_pmi?['institution_name'] ?? 'PMI Tujuan'}\n${_pmi?['address'] ?? ''}'.trim()
+                                            : '${_confirmation.campaign?.location?.split(',').first ?? 'RSUD Zainal Abidin'} (${_confirmation.distanceKm?.toStringAsFixed(1) ?? '2.0'} KM)',
                                         maxLines: 2,
                                       ),
                                     ),
@@ -173,9 +247,8 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
                               child: _buildSpecialField('Kode Unik', _confirmation.uniqueCode ?? 'AC6B34'),
                             ),
                             const SizedBox(width: 12),
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: _openGoogleMaps,
+                            if (isDonorBiasa)
+                              Expanded(
                                 child: DottedBorder(
                                   borderType: BorderType.RRect,
                                   radius: const Radius.circular(12),
@@ -183,62 +256,105 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
                                   dashPattern: const [6, 3],
                                   color: const Color.fromRGBO(35, 58, 131, 0.4),
                                   strokeWidth: 1.2,
-                                  child: Container(
-                                    height: 75,
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: const Color.fromRGBO(35, 58, 131, 0.16),
-                                      borderRadius: BorderRadius.circular(12),
-                                      boxShadow: const [
-                                        BoxShadow(
-                                          color: Color.fromRGBO(0, 0, 0, 0.1),
-                                          offset: Offset(0, 4),
-                                          blurRadius: 4,
-                                        ),
-                                      ],
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        // Google Maps Icon placeholder
-                                        Container(
-                                          width: 27,
-                                          height: 38,
-                                          decoration: const BoxDecoration(
-                                            color: Colors.transparent,
-                                          ),
-                                          child: Image.asset(
-                                            'assets/images/google_maps_icon.png',
-                                            width: 27,
-                                            height: 38,
-                                            errorBuilder: (context, error, stackTrace) {
-                                              return Icon(
-                                                Icons.location_on,
-                                                color: Colors.blue[400],
-                                                size: 27,
-                                              );
-                                            },
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Expanded(
-                                          child: Text(
-                                            'Lihat lokasi pendonoran pada Google Maps',
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
-                                              color: Color.fromRGBO(0, 0, 0, 0.7),
-                                              height: 1.33,
+                                  child: InkWell(
+                                    onTap: _openGoogleMaps,
+                                    child: Container(
+                                      height: 75,
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: const Color.fromRGBO(35, 58, 131, 0.16),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.location_on, color: Colors.blue[400], size: 27),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              _pmi != null ? 'Lihat lokasi PMI pada Google Maps' : 'Cari PMI terdekat di Google Maps',
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                                color: Color.fromRGBO(0, 0, 0, 0.7),
+                                                height: 1.33,
+                                              ),
+                                              maxLines: 3,
+                                              overflow: TextOverflow.ellipsis,
                                             ),
-                                            maxLines: 3,
-                                            overflow: TextOverflow.ellipsis,
                                           ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
+                            if (!isDonorBiasa)
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: _openGoogleMaps,
+                                  child: DottedBorder(
+                                    borderType: BorderType.RRect,
+                                    radius: const Radius.circular(12),
+                                    padding: const EdgeInsets.all(0),
+                                    dashPattern: const [6, 3],
+                                    color: const Color.fromRGBO(35, 58, 131, 0.4),
+                                    strokeWidth: 1.2,
+                                    child: Container(
+                                      height: 75,
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: const Color.fromRGBO(35, 58, 131, 0.16),
+                                        borderRadius: BorderRadius.circular(12),
+                                        boxShadow: const [
+                                          BoxShadow(
+                                            color: Color.fromRGBO(0, 0, 0, 0.1),
+                                            offset: Offset(0, 4),
+                                            blurRadius: 4,
+                                          ),
+                                        ],
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          // Google Maps Icon placeholder
+                                          Container(
+                                            width: 27,
+                                            height: 38,
+                                            decoration: const BoxDecoration(
+                                              color: Colors.transparent,
+                                            ),
+                                            child: Image.asset(
+                                              'assets/images/google_maps_icon.png',
+                                              width: 27,
+                                              height: 38,
+                                              errorBuilder: (context, error, stackTrace) {
+                                                return Icon(
+                                                  Icons.location_on,
+                                                  color: Colors.blue[400],
+                                                  size: 27,
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              'Lihat lokasi pendonoran pada Google Maps',
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                                color: Color.fromRGBO(0, 0, 0, 0.7),
+                                                height: 1.33,
+                                              ),
+                                              maxLines: 3,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
                           ],
                         ),
                         const SizedBox(height: 16),
@@ -247,21 +363,32 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
 
                         // Status Section
                         _buildStatusSection(statusColor, statusText),
-                        const SizedBox(height: 20),
-
-                        // Copyright
-                        Center(
-                          child: Text(
-                            '© 2025 Beyond. Hak Cipta Dilindungi.',
-                            style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-                          ),
-                        ),
+                        
                       ],
                     ),
                   ),
                 ),
               ),
-    );
+              bottomNavigationBar: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 6, 16, 15),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  
+                  const SizedBox(height: 8),
+                  Center(
+                    child: Text(
+                      '© 2025 Beyond. Hak Cipta Dilindungi.',
+                      style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+
   }
 
   Widget _buildField(String label, String value, {int maxLines = 1}) {
@@ -456,7 +583,7 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
                   width: double.infinity,
                   height: 48,
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: _cancelJanjiDonor,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF8B4545),
                       foregroundColor: Colors.white,
@@ -482,7 +609,7 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
     }
 
     // Status Dibatalkan/Ditolak - dengan container border sama
-    if (_confirmation.status == 'rejected' || _confirmation.status == 'expired' || _confirmation.status == 'failed') {
+    if (_confirmation.status == 'rejected' || _confirmation.status == 'expired' || _confirmation.status == 'failed' || _confirmation.status == 'cancelled') {
       return Column(
         children: [
           // Warning text dengan divider (spacing kosong)
@@ -491,11 +618,6 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
             child: Column(
               children: [
                 SizedBox(height: 24),
-                Divider(
-                  color: Color.fromRGBO(171, 69, 69, 0.2),
-                  thickness: 1,
-                  height: 1,
-                ),
               ],
             ),
           ),
@@ -507,7 +629,7 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
               color: Colors.white,
               border: Border.all(
                 color: const Color.fromRGBO(171, 69, 69, 0.2),
-                width: 1,
+                width: 2,
               ),
               borderRadius: BorderRadius.circular(16),
             ),
@@ -556,11 +678,7 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
             child: Column(
               children: [
                 SizedBox(height: 24),
-                Divider(
-                  color: Color.fromRGBO(171, 69, 69, 0.2),
-                  thickness: 1,
-                  height: 1,
-                ),
+                
               ],
             ),
           ),
@@ -572,7 +690,7 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
               color: Colors.white,
               border: Border.all(
                 color: const Color.fromRGBO(53, 155, 94, 0.2),
-                width: 1,
+                width: 2,
               ),
               borderRadius: BorderRadius.circular(16),
             ),
@@ -670,6 +788,8 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
         return 'Pendonoran Selesai';
       case 'rejected':
         return 'Pendonoran Dibatalkan';
+      case 'cancelled':
+        return 'Pendonoran Dibatalkan';
       case 'expired':
         return 'Kadaluarsa';
       default:
@@ -679,6 +799,31 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
 
   void _openGoogleMaps() async {
     try {
+      final bool isDonorBiasa = (_confirmation.confirmationOrigin == 'donor_biasa');
+      if (isDonorBiasa) {
+        // Donor Biasa: gunakan koordinat PMI jika tersedia, jika tidak cari berdasarkan nama/alamat
+        if (_pmiLat != null && _pmiLng != null) {
+          final Uri url = Uri.parse('https://www.google.com/maps/search/?api=1&query=${_pmiLat},${_pmiLng}');
+          if (await canLaunchUrl(url)) {
+            await launchUrl(url, mode: LaunchMode.externalApplication);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Tidak dapat membuka lokasi PMI di Google Maps')),
+            );
+          }
+          return;
+        }
+        final String searchQuery = (_pmi?['institution_name'] ?? _pmi?['address'] ?? 'PMI (Palang Merah Indonesia)').toString();
+        final Uri url = Uri.parse('https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(searchQuery)}');
+        if (await canLaunchUrl(url)) {
+          await launchUrl(url, mode: LaunchMode.externalApplication);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Tidak dapat membuka pencarian PMI di Google Maps')),
+          );
+        }
+        return;
+      }
       // Debug logging untuk melihat data yang tersedia
       debugPrint("📍 Campaign Data: ${_confirmation.campaign?.location}");
       debugPrint("📍 Campaign Address: ${_confirmation.campaign?.address}");
@@ -723,6 +868,60 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
       print('Error opening Google Maps: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Gagal membuka Google Maps')),
+      );
+    }
+  }
+
+  Future<void> _cancelJanjiDonor() async {
+    try {
+      final user = await AuthService().getCurrentUser();
+      final donorId = user?['id'];
+      if (donorId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User tidak ditemukan')),
+        );
+        return;
+      }
+      final baseUrl = dotenv.env['BASE_URL'] ?? 'https://default-url.com';
+      // Pilih endpoint berdasarkan origin
+      final bool isDonorBiasa = (_confirmation.confirmationOrigin == 'donor_biasa');
+      final Uri url = isDonorBiasa
+          ? Uri.parse('$baseUrl/janji-donor/cancel')
+          : Uri.parse('$baseUrl/fulfillment/donor/cancel');
+      final Map<String, dynamic> payload = {
+        'confirmation_id': _confirmation.id,
+        'donor_id': donorId,
+      };
+      // untuk fulfillment, kita dukung optional reason
+      final resp = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(payload),
+      );
+
+      if (!mounted) return;
+      if (resp.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(isDonorBiasa ? 'Janji Donor berhasil dibatalkan' : 'Konfirmasi donor berhasil dibatalkan')),
+        );
+        Navigator.pop(context);
+      } else {
+        final msg = (() {
+          try {
+            final j = jsonDecode(resp.body);
+            return j['message']?.toString() ?? 'Gagal membatalkan Janji Donor';
+          } catch (_) {
+            return 'Gagal membatalkan Janji Donor';
+          }
+        })();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(msg)),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
       );
     }
   }
