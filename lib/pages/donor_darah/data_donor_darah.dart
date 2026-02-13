@@ -8,6 +8,7 @@ import 'package:darahtanyoe_app/pages/mainpage/transaksi.dart';
 import 'package:darahtanyoe_app/pages/donor_darah/donor_confirmation_success.dart';
 import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:darahtanyoe_app/service/toast_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -70,9 +71,7 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
       
       if (userDataString == null) {
         print("❌ [DEBUG] userData is null");
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Data pengguna tidak ditemukan. Silakan login kembali.')),
-        );
+        ToastService.showError(context, message: 'Data pengguna tidak ditemukan. Silakan login kembali.');
         return;
       }
 
@@ -105,9 +104,7 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
       });
     } catch (e) {
       print("❌ [DEBUG] Error: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal memuat data pengguna: ${e.toString()}')),
-      );
+      ToastService.showError(context, message: 'Gagal memuat data pengguna: ${e.toString()}');
     } finally {
       setState(() {
         _isLoading = false;
@@ -133,9 +130,7 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
           _isLoading = false;
         });
         print("❌ [DEBUG] userData is null");
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User belum login')),
-        );
+        ToastService.showError(context, message: 'User belum login');
         return;
       }
 
@@ -206,18 +201,14 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
           final error = jsonDecode(response.body);
           final errorMsg = error['message'] ?? response.body;
           print("❌ [DEBUG] Error message: $errorMsg");
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $errorMsg')),
-          );
+          ToastService.showError(context, message: 'Error: $errorMsg');
         }
       } catch (e) {
         print("❌ [DEBUG] Exception: $e");
         setState(() {
           _isLoading = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        ToastService.showError(context, message: 'Error: $e');
       }
     } else {
       print("❌ [DEBUG] Form validation failed");

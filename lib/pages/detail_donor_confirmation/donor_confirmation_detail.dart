@@ -2,6 +2,7 @@ import 'package:darahtanyoe_app/models/donor_confirmation_model.dart';
 import 'package:darahtanyoe_app/components/AppBarWithLogo.dart';
 import 'package:darahtanyoe_app/service/auth_service.dart';
 import 'package:flutter/material.dart';
+import 'package:darahtanyoe_app/service/toast_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'dart:async';
@@ -807,9 +808,7 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
           if (await canLaunchUrl(url)) {
             await launchUrl(url, mode: LaunchMode.externalApplication);
           } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Tidak dapat membuka lokasi PMI di Google Maps')),
-            );
+            ToastService.showError(context, message: 'Tidak dapat membuka lokasi PMI di Google Maps');
           }
           return;
         }
@@ -818,9 +817,7 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
         if (await canLaunchUrl(url)) {
           await launchUrl(url, mode: LaunchMode.externalApplication);
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Tidak dapat membuka pencarian PMI di Google Maps')),
-          );
+          ToastService.showError(context, message: 'Tidak dapat membuka pencarian PMI di Google Maps');
         }
         return;
       }
@@ -859,16 +856,12 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
         if (await canLaunchUrl(url)) {
           await launchUrl(url, mode: LaunchMode.externalApplication);
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Koordinat lokasi tidak tersedia dan tidak dapat mencari berdasarkan nama')),
-          );
+          ToastService.showError(context, message: 'Koordinat lokasi tidak tersedia dan tidak dapat mencari berdasarkan nama');
         }
       }
     } catch (e) {
       print('Error opening Google Maps: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Gagal membuka Google Maps')),
-      );
+      ToastService.showError(context, message: 'Gagal membuka Google Maps');
     }
   }
 
@@ -877,9 +870,7 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
       final user = await AuthService().getCurrentUser();
       final donorId = user?['id'];
       if (donorId == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User tidak ditemukan')),
-        );
+        ToastService.showError(context, message: 'User tidak ditemukan');
         return;
       }
       final baseUrl = dotenv.env['BASE_URL'] ?? 'https://default-url.com';
@@ -901,9 +892,7 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
 
       if (!mounted) return;
       if (resp.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(isDonorBiasa ? 'Janji Donor berhasil dibatalkan' : 'Konfirmasi donor berhasil dibatalkan')),
-        );
+        ToastService.showSuccess(context, message: isDonorBiasa ? 'Janji Donor berhasil dibatalkan' : 'Konfirmasi donor berhasil dibatalkan');
         Navigator.pop(context);
       } else {
         final msg = (() {
@@ -914,15 +903,11 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
             return 'Gagal membatalkan Janji Donor';
           }
         })();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(msg)),
-        );
+        ToastService.showError(context, message: msg);
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      ToastService.showError(context, message: 'Error: $e');
     }
   }
 }

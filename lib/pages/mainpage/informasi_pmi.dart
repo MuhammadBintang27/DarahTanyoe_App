@@ -2,6 +2,7 @@ import 'package:darahtanyoe_app/components/background_widget.dart';
 import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:darahtanyoe_app/widget/header_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:darahtanyoe_app/service/toast_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -106,12 +107,7 @@ class _InformasiPMIState extends State<InformasiPMI> with WidgetsBindingObserver
       debugPrint("Stack trace: $stackTrace");
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Gagal memuat data PMI: $e"),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastService.showError(context, message: 'Gagal memuat data PMI: $e');
       }
     } finally {
       setState(() => _isLoading = false);
@@ -131,11 +127,14 @@ class _InformasiPMIState extends State<InformasiPMI> with WidgetsBindingObserver
     if (_selectedPMI == null) return 0;
 
     try {
-      final stock = (_selectedPMI!["blood_stock"] as List).firstWhere(
-        (s) => s["blood_type"] == bloodType,
-        orElse: () => {"quantity": 0},
-      );
-      return stock["quantity"] ?? 0;
+      // Sum up ALL stocks for this blood type (there might be multiple entries)
+      final stocks = (_selectedPMI!["blood_stock"] as List)
+          .where((s) => s["blood_type"] == bloodType)
+          .toList();
+      
+      if (stocks.isEmpty) return 0;
+      
+      return stocks.fold<int>(0, (sum, stock) => sum + (stock["quantity"] as int? ?? 0));
     } catch (e) {
       return 0;
     }

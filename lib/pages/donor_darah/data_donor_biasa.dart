@@ -7,6 +7,7 @@ import 'package:darahtanyoe_app/pages/detail_donor_confirmation/donor_confirmati
 import 'package:darahtanyoe_app/models/donor_confirmation_model.dart';
 import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:darahtanyoe_app/service/toast_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -54,9 +55,7 @@ class _DataPendonoranBiasaState extends State<DataPendonoranBiasa> {
     try {
       final userDataString = await _storage.read(key: 'userData');
       if (userDataString == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Data pengguna tidak ditemukan. Silakan login kembali.')),
-        );
+        ToastService.showError(context, message: 'Data pengguna tidak ditemukan. Silakan login kembali.');
         return;
       }
       final userData = jsonDecode(userDataString);
@@ -76,9 +75,7 @@ class _DataPendonoranBiasaState extends State<DataPendonoranBiasa> {
             : 'Lainnya';
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal memuat data pengguna: $e')),
-      );
+      ToastService.showError(context, message: 'Gagal memuat data pengguna: $e');
     } finally {
       setState(() => _isLoading = false);
     }

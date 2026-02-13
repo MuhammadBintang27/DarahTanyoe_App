@@ -13,6 +13,8 @@ import 'package:darahtanyoe_app/pages/detail_donor_confirmation/donor_confirmati
 import 'package:darahtanyoe_app/models/donor_confirmation_model.dart';
 import 'package:darahtanyoe_app/service/auth_service.dart';
 import 'package:darahtanyoe_app/service/campaign_service.dart';
+import 'package:darahtanyoe_app/service/toast_service.dart';
+import 'package:darahtanyoe_app/service/animation_service.dart';
 import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:darahtanyoe_app/widget/header_widget.dart';
 import 'package:darahtanyoe_app/components/background_widget.dart';
@@ -33,6 +35,26 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  bool _donorLoading = false;
+  DateTime? _parseDate(dynamic value) {
+    if (value == null) return null;
+    try {
+      if (value is DateTime) return value;
+      final s = value.toString();
+      return DateTime.tryParse(s);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String _formatIndonesianDate(DateTime dt) {
+    const months = [
+      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+    final m = months[dt.month - 1];
+    return '${dt.day} $m ${dt.year}';
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -221,9 +243,16 @@ Widget _buildActionButtons() {
           textColor: Colors.white,
           icon: Icons.local_hospital,
           onPressed: () async {
-            await _handleDonorPressed();
+            if (_donorLoading) return;
+            setState(() { _donorLoading = true; });
+            try {
+              await _handleDonorPressed();
+            } finally {
+              if (mounted) setState(() { _donorLoading = false; });
+            }
           },
           isOutlined: false,
+          isLoading: _donorLoading,
         ),
         SizedBox(width: 12),
         ActionButton(
@@ -265,20 +294,9 @@ Widget _buildPendingDonations() {
             return _buildLoadingContent(); // Menampilkan loading di dalam container
           } else if (snapshot.hasError) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Error: ${snapshot.error.toString()}'),
-                  backgroundColor: Colors.red,
-                  behavior: SnackBarBehavior.floating,
-                  duration: Duration(seconds: 3),
-                  action: SnackBarAction(
-                    label: 'Tutup',
-                    textColor: Colors.white,
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                    },
-                  ),
-                ),
+              ToastService.showError(
+                context,
+                message: 'Error: ${snapshot.error.toString()}',
               );
             });
 
@@ -677,16 +695,69 @@ Widget _buildPendingDonations() {
       }
 
       if (!mounted) return;
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const DataPendonoranBiasa()),
-      );
+      try {
+        final token = await AuthService().getAccessToken();
+        final profileUri = Uri.parse('$baseUrl/users/$donorId');
+        final profileResp = await http.get(
+          profileUri,
+          headers: token != null ? {
+            'Authorization': 'Bearer $token',
+            'Cache-Control': 'no-cache',
+          } : {},
+        );
+        if (profileResp.statusCode == 200) {
+          final profileJson = jsonDecode(profileResp.body) as Map<String, dynamic>;
+          final userJson = profileJson['user'] as Map<String, dynamic>?;
+          final lastStr = userJson?['last_donation_date'];
+          final last = _parseDate(lastStr);
+          if (last != null) {
+            final nextEligible = DateTime(last.year, last.month + 3, last.day);
+            if (DateTime.now().isBefore(nextEligible)) {
+              final lastFmt = _formatIndonesianDate(last);
+              final nextFmt = _formatIndonesianDate(nextEligible);
+              await AnimationService.showInfo(
+                context,
+                title: 'Belum Bisa Donor',
+                message: 'Donasi terakhir: $lastFmt.\nAnda dapat donor kembali setelah $nextFmt.',
+                buttonText: 'Tutup',
+              );
+            } else {
+              // Eligible and no active appointment -> allow scheduling
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const DataPendonoranBiasa()),
+              );
+            }
+          } else {
+            // No last donation info -> allow scheduling
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const DataPendonoranBiasa()),
+            );
+          }
+        } else {
+          // Profile fetch failed -> allow scheduling
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const DataPendonoranBiasa()),
+          );
+        }
+      } catch (_) {
+        // Network/error -> allow scheduling
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const DataPendonoranBiasa()),
+        );
+      }
+      return;
     } catch (_) {
       if (!mounted) return;
+      // Fallback: allow scheduling on unexpected errors
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => const DataPendonoranBiasa()),
       );
+      return;
     }
   }
   }

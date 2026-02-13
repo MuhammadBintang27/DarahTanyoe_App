@@ -8,6 +8,7 @@ import 'package:darahtanyoe_app/widget/header_widget.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:darahtanyoe_app/models/donor_confirmation_model.dart';
 import 'package:flutter/material.dart';
+import 'package:darahtanyoe_app/service/toast_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:darahtanyoe_app/service/institution_service.dart';
 
@@ -57,13 +58,7 @@ class _TransactionBloodState extends State<TransactionBlood> {
 
   // ✅ Show error message via SnackBar
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-        duration: const Duration(seconds: 4),
-      ),
-    );
+    ToastService.showError(context, message: message);
   }
 
   // ✅ NEW: Load active confirmations (Sedang Berlangsung)

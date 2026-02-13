@@ -1,5 +1,6 @@
 import 'package:darahtanyoe_app/pages/mainpage/profil.dart';
 import 'package:flutter/material.dart';
+import 'package:darahtanyoe_app/service/toast_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:darahtanyoe_app/pages/mainpage/home_screen.dart';
 import 'package:darahtanyoe_app/pages/mainpage/informasi_pmi.dart';
@@ -69,9 +70,7 @@ class MainScreenState extends State<MainScreen> {
       
       if (campaign == null) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Kampanye tidak ditemukan'), backgroundColor: Colors.red),
-          );
+          ToastService.showError(context, message: 'Kampanye tidak ditemukan');
         }
         return;
       }
@@ -87,9 +86,7 @@ class MainScreenState extends State<MainScreen> {
     } catch (e) {
       print('❌ Error fetching campaign: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal memuat detail kampanye'), backgroundColor: Colors.red),
-        );
+        ToastService.showError(context, message: 'Gagal memuat detail kampanye');
       }
     }
   }
@@ -103,9 +100,7 @@ class MainScreenState extends State<MainScreen> {
       
       if (request == null) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Permintaan darah tidak ditemukan'), backgroundColor: Colors.red),
-          );
+          ToastService.showError(context, message: 'Permintaan darah tidak ditemukan');
         }
         return;
       }
@@ -121,9 +116,7 @@ class MainScreenState extends State<MainScreen> {
     } catch (e) {
       print('❌ Error fetching request: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal memuat detail permintaan'), backgroundColor: Colors.red),
-        );
+        ToastService.showError(context, message: 'Gagal memuat detail permintaan');
       }
     }
   }

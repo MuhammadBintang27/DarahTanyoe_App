@@ -5,6 +5,7 @@ import 'package:darahtanyoe_app/helpers/formatDateTime.dart';
 import 'package:darahtanyoe_app/models/permintaan_darah_model.dart';
 import 'package:darahtanyoe_app/pages/donor_darah/data_donor_darah.dart';
 import 'package:flutter/material.dart';
+import 'package:darahtanyoe_app/service/toast_service.dart';
 import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -337,9 +338,7 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
                       final confirmId = _confirmationId ?? widget.confirmationId;
                       
                       if (confirmId == null && !_preCheckLoading) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Gagal mempersiapkan konfirmasi. Silakan refresh halaman.')),
-                        );
+                        ToastService.showError(context, message: 'Gagal mempersiapkan konfirmasi. Silakan refresh halaman.');
                         return;
                       }
 

@@ -1,6 +1,7 @@
 import 'package:darahtanyoe_app/components/background_widget.dart';
 import 'package:darahtanyoe_app/pages/detail_permintaan/detail_permintaan_darah.dart';
 import 'package:flutter/material.dart';
+import 'package:darahtanyoe_app/service/toast_service.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -204,23 +205,13 @@ class _NotificationPageState extends State<NotificationPage> {
             AnimationService.showCampaignUnavailable(context, status: status);
           } else if (status == 'active' || status == 'draft') {
             // Campaign masih active, navigate to detail
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Membuka detail permintaan darah...'),
-                backgroundColor: Color(0xFF4CAF50),
-              ),
-            );
+            ToastService.showSuccess(context, message: 'Membuka detail permintaan darah...');
             // TODO: Implement navigation ke campaign detail page
             // Bisa fetch PermintaanDarahModel dari API dan navigate
           }
         } else {
           // API error
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Gagal memuat data permintaan darah'),
-              backgroundColor: Color(0xFFAB4545),
-            ),
-          );
+          ToastService.showError(context, message: 'Gagal memuat data permintaan darah');
         }
       } catch (e) {
         // Dismiss loading dialog jika masih ada
@@ -229,12 +220,7 @@ class _NotificationPageState extends State<NotificationPage> {
         }
 
         debugPrint('❌ Error fetching campaign: $e');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Color(0xFFAB4545),
-          ),
-        );
+        ToastService.showError(context, message: 'Error: ${e.toString()}');
       }
     }
   }

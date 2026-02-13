@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:darahtanyoe_app/service/toast_service.dart';
 import 'package:intl/intl.dart';
 import 'package:darahtanyoe_app/theme/theme.dart';
 import '../../components/background_widget.dart';
@@ -96,9 +97,7 @@ class _EditProfilPageState extends State<EditProfilPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal mendapatkan lokasi: $e')),
-        );
+        ToastService.showError(context, message: 'Gagal mendapatkan lokasi: $e');
       }
     } finally {
       if (mounted) {
@@ -132,9 +131,7 @@ class _EditProfilPageState extends State<EditProfilPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal mendapatkan alamat: $e')),
-        );
+        ToastService.showError(context, message: 'Gagal mendapatkan alamat: $e');
       }
     }
   }
@@ -197,12 +194,7 @@ class _EditProfilPageState extends State<EditProfilPage> {
         await _authService.updateUserData(updatedUser);
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Profil berhasil diperbarui'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          ToastService.showSuccess(context, message: 'Profil berhasil diperbarui');
           Navigator.pop(context, true); // Return true to indicate refresh needed
         }
       } else {
@@ -211,12 +203,7 @@ class _EditProfilPageState extends State<EditProfilPage> {
     } catch (e) {
       print('❌ ERROR: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        ToastService.showError(context, message: 'Error: $e');
       }
     } finally {
       if (mounted) {
@@ -497,7 +484,7 @@ class _EditProfilPageState extends State<EditProfilPage> {
                           child: ElevatedButton(
                             onPressed: isLoading ? null : _saveChanges,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.brand_01,
+                              backgroundColor: AppTheme.brand_03,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),

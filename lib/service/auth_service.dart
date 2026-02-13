@@ -3,6 +3,7 @@ import 'package:darahtanyoe_app/pages/authentication/login_page.dart';
 import 'package:darahtanyoe_app/pages/authentication/personal_info.dart';
 import 'package:darahtanyoe_app/pages/mainpage/main_screen.dart';
 import 'animation_service.dart';
+import 'toast_service.dart';
 import 'push_notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -509,12 +510,10 @@ class AuthService {
     // Handle any errors during logout
     debugPrint('Error during logout: ${e.toString()}');
     
-    // Show error message to user
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Logout failed: ${e.toString()}'),
-        backgroundColor: Colors.red,
-      ),
+    // Show error message to user via ToastService
+    ToastService.showError(
+      context,
+      message: 'Logout gagal: ${e.toString()}',
     );
   }
 }

@@ -8,6 +8,7 @@ import 'package:darahtanyoe_app/service/auth_service.dart';
 import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:darahtanyoe_app/service/toast_service.dart';
 import 'package:darahtanyoe_app/widget/header_widget.dart';
 import '../../service/campaign_service.dart';
 
@@ -84,20 +85,9 @@ class _NearestBloodDonationState extends State<NearestBloodDonation> {
         } else if (snapshot.hasError) {
           // Tampilkan SnackBar untuk error
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Error: ${snapshot.error.toString()}'),
-                backgroundColor: Colors.red,
-                behavior: SnackBarBehavior.floating,
-                duration: Duration(seconds: 3),
-                action: SnackBarAction(
-                  label: 'Tutup',
-                  textColor: Colors.white,
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                  },
-                ),
-              ),
+            ToastService.showError(
+              context,
+              message: 'Error: ${snapshot.error.toString()}',
             );
           });
 

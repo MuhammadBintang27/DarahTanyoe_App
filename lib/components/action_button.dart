@@ -7,6 +7,7 @@ class ActionButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onPressed;
   final bool isOutlined;
+  final bool isLoading;
 
   const ActionButton({
     super.key,
@@ -16,6 +17,7 @@ class ActionButton extends StatelessWidget {
     required this.icon,
     required this.onPressed,
     this.isOutlined = false,
+    this.isLoading = false,
   });
 
   @override
@@ -36,8 +38,17 @@ class ActionButton extends StatelessWidget {
         ),
         child: isOutlined
             ? OutlinedButton.icon(
-          onPressed: onPressed,
-          icon: Icon(icon, color: textColor),
+          onPressed: isLoading ? null : onPressed,
+          icon: isLoading
+              ? SizedBox(
+                  height: 18,
+                  width: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(color),
+                  ),
+                )
+              : Icon(icon, color: textColor),
           label: Text(
             text,
             style: TextStyle(color: textColor),
@@ -51,8 +62,17 @@ class ActionButton extends StatelessWidget {
           ),
         )
             : ElevatedButton.icon(
-          onPressed: onPressed,
-          icon: Icon(icon, color: Colors.white),
+          onPressed: isLoading ? null : onPressed,
+          icon: isLoading
+              ? SizedBox(
+                  height: 18,
+                  width: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+              : Icon(icon, color: Colors.white),
           label: Text(
             text,
             style: TextStyle(color: Colors.white),
