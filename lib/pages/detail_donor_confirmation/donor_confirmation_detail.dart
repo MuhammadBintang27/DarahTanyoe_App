@@ -60,13 +60,6 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
 
   void _logConfirmationData() {
     // Debug logging for confirmation data
-    print('🔍 DEBUG: Confirmation data received');
-    print('🔍 Campaign ID: ${_confirmation.campaignId}');
-    print('🔍 Campaign Object: ${_confirmation.campaign}');
-    print('🔍 Campaign Location: ${_confirmation.campaignLocation}');
-    print('🔍 Campaign Address: ${_confirmation.campaignAddress}');
-    print('🔍 Campaign Latitude: ${_confirmation.campaignLatitude}');
-    print('🔍 Campaign Longitude: ${_confirmation.campaignLongitude}');
   }
 
   Future<void> _maybeFetchPmi() async {
@@ -84,7 +77,6 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
           });
         }
       } catch (e) {
-        print('Error fetching PMI detail: $e');
       }
     }
   }
@@ -822,17 +814,11 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
         return;
       }
       // Debug logging untuk melihat data yang tersedia
-      debugPrint("📍 Campaign Data: ${_confirmation.campaign?.location}");
-      debugPrint("📍 Campaign Address: ${_confirmation.campaign?.address}");
-      debugPrint("📍 Parsed Latitude: ${_confirmation.campaignLatitude}");
-      debugPrint("📍 Parsed Longitude: ${_confirmation.campaignLongitude}");
       
       double? latitude = _confirmation.campaignLatitude;
       double? longitude = _confirmation.campaignLongitude;
       
       if (latitude != null && longitude != null) {
-        debugPrint("LATITUDE $latitude");
-        debugPrint("LONGITUDE $longitude");
         final Uri url = Uri.parse(
           'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude',
         );
@@ -847,8 +833,6 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
                            _confirmation.campaign?.address ?? 
                            'RSUD Zainal Abidin';
         
-        debugPrint("📍 Fallback search with location name: $locationName");
-        
         final Uri url = Uri.parse(
           'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(locationName)}',
         );
@@ -860,7 +844,6 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
         }
       }
     } catch (e) {
-      print('Error opening Google Maps: $e');
       ToastService.showError(context, message: 'Gagal membuka Google Maps');
     }
   }

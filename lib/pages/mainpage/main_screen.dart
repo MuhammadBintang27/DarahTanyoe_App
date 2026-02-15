@@ -49,8 +49,6 @@ class MainScreenState extends State<MainScreen> {
       final String? type = data['type'] ?? data['relatedType'];
       final String? id = data['relatedId'] ?? data['related_id'];
 
-      print('🔔 Notification tapped in MainScreen: type=$type, id=$id');
-
       if (id == null) return;
 
       // Direct Navigator.push like permintaan_darah_terdekat
@@ -65,7 +63,6 @@ class MainScreenState extends State<MainScreen> {
   /// Fetch campaign data and navigate to detail
   void _navigateToCampaignDetail(String campaignId) async {
     try {
-      print('📡 Fetching campaign detail: $campaignId');
       final campaign = await CampaignService.getCampaignById(campaignId);
       
       if (campaign == null) {
@@ -84,7 +81,6 @@ class MainScreenState extends State<MainScreen> {
         );
       }
     } catch (e) {
-      print('❌ Error fetching campaign: $e');
       if (mounted) {
         ToastService.showError(context, message: 'Gagal memuat detail kampanye');
       }
@@ -95,7 +91,6 @@ class MainScreenState extends State<MainScreen> {
   /// Now uses getCampaignById (unified endpoint /campaigns/:id)
   void _navigateToRequestDetail(String requestId) async {
     try {
-      print('📡 Fetching request detail: $requestId');
       final request = await CampaignService.getCampaignById(requestId);
       
       if (request == null) {
@@ -114,7 +109,6 @@ class MainScreenState extends State<MainScreen> {
         );
       }
     } catch (e) {
-      print('❌ Error fetching request: $e');
       if (mounted) {
         ToastService.showError(context, message: 'Gagal memuat detail permintaan');
       }
@@ -136,7 +130,6 @@ class MainScreenState extends State<MainScreen> {
 
   Future<void> changeTab(int index) async {
     final prefs = await SharedPreferences.getInstance();
-    debugPrint("changeTab dipanggil: index = $index");
 
     setState(() {
       _selectedIndex = index;

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
 import 'login_page.dart';
+import 'onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -44,8 +45,6 @@ class _SplashScreenState extends State<SplashScreen> {
         if (expiryDate.isAfter(now)) {
           // ✅ Register FCM token untuk existing user
           try {
-            print('🔔 App startup: Checking FCM token for existing user...');
-            
             // Ambil user ID dari userData di secure storage
             final String? userDataStr = await storage.read(key: 'userData');
             if (userDataStr != null) {
@@ -53,14 +52,11 @@ class _SplashScreenState extends State<SplashScreen> {
               final String? userId = userData['id'];
               
               if (userId != null) {
-                print('🔍 Found existing user: $userId');
                 final pushNotificationService = PushNotificationService();
                 await pushNotificationService.registerFCMTokenForUser(userId);
-                print('✅ FCM token registered for existing user at app startup');
               }
             }
           } catch (fcmError) {
-            print('⚠️ Error registering FCM token at startup: $fcmError');
             // Non-blocking error, continue navigation
           }
           
@@ -72,18 +68,41 @@ class _SplashScreenState extends State<SplashScreen> {
         }
       }
 
-      // If no valid token or expired, navigate to login page
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginPage()),
-      );
+      // If no valid token or expired, check onboarding completion first
+      final String? onboardingCompleted = await storage.read(key: 'onboarding_completed');
+      
+      if (onboardingCompleted == null || onboardingCompleted != 'true') {
+        // Show onboarding if not completed
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const OnboardingScreen()),
+        );
+      } else {
+        // Show login page if onboarding completed
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginPage()),
+        );
+      }
     } catch (e) {
-      // On error, go to login page
+      // On error, check onboarding completion first
       if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginPage()),
-      );
+      
+      final String? onboardingCompleted = await storage.read(key: 'onboarding_completed');
+      
+      if (onboardingCompleted == null || onboardingCompleted != 'true') {
+        // Show onboarding if not completed
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const OnboardingScreen()),
+        );
+      } else {
+        // Show login page if onboarding completed
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginPage()),
+        );
+      }
     }
   }
 

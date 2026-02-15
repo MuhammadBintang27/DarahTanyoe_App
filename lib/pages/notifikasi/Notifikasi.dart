@@ -90,8 +90,6 @@ class _NotificationPageState extends State<NotificationPage> {
 
   // Load notifications from API
   Future<void> _loadNotifications(String userId) async {
-    debugPrint('📲 Loading notifications for userId: $userId');
-    
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -101,11 +99,6 @@ class _NotificationPageState extends State<NotificationPage> {
     try {
       final notifications = await NotifService.NotificationService.getNotifications(userId, includeRead: false);
       
-      debugPrint('📲 Loaded ${notifications.length} notifications');
-      for (var notif in notifications) {
-        debugPrint('  - ${notif.title} (isRead: ${notif.isRead})');
-      }
-
       if (mounted) {
         setState(() {
           _notifications = notifications;
@@ -114,7 +107,6 @@ class _NotificationPageState extends State<NotificationPage> {
         });
       }
     } catch (e) {
-      debugPrint('❌ Error loading notifications: $e');
       if (mounted) {
         setState(() {
           _errorMessage = 'Gagal memuat notifikasi. Silakan coba lagi.';
@@ -165,7 +157,6 @@ class _NotificationPageState extends State<NotificationPage> {
         });
       }
     } catch (e) {
-      debugPrint('Error marking notification as read: $e');
     }
   }
 
@@ -219,7 +210,6 @@ class _NotificationPageState extends State<NotificationPage> {
           Navigator.of(context).pop();
         }
 
-        debugPrint('❌ Error fetching campaign: $e');
         ToastService.showError(context, message: 'Error: ${e.toString()}');
       }
     }

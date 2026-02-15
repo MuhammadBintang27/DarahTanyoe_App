@@ -19,7 +19,6 @@ void main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
   } catch (e) {
-    print('Firebase already initialized: $e');
   }
   
   await AuthService.init();

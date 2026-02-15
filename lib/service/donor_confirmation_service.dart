@@ -35,7 +35,6 @@ class DonorConfirmationService {
       }
       return null;
     } catch (e) {
-      print('Error confirming donation: $e');
       return null;
     }
   }
@@ -62,7 +61,6 @@ class DonorConfirmationService {
 
       return response.statusCode == 200 || response.statusCode == 201;
     } catch (e) {
-      print('Error rejecting donation: $e');
       return false;
     }
   }
@@ -86,7 +84,6 @@ class DonorConfirmationService {
       }
       return [];
     } catch (e) {
-      print('Error fetching pending confirmations: $e');
       return [];
     }
   }
@@ -110,7 +107,6 @@ class DonorConfirmationService {
       }
       return [];
     } catch (e) {
-      print('Error fetching confirmation history: $e');
       return [];
     }
   }
@@ -135,7 +131,6 @@ class DonorConfirmationService {
 
       return response.statusCode == 200;
     } catch (e) {
-      print('Error verifying code: $e');
       return false;
     }
   }
@@ -155,7 +150,6 @@ class DonorConfirmationService {
       }
       return null;
     } catch (e) {
-      print('Error fetching confirmation detail: $e');
       return null;
     }
   }
@@ -175,7 +169,6 @@ class DonorConfirmationService {
       }
       return null;
     } catch (e) {
-      print('Error fetching confirmation by code: $e');
       return null;
     }
   }

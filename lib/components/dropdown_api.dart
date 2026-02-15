@@ -69,7 +69,6 @@ class _DropdownApiState extends State<DropdownApi> {
         throw Exception('Gagal mengambil data, status: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error: $e');
     } finally {
       setState(() {
         isLoading = false;
@@ -94,7 +93,6 @@ class _DropdownApiState extends State<DropdownApi> {
               selectedItem = newValue;
             });
             widget.onChanged(newValue);
-            print('Selected: ${newValue?.id} - ${newValue?.name}');
           },
           items: options.map((Lokasi option) {
             return DropdownMenuItem<Lokasi>(

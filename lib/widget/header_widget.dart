@@ -41,7 +41,6 @@ class _HeaderWidgetState extends State<HeaderWidget> {
         }
       }
     } catch (e) {
-      debugPrint('Error loading unread count: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;

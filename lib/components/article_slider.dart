@@ -75,11 +75,7 @@ class _ArticleSliderState extends State<ArticleSlider> {
             url,
             mode: LaunchMode.externalApplication,
           );
-          if (!launched) {
-            print('Gagal meluncurkan URL');
-          }
         } else {
-          print('Tidak bisa membuka URL: ${article.articleUrl}');
         }
       },
       child: Container(

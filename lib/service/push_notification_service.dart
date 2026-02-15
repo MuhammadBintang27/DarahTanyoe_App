@@ -52,7 +52,6 @@ class PushNotificationService {
                 AndroidFlutterLocalNotificationsPlugin>();
         if (androidImplementation != null) {
           final granted = await androidImplementation.requestNotificationsPermission();
-          print('📱 Notification permission granted: $granted');
         }
       }
 
@@ -76,7 +75,6 @@ class PushNotificationService {
             enableLights: true,
           ),
         );
-        print('✅ Android notification channel created');
       }
 
       final DarwinInitializationSettings initializationSettingsIOS =
@@ -99,7 +97,6 @@ class PushNotificationService {
 
       // Get FCM token
       String? token = await _firebaseMessaging.getToken();
-      print('✅ FCM Token obtained: $token');
 
       // DON'T save token yet - wait until user logs in
       // Token akan disimpan di verifyOTP() atau savePersonalInfo()
@@ -112,13 +109,10 @@ class PushNotificationService {
 
       // Handle token refresh - update backend when token changes
       _firebaseMessaging.onTokenRefresh.listen((newToken) {
-        print('🔄 FCM Token refreshed: $newToken');
         _updateFCMTokenForCurrentUser(newToken);
       });
 
-      print('✅ Push Notification Service initialized');
     } catch (e) {
-      print('❌ Error initializing push notifications: $e');
     }
   }
 
@@ -127,7 +121,6 @@ class PushNotificationService {
     try {
       final user = await AuthService().getCurrentUser();
       if (user == null) {
-        print('⚠️ User not authenticated, cannot save FCM token');
         return;
       }
 
@@ -145,12 +138,9 @@ class PushNotificationService {
       );
 
       if (response.statusCode == 200) {
-        print('✅ FCM token saved to backend');
       } else {
-        print('❌ Failed to save FCM token: ${response.statusCode}');
       }
     } catch (e) {
-      print('⚠️ Error saving FCM token: $e');
     }
   }
 
@@ -159,17 +149,11 @@ class PushNotificationService {
     try {
       String? token = await _firebaseMessaging.getToken();
       if (token == null) {
-        print('⚠️ FCM token is null, cannot register');
         return;
       }
 
       final String apiUrl = dotenv.env['BASE_URL'] ?? 'http://10.0.2.2:4000';
       
-      print('🔔 Registering FCM token:');
-      print('   URL: $apiUrl/notifications/push-token/register');
-      print('   userId: $userId');
-      print('   token: ${token.substring(0, 20)}...');
-
       final response = await http.post(
         Uri.parse('$apiUrl/notifications/push-token/register'),
         headers: {'Content-Type': 'application/json'},
@@ -180,17 +164,10 @@ class PushNotificationService {
         }),
       );
 
-      print('📊 Response status: ${response.statusCode}');
-      print('📊 Response body: ${response.body}');
-      
       if (response.statusCode == 200) {
-        print('✅ FCM token registered for user $userId');
       } else {
-        print('❌ Failed to register FCM token: ${response.statusCode}');
-        print('❌ Error response: ${response.body}');
       }
     } catch (e) {
-      print('⚠️ Error registering FCM token for user: $e');
     }
   }
 
@@ -199,7 +176,6 @@ class PushNotificationService {
     try {
       final user = await AuthService().getCurrentUser();
       if (user == null) {
-        print('⚠️ User not authenticated, skipping token update');
         return;
       }
 
@@ -217,12 +193,9 @@ class PushNotificationService {
       );
 
       if (response.statusCode == 200) {
-        print('✅ FCM token updated for user $userId');
       } else {
-        print('❌ Failed to update FCM token: ${response.statusCode}');
       }
     } catch (e) {
-      print('⚠️ Error updating FCM token: $e');
     }
   }
 
@@ -231,7 +204,6 @@ class PushNotificationService {
     try {
       String? token = await _firebaseMessaging.getToken();
       if (token == null) {
-        print('⚠️ FCM token is null, cannot unregister');
         return;
       }
 
@@ -245,22 +217,14 @@ class PushNotificationService {
       );
 
       if (response.statusCode == 200) {
-        print('✅ FCM token unregistered for user $userId');
       } else {
-        print('❌ Failed to unregister FCM token: ${response.statusCode}');
       }
     } catch (e) {
-      print('⚠️ Error unregistering FCM token: $e');
     }
   }
 
   /// Handle foreground notifications (when app is open)
   void _handleForegroundNotification(RemoteMessage message) {
-    print('📬 Foreground notification received');
-    print('Title: ${message.notification?.title}');
-    print('Body: ${message.notification?.body}');
-    print('Data: ${message.data}');
-
     // Add to received notifications list
     receivedNotifications.add({
       'title': message.notification?.title ?? 'Notifikasi',
@@ -279,9 +243,6 @@ class PushNotificationService {
 
   /// Handle notification tap (both foreground and background)
   void _handleNotificationTap(RemoteMessage message) {
-    print('👆 Notification tapped');
-    print('Data: ${message.data}');
-
     // Call callback if set
     if (onNotificationTapped != null) {
       onNotificationTapped!(message.data);
@@ -293,8 +254,6 @@ class PushNotificationService {
 
   /// Handle local notification response (Android click)
   void _handleNotificationResponse(NotificationResponse response) {
-    print('👆 Local notification tapped: ${response.payload}');
-
     try {
       if (response.payload != null) {
         final data = jsonDecode(response.payload!);
@@ -304,7 +263,6 @@ class PushNotificationService {
         _handleNotificationNavigation(data);
       }
     } catch (e) {
-      print('Error parsing notification payload: $e');
     }
   }
 
@@ -314,10 +272,7 @@ class PushNotificationService {
     final String? type = data['type'] ?? data['relatedType'];
     final String? referenceId = data['relatedId'] ?? data['related_id'] ?? data['referenceId'];
 
-    print('📍 Notification data: type=$type, id=$referenceId');
-
     if (referenceId == null) {
-      print('⚠️ No referenceId/relatedId/related_id in notification data');
       return;
     }
 
@@ -334,8 +289,6 @@ class PushNotificationService {
     String? payload,
   }) async {
     try {
-      print('🔔 Attempting to show local notification: $title');
-      
       const AndroidNotificationDetails androidPlatformChannelSpecifics =
           AndroidNotificationDetails(
         'darahtanyoe_channel',
@@ -363,7 +316,6 @@ class PushNotificationService {
       );
 
       final notificationId = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-      print('📤 Showing notification with ID: $notificationId');
       
       await _localNotifications.show(
         notificationId,
@@ -373,9 +325,7 @@ class PushNotificationService {
         payload: payload,
       );
       
-      print('✅ Local notification shown successfully');
     } catch (e) {
-      print('❌ Error showing local notification: $e');
     }
   }
 
@@ -394,9 +344,7 @@ class PushNotificationService {
   Future<void> subscribeToTopic(String topic) async {
     try {
       await _firebaseMessaging.subscribeToTopic(topic);
-      print('✅ Subscribed to topic: $topic');
     } catch (e) {
-      print('❌ Error subscribing to topic: $e');
     }
   }
 
@@ -404,9 +352,7 @@ class PushNotificationService {
   Future<void> unsubscribeFromTopic(String topic) async {
     try {
       await _firebaseMessaging.unsubscribeFromTopic(topic);
-      print('✅ Unsubscribed from topic: $topic');
     } catch (e) {
-      print('❌ Error unsubscribing from topic: $e');
     }
   }
 }

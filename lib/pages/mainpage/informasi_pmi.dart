@@ -47,7 +47,6 @@ class _InformasiPMIState extends State<InformasiPMI> with WidgetsBindingObserver
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // Refresh data ketika app kembali ke foreground
     if (state == AppLifecycleState.resumed) {
-      debugPrint("App resumed - refreshing PMI data");
       _fetchPMIList();
     }
   }
@@ -60,30 +59,14 @@ class _InformasiPMIState extends State<InformasiPMI> with WidgetsBindingObserver
       setState(() => _isLoading = true);
       final response = await http.get(url);
 
-      debugPrint("Response status: ${response.statusCode}");
-      debugPrint("Response body: ${response.body}");
-
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final List<dynamic> allInstitutions = data["data"] ?? [];
-
-        debugPrint("Response data: ${json.encode(allInstitutions)}");
-        debugPrint("Total institutions: ${allInstitutions.length}");
-
-        // Debug: Lihat semua institution_type
-        for (var inst in allInstitutions) {
-          debugPrint("Institution: ${inst["institution_name"] ?? inst["name"]} - Type: ${inst["institution_type"]}");
-        }
 
         // Filter hanya PMI (case-sensitive)
         final pmiInstitutions = allInstitutions
             .where((inst) => inst["institution_type"] == "pmi")
             .toList();
-
-        debugPrint("PMI institutions found: ${pmiInstitutions.length}");
-        for (var pmi in pmiInstitutions) {
-          debugPrint("PMI: ${pmi["institution_name"] ?? pmi["name"]}");
-        }
 
         setState(() {
           _pmiList =
@@ -103,9 +86,7 @@ class _InformasiPMIState extends State<InformasiPMI> with WidgetsBindingObserver
         });
       }
     } catch (e, stackTrace) {
-      debugPrint("Error fetching PMI list: $e");
-      debugPrint("Stack trace: $stackTrace");
-      
+
       if (mounted) {
         ToastService.showError(context, message: 'Gagal memuat data PMI: $e');
       }

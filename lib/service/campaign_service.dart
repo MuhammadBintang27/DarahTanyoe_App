@@ -22,7 +22,6 @@ class CampaignService {
       }
       return null;
     } catch (e) {
-      print('Error fetching campaign: $e');
       return null;
     }
   }
@@ -44,7 +43,6 @@ class CampaignService {
       }
       return [];
     } catch (e) {
-      print('Error fetching campaigns: $e');
       return [];
     }
   }
@@ -69,17 +67,12 @@ class CampaignService {
         final data = jsonDecode(response.body);
         final List<dynamic> campaigns = data['data'] ?? [];
         
-        print('✅ Fetched ${campaigns.length} nearby campaigns');
-        
         return campaigns
             .map((item) => PermintaanDarahModel.fromJson(item as Map<String, dynamic>))
             .toList();
-      } else {
-        print('❌ Error: API returned ${response.statusCode}');
       }
       return [];
     } catch (e) {
-      print('❌ Error fetching nearest campaigns: $e');
       return [];
     }
   }
@@ -101,7 +94,6 @@ class CampaignService {
       }
       return [];
     } catch (e) {
-      print('Error fetching campaigns by blood type: $e');
       return [];
     }
   }

@@ -59,28 +59,22 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
   }
 
   Future<void> _autoFillUserData() async {
-    print("🔍 [DEBUG] _autoFillUserData called");
-    
     setState(() {
       _isLoading = true;
     });
 
     try {
       final userDataString = await _storage.read(key: 'userData');
-      print("🔍 [DEBUG] userData from storage: $userDataString");
       
       if (userDataString == null) {
-        print("❌ [DEBUG] userData is null");
         ToastService.showError(context, message: 'Data pengguna tidak ditemukan. Silakan login kembali.');
         return;
       }
 
       final userData = jsonDecode(userDataString);
-      print("🔍 [DEBUG] userData decoded: $userData");
       
       setState(() {
         _nameController.text = userData['full_name'] ?? '';
-        print("✅ [DEBUG] Name filled: ${_nameController.text}");
         
         String phoneNumber = userData['phone_number'] ?? '';
         if (phoneNumber.startsWith('62')) {
@@ -89,21 +83,16 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
           phoneNumber = phoneNumber.substring(3);
         }
         _phoneController.text = phoneNumber;
-        print("✅ [DEBUG] Phone filled: ${_phoneController.text}");
         
         String? healthNotes = userData['health_notes'];
-        print("🔍 [DEBUG] healthNotes: $healthNotes");
         
         if (healthNotes != null && _riwayatPenyakitOptions.contains(healthNotes)) {
           _selectedRiwayatPenyakit = healthNotes;
-          print("✅ [DEBUG] Health notes set to: $healthNotes");
         } else {
           _selectedRiwayatPenyakit = 'Lainnya'; // Fallback if health_notes doesn't match options
-          print("⚠️ [DEBUG] Health notes not found, using fallback: Lainnya");
         }
       });
     } catch (e) {
-      print("❌ [DEBUG] Error: $e");
       ToastService.showError(context, message: 'Gagal memuat data pengguna: ${e.toString()}');
     } finally {
       setState(() {
@@ -113,32 +102,23 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
   }
 
   Future<void> _submitForm() async {
-    print("🔍 [DEBUG] _submitForm called");
-    
     if (_formKey.currentState!.validate()) {
-      print("✅ [DEBUG] Form validation passed");
-      
       setState(() {
         _isLoading = true;
       });
 
       final userDataString = await _storage.read(key: 'userData');
-      print("🔍 [DEBUG] userData from storage: $userDataString");
       
       if (userDataString == null) {
         setState(() {
           _isLoading = false;
         });
-        print("❌ [DEBUG] userData is null");
         ToastService.showError(context, message: 'User belum login');
         return;
       }
 
       final userData = jsonDecode(userDataString);
       final donorId = userData['id'];
-      print("🔍 [DEBUG] donorId: $donorId");
-      print("🔍 [DEBUG] confirmationId: ${widget.confirmationId}");
-      print("🔍 [DEBUG] campaignId: ${widget.campaignId}");
 
       try {
         // ✅ Call correct endpoint: /fulfillment/donor/confirm
@@ -149,16 +129,11 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
         // Add confirmation_id jika ada (dari notification)
         if (widget.confirmationId != null) {
           requestBody['confirmation_id'] = widget.confirmationId;
-          print("🔍 [DEBUG] Using confirmation_id path");
         } else {
           // Jika tidak ada confirmation_id, kirim campaign_id
           // Backend akan create confirmation baru dari campaign_id
           requestBody['campaign_id'] = widget.campaignId;
-          print("🔍 [DEBUG] Using campaign_id path");
         }
-
-        print("🔍 [DEBUG] Request body: $requestBody");
-        print("🔍 [DEBUG] Endpoint: ${dotenv.env['BASE_URL']}/fulfillment/donor/confirm");
 
         final response = await http.post(
           Uri.parse('${dotenv.env['BASE_URL']}/fulfillment/donor/confirm'),
@@ -166,23 +141,16 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
           body: jsonEncode(requestBody),
         );
 
-        print("🔍 [DEBUG] Response status: ${response.statusCode}");
-        print("🔍 [DEBUG] Response body: ${response.body}");
-
         setState(() {
           _isLoading = false;
         });
 
         if (response.statusCode == 200) {
-          print("✅ [DEBUG] Success response received");
           final data = jsonDecode(response.body);
           final confirmationData = data['data'];
 
-          print("🔍 [DEBUG] Confirmation data: $confirmationData");
-
           // ✅ Navigate to success page with unique code
           if (mounted) {
-            print("✅ [DEBUG] Navigating to DonorConfirmationSuccess");
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
@@ -197,21 +165,16 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
             );
           }
         } else {
-          print("❌ [DEBUG] Error response: ${response.statusCode}");
           final error = jsonDecode(response.body);
           final errorMsg = error['message'] ?? response.body;
-          print("❌ [DEBUG] Error message: $errorMsg");
           ToastService.showError(context, message: 'Error: $errorMsg');
         }
       } catch (e) {
-        print("❌ [DEBUG] Exception: $e");
         setState(() {
           _isLoading = false;
         });
         ToastService.showError(context, message: 'Error: $e');
       }
-    } else {
-      print("❌ [DEBUG] Form validation failed");
     }
   }
 

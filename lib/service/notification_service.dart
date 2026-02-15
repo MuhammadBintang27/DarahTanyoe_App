@@ -15,29 +15,22 @@ class NotificationService {
     try {
       final query = includeRead ? '?include_read=true' : '';
       final url = '$_baseUrl/notifications/user/$userId$query';
-      print('📲 Fetching notifications from: $url');
       
       final response = await http.get(
         Uri.parse(url),
       ).timeout(const Duration(seconds: 10));
 
-      print('📲 Response status: ${response.statusCode}');
-      print('📲 Response body: ${response.body}');
-      
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         // Backend return structure: {status, code, message, data: [...]}
         final List<dynamic> notifications = data['data'] ?? [];
-        print('📲 Parsed ${notifications.length} notifications');
         
         return notifications
             .map((item) => NotificationModel.fromJson(item as Map<String, dynamic>))
             .toList();
       }
-      print('❌ Failed to fetch notifications: ${response.statusCode}');
       return [];
     } catch (e) {
-      print('❌ Error fetching notifications: $e');
       return [];
     }
   }
@@ -59,7 +52,6 @@ class NotificationService {
       }
       return [];
     } catch (e) {
-      print('Error fetching unread notifications: $e');
       return [];
     }
   }
@@ -78,7 +70,6 @@ class NotificationService {
       }
       return 0;
     } catch (e) {
-      print('Error fetching unread count: $e');
       return 0;
     }
   }
@@ -88,16 +79,13 @@ class NotificationService {
   static Future<bool> markAsRead(String notificationId) async {
     try {
       final url = '$_baseUrl/notifications/$notificationId/read';
-      print('📲 Marking notification as read: $url');
       
       final response = await http.patch(
         Uri.parse(url),
       );
 
-      print('📲 Mark as read response: ${response.statusCode}');
       return response.statusCode == 200;
     } catch (e) {
-      print('❌ Error marking notification as read: $e');
       return false;
     }
   }
@@ -112,7 +100,6 @@ class NotificationService {
 
       return response.statusCode == 200;
     } catch (e) {
-      print('Error marking all as read: $e');
       return false;
     }
   }
@@ -127,7 +114,6 @@ class NotificationService {
 
       return response.statusCode == 200;
     } catch (e) {
-      print('Error deleting notification: $e');
       return false;
     }
   }
@@ -142,7 +128,6 @@ class NotificationService {
 
       return response.statusCode == 200;
     } catch (e) {
-      print('Error deleting expired notifications: $e');
       return false;
     }
   }

@@ -49,13 +49,10 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
       setState(() {
         _confirmationId = widget.confirmationId;
       });
-      print("✅ [DEBUG] Using confirmationId from notification: ${widget.confirmationId}");
       return;
     }
 
     // For "Permintaan Terdekat" flow, call pre-check endpoint
-    print("🔍 [DEBUG] Pre-check called for permintaan terdekat");
-    
     setState(() {
       _preCheckLoading = true;
     });
@@ -63,15 +60,12 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
     try {
       final userDataString = await _storage.read(key: 'userData');
       if (userDataString == null) {
-        print("❌ [DEBUG] User not logged in");
         return;
       }
 
       final userData = jsonDecode(userDataString);
       final donorId = userData['id'];
       final campaignId = widget.permintaan.id;
-
-      print("🔍 [DEBUG] Pre-check params - campaignId: $campaignId, donorId: $donorId");
 
       final response = await http.get(
         Uri.parse('${dotenv.env['BASE_URL']}/fulfillment/donor/pre-check')
@@ -81,9 +75,6 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
         }),
       );
 
-      print("🔍 [DEBUG] Pre-check response status: ${response.statusCode}");
-      print("🔍 [DEBUG] Pre-check response body: ${response.body}");
-
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final confirmationId = data['data']['confirmationId'];
@@ -91,13 +82,8 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
         setState(() {
           _confirmationId = confirmationId;
         });
-        
-        print("✅ [DEBUG] Pre-check successful, confirmationId: $confirmationId");
-      } else {
-        print("❌ [DEBUG] Pre-check failed: ${response.statusCode}");
       }
     } catch (e) {
-      print("❌ [DEBUG] Pre-check error: $e");
     } finally {
       setState(() {
         _preCheckLoading = false;
@@ -148,7 +134,6 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
         }
       }
     } catch (e) {
-      debugPrint("Error calculating distance: $e");
     }
   }
 
@@ -513,8 +498,6 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
           ),
           InkWell(
             onTap: () async {
-              debugPrint("LATITUDE ${widget.permintaan.latitude}");
-              debugPrint("LONGITUDE ${widget.permintaan.longitude}");
               final Uri url = Uri.parse(
                 'https://www.google.com/maps/search/?api=1&query=${widget.permintaan.latitude},${widget.permintaan.longitude}',
               );

@@ -143,16 +143,11 @@ class _EditProfilPageState extends State<EditProfilPage> {
       final baseUrl = dotenv.env['BASE_URL'] ?? '';
       final userId = widget.userData['id'];
       
-      print('🔍 DEBUG: Base URL: $baseUrl');
-      print('🔍 DEBUG: User ID: $userId');
-      print('🔍 DEBUG: User ID type: ${userId.runtimeType}');
-      
       if (userId == null || userId.toString().isEmpty) {
         throw Exception('User ID tidak ditemukan');
       }
 
       final url = Uri.parse('$baseUrl/users/update/$userId');
-      print('🔍 DEBUG: Full URL: $url');
 
       final Map<String, dynamic> updateData = {
         'email': emailController.text,
@@ -167,16 +162,11 @@ class _EditProfilPageState extends State<EditProfilPage> {
         updateData['longitude'] = newLongitude;
       }
 
-      print('🔍 DEBUG: Update data: $updateData');
-
       final response = await http.patch(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(updateData),
       );
-
-      print('🔍 DEBUG: Response status: ${response.statusCode}');
-      print('🔍 DEBUG: Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         // Update localStorage dengan data terbaru
@@ -201,7 +191,6 @@ class _EditProfilPageState extends State<EditProfilPage> {
         throw Exception('Gagal mengupdate profil: ${response.statusCode}');
       }
     } catch (e) {
-      print('❌ ERROR: $e');
       if (mounted) {
         ToastService.showError(context, message: 'Error: $e');
       }

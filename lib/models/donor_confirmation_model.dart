@@ -240,33 +240,22 @@ class DonorConfirmationModel {
     if (geoData == null) return null;
     
     try {
-      print("🔍 [GEO] Raw geoData type: ${geoData.runtimeType}");
-      print("🔍 [GEO] Raw geoData: $geoData");
-      
       // Handle EWKB format (hexadecimal string)
       if (geoData is String) {
-        print("🔍 [GEO] Parsing EWKB string format");
         return _parseEWKBLatitude(geoData);
       }
       
       // Handle GeoJSON format (Map)
       if (geoData is Map<String, dynamic>) {
-        print("🔍 [GEO] Parsing GeoJSON format");
         final coordinates = geoData['coordinates'];
-        print("🔍 [GEO] Coordinates type: ${coordinates.runtimeType}");
-        print("🔍 [GEO] Coordinates: $coordinates");
         
         if (coordinates is List && coordinates.length >= 2) {
           final lat = coordinates[1] as double; // [longitude, latitude]
-          print("✅ [GEO] Extracted latitude from GeoJSON: $lat");
           return lat;
         }
       }
     } catch (e) {
-      print('❌ [GEO] Error parsing latitude: $e');
-      print('❌ [GEO] Stack trace: ${e}');
     }
-    print("⚠️ [GEO] Failed to extract latitude, returning null");
     return null;
   }
 
@@ -275,33 +264,22 @@ class DonorConfirmationModel {
     if (geoData == null) return null;
     
     try {
-      print("🔍 [GEO] Raw geoData type: ${geoData.runtimeType}");
-      print("🔍 [GEO] Raw geoData: $geoData");
-      
       // Handle EWKB format (hexadecimal string)
       if (geoData is String) {
-        print("🔍 [GEO] Parsing EWKB string format");
         return _parseEWKBLongitude(geoData);
       }
       
       // Handle GeoJSON format (Map)
       if (geoData is Map<String, dynamic>) {
-        print("🔍 [GEO] Parsing GeoJSON format");
         final coordinates = geoData['coordinates'];
-        print("🔍 [GEO] Coordinates type: ${coordinates.runtimeType}");
-        print("🔍 [GEO] Coordinates: $coordinates");
         
         if (coordinates is List && coordinates.length >= 2) {
           final lng = coordinates[0] as double; // [longitude, latitude]
-          print("✅ [GEO] Extracted longitude from GeoJSON: $lng");
           return lng;
         }
       }
     } catch (e) {
-      print('❌ [GEO] Error parsing longitude: $e');
-      print('❌ [GEO] Stack trace: ${e}');
     }
-    print("⚠️ [GEO] Failed to extract longitude, returning null");
     return null;
   }
   
@@ -312,22 +290,18 @@ class DonorConfirmationModel {
       // Positions: 0-2 (byte order), 2-10 (type), 10-18 (SRID), 18-34 (longitude), 34-50 (latitude)
       
       if (ewkbHex.length < 50) {
-        print("❌ [EWKB] Invalid EWKB hex string length: ${ewkbHex.length}");
         return null;
       }
       
       // Extract latitude (Y coordinate) - last 16 characters (8 bytes as hex)
       final latHex = ewkbHex.substring(34, 50);
-      print("🔍 [EWKB] Latitude hex: $latHex");
       
       // Convert hex string to double (little-endian)
       final latBytes = _hexToBytes(latHex);
       final latitude = _bytesToDouble(latBytes);
-      print("✅ [EWKB] Extracted latitude: $latitude");
       
       return latitude;
     } catch (e) {
-      print('❌ [EWKB] Error parsing latitude: $e');
       return null;
     }
   }
@@ -339,22 +313,18 @@ class DonorConfirmationModel {
       // Positions: 0-2 (byte order), 2-10 (type), 10-18 (SRID), 18-34 (longitude), 34-50 (latitude)
       
       if (ewkbHex.length < 50) {
-        print("❌ [EWKB] Invalid EWKB hex string length: ${ewkbHex.length}");
         return null;
       }
       
       // Extract longitude (X coordinate) - characters 18-34 (8 bytes as hex)
       final lngHex = ewkbHex.substring(18, 34);
-      print("🔍 [EWKB] Longitude hex: $lngHex");
       
       // Convert hex string to double (little-endian)
       final lngBytes = _hexToBytes(lngHex);
       final longitude = _bytesToDouble(lngBytes);
-      print("✅ [EWKB] Extracted longitude: $longitude");
       
       return longitude;
     } catch (e) {
-      print('❌ [EWKB] Error parsing longitude: $e');
       return null;
     }
   }

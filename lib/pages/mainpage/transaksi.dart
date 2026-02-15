@@ -77,19 +77,12 @@ class _TransactionBloodState extends State<TransactionBlood> {
       final String baseUrl = dotenv.env['BASE_URL'] ?? '';
       final url = Uri.parse('$baseUrl/fulfillment/donor/$donorId/confirmations?status=active');
 
-      print('🔍 Fetching berlangsung from: $url');
-
       final response = await http.get(url);
-
-      print('📊 Response status: ${response.statusCode}');
-      print('📊 Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
         final List<dynamic> data = jsonData['data'] ?? [];
         
-        print('✅ Loaded ${data.length} active confirmations');
-
         if (mounted) {
           setState(() {
             berlangsungList = data
@@ -111,7 +104,6 @@ class _TransactionBloodState extends State<TransactionBlood> {
         throw Exception('Gagal mengambil data: ${response.statusCode}');
       }
     } catch (e) {
-      print('❌ Error loading berlangsung: $e');
       if (mounted) {
         setState(() => isLoading = false);
         _showError("Gagal memuat data pendonoran: $e");
@@ -135,19 +127,12 @@ class _TransactionBloodState extends State<TransactionBlood> {
       final String baseUrl = dotenv.env['BASE_URL'] ?? '';
       final url = Uri.parse('$baseUrl/fulfillment/donor/$donorId/confirmations?status=completed');
 
-      print('🔍 Fetching selesai from: $url');
-
       final response = await http.get(url);
-
-      print('📊 Response status: ${response.statusCode}');
-      print('📊 Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
         final List<dynamic> data = jsonData['data'] ?? [];
         
-        print('✅ Loaded ${data.length} completed confirmations');
-
         if (mounted) {
           setState(() {
             selesaiList = data
@@ -168,7 +153,6 @@ class _TransactionBloodState extends State<TransactionBlood> {
         throw Exception('Gagal mengambil data: ${response.statusCode}');
       }
     } catch (e) {
-      print('❌ Error loading selesai: $e');
       if (mounted) {
         setState(() => isLoading = false);
         _showError("Gagal memuat data pendonoran: $e");

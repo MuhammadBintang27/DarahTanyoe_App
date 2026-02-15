@@ -49,17 +49,11 @@ class AuthService {
 
   /// **✅ Kirim OTP**
   Future<bool> sendOTP(String phone, [BuildContext? context]) async {
-    print("🔍 DEBUG: Base URL from dotenv: ${dotenv.env['BASE_URL']}");
-    print("🔍 DEBUG: AuthService baseUrl: $baseUrl");
     var request = http.Request('POST', Uri.parse('$baseUrl/users/masuk'));
-    print("🔍 DEBUG: Full URL: $baseUrl/users/masuk");
-    print("🔍 DEBUG: Request body: ${jsonEncode({"phone": phone})}");
     request.headers.addAll({
       'Content-Type': 'application/json',
     });
     request.body = jsonEncode({"phone": phone}); // <-- MENAMBAHKAN BODY REQUEST
-
-    print("Nomor yang dikirim OTP: $phone");
 
     try {
       // Tampilkan loading jika context tersedia
@@ -73,8 +67,6 @@ class AuthService {
 
       // Baca response body sebagai string
       String responseBody = await response.stream.bytesToString();
-      print("Response Status Code: ${response.statusCode}");
-      print("Response Body: $responseBody");
 
       // Sembunyikan loading jika context tersedia
       if (context != null) {
@@ -104,7 +96,6 @@ class AuthService {
         return false;
       }
     } catch (e) {
-      print("Error in sendOTP: $e");
       errorCallback?.call(e.toString());
 
       if (context != null) {
@@ -120,16 +111,12 @@ class AuthService {
 
   /// **✅ Verifikasi OTP**
   Future<bool> verifyOTP(String otp, String phone, BuildContext context) async {
-    print("🔍 DEBUG: Verifying OTP - Phone: $phone, OTP: $otp");
-    print("🔍 DEBUG: Base URL: $baseUrl");
     try {
       // Call original loading callback
       loadingCallback?.call(true);
 
       // Show animation
       AnimationService.showLoading(context);
-      print(phone);
-      print(otp);
       final response = await http.post(
         Uri.parse('$baseUrl/users/verifyOTP'),
         body: jsonEncode({"token": otp, "phone": phone}),
@@ -138,14 +125,8 @@ class AuthService {
         },
       );
 
-      print("Verify OTP URL: $baseUrl/users/verifyOTP");
-      print("Response status: ${response.statusCode}");
-      print("Response body: ${response.body}");
-
       // Hide animation
       AnimationService.hideLoading(context);
-      print(response.statusCode);
-      print(response.body);
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         final String? accessToken =
@@ -159,7 +140,6 @@ class AuthService {
           await storage.write(key: 'access_token', value: accessToken);
           await storage.write(key: 'expiry_date', value: expires_at);
           await storage.write(key: 'userData', value: jsonEncode(userData));
-          print("Access token dan expiry date berhasil disimpan.");
         }
 
         if (responseData['user'] != null && responseData['user'].isNotEmpty) {
@@ -168,12 +148,9 @@ class AuthService {
 
           // ✅ Register FCM token untuk user yang login
           try {
-            print('🔔 Registering FCM token for existing user: $userId');
             final pushNotificationService = PushNotificationService();
             await pushNotificationService.registerFCMTokenForUser(userId);
-            print('✅ FCM token registered for user: $userId');
           } catch (fcmError) {
-            print('⚠️ Error registering FCM token: $fcmError');
             // Non-blocking error, continue dengan login
           }
 
@@ -203,16 +180,11 @@ class AuthService {
           );
           return true;
         } else {
-          print("User tidak ditemukan, mengarah ke PersonalInfo...");
-
           // ✅ Register FCM token juga untuk user baru yang belum lengkap profile
           try {
-            print('🔔 Registering FCM token for new user: $userId');
             final pushNotificationService = PushNotificationService();
             await pushNotificationService.registerFCMTokenForUser(userId);
-            print('✅ FCM token registered for new user: $userId');
           } catch (fcmError) {
-            print('⚠️ Error registering FCM token: $fcmError');
             // Non-blocking error, continue dengan navigation
           }
 
@@ -250,7 +222,6 @@ class AuthService {
         return false;
       }
     } catch (e) {
-      print("Error in verifyOTP: $e");
       // Call original error callback
       errorCallback?.call(e.toString());
 
@@ -363,8 +334,6 @@ class AuthService {
   Future<bool> saveBloodInfo(
       String bloodType, String lastDonation, String medicalHistory, [BuildContext? context]) async {
     try {
-      print('🔍 saveBloodInfo() called - starting registration');
-      
       // Aktifkan loading
       loadingCallback?.call(true);
 
@@ -394,33 +363,21 @@ class AuthService {
         },
       );
 
-      print("Final Registration Data Sent: ${jsonEncode(dataToSend)}");
-      print(response.statusCode);
-      print(response.body);
-      
       if (response.statusCode == 201) {
-        print('✅ Registration successful (201), response received');
-        
         await _saveToLocalStorage();
         // Ambil data user dari response body
         final responseBody = jsonDecode(response.body);
         final userData = responseBody['user'];
         final userId = userData['id'];
-        
-        print('🔍 User ID extracted: $userId');
 
         // Simpan ke SecureStorage dalam bentuk JSON string
         await storage.write(key: 'userData', value: jsonEncode(userData));
 
         // ✅ Register FCM token untuk user baru
         try {
-          print('🔔 Attempting to register FCM token...');
           final pushNotificationService = PushNotificationService();
           await pushNotificationService.registerFCMTokenForUser(userId);
-          print('✅ FCM token registered for new user: $userId');
         } catch (fcmError) {
-          print('⚠️ Error registering FCM token: $fcmError');
-          print('⚠️ Stack trace: $fcmError');
           // Non-blocking error, continue dengan registration
         }
 
@@ -489,7 +446,6 @@ class AuthService {
       
       // Unregister FCM token for this user
       if (userId != null) {
-        debugPrint('🔌 Unregistering FCM token for user $userId...');
         final pushNotificationService = PushNotificationService();
         await pushNotificationService.unregisterFCMTokenForUser(userId);
       }
@@ -508,7 +464,6 @@ class AuthService {
     );
   } catch (e) {
     // Handle any errors during logout
-    debugPrint('Error during logout: ${e.toString()}');
     
     // Show error message to user via ToastService
     ToastService.showError(
@@ -527,7 +482,6 @@ class AuthService {
       // User dianggap login jika kedua data tersedia
       return accessToken != null && userData != null;
     } catch (e) {
-      print("Error checking login status: $e");
       return false;
     }
   }
@@ -541,7 +495,6 @@ class AuthService {
       }
       return null;
     } catch (e) {
-      print("Error getting current user: $e");
       return null;
     }
   }
@@ -551,7 +504,6 @@ class AuthService {
     try {
       return await storage.read(key: 'access_token');
     } catch (e) {
-      print("Error getting access token: $e");
       return null;
     }
   }
@@ -572,10 +524,7 @@ class AuthService {
       
       final userDataString = jsonEncode(mergedData);
       await storage.write(key: 'userData', value: userDataString);
-      print("✅ User data updated in localStorage (merged)");
-      print("🔍 Updated fields: ${updates.keys.toList()}");
     } catch (e) {
-      print("Error updating user data: $e");
     }
   }
   
