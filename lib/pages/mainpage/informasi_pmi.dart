@@ -444,9 +444,9 @@ class _InformasiPMIState extends State<InformasiPMI> with WidgetsBindingObserver
                                           gridDelegate:
                                               SliverGridDelegateWithFixedCrossAxisCount(
                                             crossAxisCount: 4,
-                                            crossAxisSpacing: 8,
-                                            mainAxisSpacing: 8,
-                                            childAspectRatio: 0.95,
+                                            crossAxisSpacing: 10,
+                                            mainAxisSpacing: 10,
+                                            childAspectRatio: 0.85,
                                           ),
                                           itemCount: bloodTypes.length,
                                           itemBuilder: (context, index) {
@@ -458,7 +458,7 @@ class _InformasiPMIState extends State<InformasiPMI> with WidgetsBindingObserver
 
                                             return Container(
                                               padding: EdgeInsets.symmetric(
-                                                  vertical: 6, horizontal: 4),
+                                                  vertical: 10, horizontal: 6),
                                               decoration: BoxDecoration(
                                                 color: statusColor
                                                     .withValues(alpha: 0.1),
@@ -468,7 +468,7 @@ class _InformasiPMIState extends State<InformasiPMI> with WidgetsBindingObserver
                                                   width: 1.5,
                                                 ),
                                                 borderRadius:
-                                                    BorderRadius.circular(10),
+                                                    BorderRadius.circular(12),
                                               ),
                                               child: Column(
                                                 mainAxisAlignment:
@@ -478,25 +478,25 @@ class _InformasiPMIState extends State<InformasiPMI> with WidgetsBindingObserver
                                                   Text(
                                                     bloodType,
                                                     style: TextStyle(
-                                                      fontSize: 13,
+                                                      fontSize: 15,
                                                       fontWeight: FontWeight.bold,
                                                       color: statusColor,
                                                     ),
                                                   ),
-                                                  SizedBox(height: 4),
+                                                  SizedBox(height: 6),
                                                   Text(
                                                     "$quantity",
                                                     style: TextStyle(
-                                                      fontSize: 18,
+                                                      fontSize: 22,
                                                       fontWeight: FontWeight.bold,
                                                       color: statusColor,
                                                     ),
                                                   ),
-                                                  SizedBox(height: 1),
+                                                  SizedBox(height: 2),
                                                   Text(
                                                     "Kantong",
                                                     style: TextStyle(
-                                                      fontSize: 8,
+                                                      fontSize: 9,
                                                       color: Colors.grey[600],
                                                       fontWeight: FontWeight.w500,
                                                     ),

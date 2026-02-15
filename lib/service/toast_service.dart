@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 enum ToastType { success, error, info, warning }
 
-enum ToastPosition { top, bottom }
+enum ToastPosition { top, bottom, topRight }
 
 class ToastAction {
   final String label;
@@ -28,7 +28,7 @@ class ToastService {
     String? title,
     ToastType type = ToastType.info,
     Duration duration = const Duration(seconds: 3),
-    ToastPosition position = ToastPosition.bottom,
+    ToastPosition position = ToastPosition.topRight,
     ToastAction? action,
     bool dismissible = true,
     bool queueable = true,
@@ -94,7 +94,7 @@ class ToastService {
     required String message,
     String? title,
     Duration duration = const Duration(seconds: 3),
-    ToastPosition position = ToastPosition.bottom,
+    ToastPosition position = ToastPosition.topRight,
     ToastAction? action,
     bool dismissible = true,
   }) =>
@@ -114,7 +114,7 @@ class ToastService {
     required String message,
     String? title,
     Duration duration = const Duration(seconds: 4),
-    ToastPosition position = ToastPosition.bottom,
+    ToastPosition position = ToastPosition.topRight,
     ToastAction? action,
     bool dismissible = true,
   }) =>
@@ -134,7 +134,7 @@ class ToastService {
     required String message,
     String? title,
     Duration duration = const Duration(seconds: 3),
-    ToastPosition position = ToastPosition.bottom,
+    ToastPosition position = ToastPosition.topRight,
     ToastAction? action,
     bool dismissible = true,
   }) =>
@@ -154,7 +154,7 @@ class ToastService {
     required String message,
     String? title,
     Duration duration = const Duration(seconds: 3),
-    ToastPosition position = ToastPosition.bottom,
+    ToastPosition position = ToastPosition.topRight,
     ToastAction? action,
     bool dismissible = true,
   }) =>
@@ -240,7 +240,9 @@ class _ToastWidgetState extends State<_ToastWidget>
 
     final slideBegin = widget.position == ToastPosition.bottom
         ? const Offset(0, 0.3)
-        : const Offset(0, -0.3);
+        : widget.position == ToastPosition.topRight
+            ? const Offset(1, 0)
+            : const Offset(0, -0.3);
 
     _offset = Tween<Offset>(begin: slideBegin, end: Offset.zero)
         .chain(CurveTween(curve: Curves.easeOutCubic))
@@ -360,11 +362,15 @@ class _ToastWidgetState extends State<_ToastWidget>
     final padding = widget.position == ToastPosition.bottom
         ? EdgeInsets.only(
             bottom: media.viewInsets.bottom + media.padding.bottom + 16)
-        : EdgeInsets.only(top: media.padding.top + 16);
+        : widget.position == ToastPosition.topRight
+            ? EdgeInsets.only(top: media.padding.top + 16, right: 16)
+            : EdgeInsets.only(top: media.padding.top + 16);
 
     final alignment = widget.position == ToastPosition.bottom
         ? Alignment.bottomCenter
-        : Alignment.topCenter;
+        : widget.position == ToastPosition.topRight
+            ? Alignment.topRight
+            : Alignment.topCenter;
 
     return Positioned.fill(
       child: SafeArea(
@@ -385,11 +391,15 @@ class _ToastWidgetState extends State<_ToastWidget>
                     offset: Offset(0, _dragDistance),
                     child: Container(
                       margin: padding,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: widget.position == ToastPosition.topRight
+                          ? EdgeInsets.zero
+                          : const EdgeInsets.symmetric(horizontal: 16),
                       child: Material(
                         color: Colors.transparent,
                         child: Container(
-                          constraints: const BoxConstraints(maxWidth: 540),
+                            constraints: BoxConstraints(
+                              maxWidth: widget.position == ToastPosition.topRight ? 360 : 540,
+                            ),
                           decoration: BoxDecoration(
                             color: _bgColor,
                             borderRadius: BorderRadius.circular(12),
@@ -417,7 +427,10 @@ class _ToastWidgetState extends State<_ToastWidget>
                               children: [
                                 Icon(_icon, color: _iconColor, size: 22),
                                 const SizedBox(width: 12),
-                                Expanded(
+                                Flexible(
+                                  fit: widget.position == ToastPosition.topRight 
+                                      ? FlexFit.loose 
+                                      : FlexFit.tight,
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     crossAxisAlignment:
@@ -467,7 +480,7 @@ class _ToastWidgetState extends State<_ToastWidget>
                                     ],
                                   ),
                                 ),
-                                if (widget.dismissible) ...[
+                                if (widget.dismissible && widget.position != ToastPosition.topRight) ...[
                                   const SizedBox(width: 8),
                                   GestureDetector(
                                     onTap: _hide,

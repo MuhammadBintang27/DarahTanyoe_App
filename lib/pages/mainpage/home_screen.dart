@@ -12,6 +12,7 @@ import 'package:darahtanyoe_app/pages/donor_darah/data_donor_biasa.dart';
 import 'package:darahtanyoe_app/pages/detail_donor_confirmation/donor_confirmation_detail.dart';
 import 'package:darahtanyoe_app/models/donor_confirmation_model.dart';
 import 'package:darahtanyoe_app/service/auth_service.dart';
+import 'package:darahtanyoe_app/pages/authentication/login_page.dart';
 import 'package:darahtanyoe_app/service/campaign_service.dart';
 import 'package:darahtanyoe_app/service/toast_service.dart';
 import 'package:darahtanyoe_app/service/animation_service.dart';
@@ -293,15 +294,26 @@ Widget _buildPendingDonations() {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return _buildLoadingContent(); // Menampilkan loading di dalam container
           } else if (snapshot.hasError) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              ToastService.showError(
-                context,
-                message: 'Error: ${snapshot.error.toString()}',
-              );
-            });
-
-            // Tampilkan konten kosong ketika error
-            return _buildEmptyContent();
+            // Check if error is authentication related
+            final errorMessage = snapshot.error.toString();
+            if (errorMessage.contains('User tidak ditemukan atau belum login') || 
+                errorMessage.contains('belum login')) {
+              // Redirect to login page for auth errors
+              WidgetsBinding.instance.addPostFrameCallback((_) async {
+                final authService = AuthService();
+                await authService.logout(context);
+              });
+              return _buildEmptyContent();
+            } else {
+              // Show other errors as toast
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                ToastService.showError(
+                  context,
+                  message: 'Error: ${snapshot.error.toString()}',
+                );
+              });
+              return _buildEmptyContent();
+            }
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return _buildEmptyContent(); // Menampilkan teks jika data kosong
           }
@@ -484,7 +496,6 @@ Widget _buildPendingDonations() {
               Text(
                 'Memuat data...',
                 style: TextStyle(
-                  fontFamily: 'DM Sans',
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                   color: Colors.grey[600],
@@ -515,7 +526,6 @@ Widget _buildPendingDonations() {
                   "Tidak ada permintaan darah terdekat saat ini",
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontFamily: 'DM Sans',
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                     color: Colors.grey[600],

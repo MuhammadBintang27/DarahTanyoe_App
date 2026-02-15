@@ -252,7 +252,6 @@ class BloodCard extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: progressFontSize,
                                 color: AppTheme.neutral_01,
-                                fontFamily: 'DM Sans',
                               ),
                               children: [
                                 TextSpan(text: 'Telah terisi '),

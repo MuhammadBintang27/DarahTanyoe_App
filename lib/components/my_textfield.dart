@@ -1,7 +1,6 @@
 import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 
 enum InputType { text, dropdown, date }
@@ -86,6 +85,7 @@ class _MyTextFieldState extends State<MyTextField> {
 
     return Container(
       width: double.infinity,
+      clipBehavior: Clip.none,
       decoration: BoxDecoration(
         color: widget.isAuth ? textColor.withOpacity(0.11) : Colors.white60,
         boxShadow: widget.isAuth == false
@@ -97,17 +97,17 @@ class _MyTextFieldState extends State<MyTextField> {
           )
         ] : [],
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor, width: 0.5),
+        border: Border.all(color: borderColor, width: 1.5),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: widget.inputType == InputType.text
           ? TextFormField(
         controller: _controller,
         readOnly: widget.readOnly,
-        style: GoogleFonts.dmSans(color: textColor),
+        style: TextStyle(color: textColor),
         decoration: InputDecoration(
           hintText: widget.hintText,
-          hintStyle: GoogleFonts.dmSans(color: textColor.withOpacity(0.4)),
+          hintStyle: TextStyle(color: textColor.withOpacity(0.4)),
           border: InputBorder.none,
         ),
         keyboardType: widget.keyboardType,
@@ -121,15 +121,15 @@ class _MyTextFieldState extends State<MyTextField> {
           value: _selectedDropdownValue,
           hint: Text(
             widget.hintText,
-            style: GoogleFonts.dmSans(color: textColor.withOpacity(0.4)),
+            style: TextStyle(color: textColor.withOpacity(0.4)),
           ),
           icon: Icon(Icons.arrow_drop_down, color: textColor),
-          style: GoogleFonts.dmSans(color: textColor),
+          style: TextStyle(color: textColor),
           dropdownColor: Colors.black87.withOpacity(0.9),
           items: widget.dropdownItems?.map((String item) {
             return DropdownMenuItem<String>(
               value: item,
-              child: Text(item, style: GoogleFonts.dmSans(color: textColor)),
+              child: Text(item, style: TextStyle(color: textColor)),
             );
           }).toList(),
           onChanged: (value) {
@@ -145,11 +145,11 @@ class _MyTextFieldState extends State<MyTextField> {
         child: AbsorbPointer(
           child: TextFormField(
             controller: _controller,
-            style: GoogleFonts.dmSans(color: textColor),
+            style: TextStyle(color: textColor),
             decoration: InputDecoration(
               hintText: widget.hintText,
               hintStyle:
-              GoogleFonts.dmSans(color: textColor.withOpacity(0.7)),
+              TextStyle(color: textColor.withOpacity(0.7)),
               border: InputBorder.none,
               suffixIcon: Icon(Icons.calendar_today, color: textColor),
             ),

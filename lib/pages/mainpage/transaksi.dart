@@ -310,24 +310,27 @@ class _TransactionBloodState extends State<TransactionBlood> {
     }
 
     if (berlangsungList.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.inbox_outlined,
-              size: 64,
-              color: AppTheme.neutral_01.withOpacity(0.3),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Tidak ada pendonoran sedang berlangsung',
-              style: TextStyle(
-                color: AppTheme.neutral_01.withOpacity(0.6),
-                fontSize: 16,
+      return SizedBox(
+        height: MediaQuery.of(context).size.height * 0.6,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.inbox_outlined,
+                size: 64,
+                color: AppTheme.neutral_01.withOpacity(0.3),
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              Text(
+                'Tidak ada pendonoran sedang berlangsung',
+                style: TextStyle(
+                  color: AppTheme.neutral_01.withOpacity(0.6),
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -350,24 +353,27 @@ class _TransactionBloodState extends State<TransactionBlood> {
     }
 
     if (selesaiList.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.check_circle_outline,
-              size: 64,
-              color: AppTheme.neutral_01.withOpacity(0.3),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Belum ada pendonoran yang selesai',
-              style: TextStyle(
-                color: AppTheme.neutral_01.withOpacity(0.6),
-                fontSize: 16,
+      return SizedBox(
+        height: MediaQuery.of(context).size.height * 0.6,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.check_circle_outline,
+                size: 64,
+                color: AppTheme.neutral_01.withOpacity(0.3),
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              Text(
+                'Belum ada pendonoran yang selesai',
+                style: TextStyle(
+                  color: AppTheme.neutral_01.withOpacity(0.6),
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -583,7 +589,6 @@ class _TransactionBloodState extends State<TransactionBlood> {
                                 style: TextStyle(
                                   fontSize: 11,
                                   color: AppTheme.neutral_01,
-                                  fontFamily: 'DM Sans',
                                 ),
                                 children: [
                                   const TextSpan(text: 'Telah terisi '),

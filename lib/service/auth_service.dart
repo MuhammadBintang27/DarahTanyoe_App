@@ -363,6 +363,11 @@ class AuthService {
         },
       );
 
+      // Hide loading animation before showing success/error
+      if (context != null) {
+        AnimationService.hideLoading(context);
+      }
+
       if (response.statusCode == 201) {
         await _saveToLocalStorage();
         // Ambil data user dari response body
@@ -412,20 +417,16 @@ class AuthService {
       // Callback error
       errorCallback?.call(e.toString());
 
-      // Tampilkan animasi error jika ada context
+      // Hide loading and show error animation if context available
       if (context != null) {
+        AnimationService.hideLoading(context);
         await AnimationService.showError(context, message: e.toString());
       }
 
       return false;
     } finally {
-      // Matikan loading
+      // Matikan loading callback
       loadingCallback?.call(false);
-
-      // Sembunyikan animasi loading jika ada context
-      if (context != null) {
-        AnimationService.hideLoading(context);
-      }
     }
   }
 

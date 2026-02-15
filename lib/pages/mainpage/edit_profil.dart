@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:darahtanyoe_app/service/toast_service.dart';
-import 'package:intl/intl.dart';
 import 'package:darahtanyoe_app/theme/theme.dart';
 import '../../components/background_widget.dart';
 import '../../service/auth_service.dart';
@@ -221,7 +220,6 @@ class _EditProfilPageState extends State<EditProfilPage> {
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            fontFamily: 'DM Sans',
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -232,7 +230,6 @@ class _EditProfilPageState extends State<EditProfilPage> {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            fontFamily: 'DM Sans',
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -257,7 +254,6 @@ class _EditProfilPageState extends State<EditProfilPage> {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            fontFamily: 'DM Sans',
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -282,7 +278,6 @@ class _EditProfilPageState extends State<EditProfilPage> {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            fontFamily: 'DM Sans',
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -322,7 +317,6 @@ class _EditProfilPageState extends State<EditProfilPage> {
                               showLocationPicker ? 'Tutup Peta' : 'Pilih di Peta',
                               style: const TextStyle(
                                 color: Colors.white,
-                                fontFamily: 'DM Sans',
                               ),
                             ),
                           ),
@@ -359,8 +353,12 @@ class _EditProfilPageState extends State<EditProfilPage> {
                                     ),
                                     children: [
                                       TileLayer(
-                                        urlTemplate:
-                                            'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                        urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                        subdomains: const ['a', 'b', 'c'],
+                                        userAgentPackageName: 'com.darahtanyoe.app',
+                                        maxZoom: 18,
+                                        minZoom: 3,
+                                        retinaMode: true,
                                       ),
                                       if (selectedLocation != null)
                                         MarkerLayer(
@@ -392,6 +390,19 @@ class _EditProfilPageState extends State<EditProfilPage> {
                                             ),
                                           ],
                                         ),
+                                      RichAttributionWidget(
+                                        popupInitialDisplayDuration: Duration.zero,
+                                        animationConfig: FadeRAWA(),
+                                        showFlutterMapAttribution: false,
+                                        alignment: AttributionAlignment.bottomLeft,
+                                        permanentHeight: 16,
+                                        attributions: [
+                                          TextSourceAttribution(
+                                            'OpenStreetMap contributors',
+                                            onTap: () {},
+                                          ),
+                                        ],
+                                      ),
                                     ],
                                   ),
                                 ],
@@ -431,7 +442,6 @@ class _EditProfilPageState extends State<EditProfilPage> {
                                     : 'Gunakan Lokasi Saat Ini',
                                 style: const TextStyle(
                                   color: Colors.white,
-                                  fontFamily: 'DM Sans',
                                 ),
                               ),
                             ),
@@ -446,7 +456,6 @@ class _EditProfilPageState extends State<EditProfilPage> {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            fontFamily: 'DM Sans',
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -495,7 +504,6 @@ class _EditProfilPageState extends State<EditProfilPage> {
                                       color: Colors.white,
                                       fontWeight: FontWeight.w600,
                                       fontSize: 14,
-                                      fontFamily: 'DM Sans',
                                     ),
                                   ),
                           ),

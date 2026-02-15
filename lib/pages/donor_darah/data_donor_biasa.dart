@@ -9,7 +9,6 @@ import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:darahtanyoe_app/service/toast_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
@@ -202,7 +201,7 @@ class _DataPendonoranBiasaState extends State<DataPendonoranBiasa> {
         padding: const EdgeInsets.only(bottom: 6),
         child: Text(
           text,
-          style: GoogleFonts.dmSans(
+          style: TextStyle(
             color: text == "Golongan Darah" ? AppTheme.neutral_01.withOpacity(0.6) : AppTheme.neutral_01,
             fontWeight: FontWeight.w600,
             fontSize: 16,
@@ -260,7 +259,7 @@ class _DataPendonoranBiasaState extends State<DataPendonoranBiasa> {
                                     )
                                   : Text(
                                       'Isi dengan data anda saat ini',
-                                      style: GoogleFonts.dmSans(
+                                      style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 18,
                                         fontWeight: FontWeight.w600,
@@ -313,11 +312,11 @@ class _DataPendonoranBiasaState extends State<DataPendonoranBiasa> {
                                   child: TextFormField(
                                     controller: _countryCodeController,
                                     readOnly: true,
-                                    style: GoogleFonts.dmSans(color: AppTheme.neutral_01),
+                                    style: TextStyle(color: AppTheme.neutral_01),
                                     decoration: InputDecoration(
                                       border: InputBorder.none,
                                       hintText: '+62',
-                                      hintStyle: GoogleFonts.dmSans(color: AppTheme.neutral_01),
+                                      hintStyle: TextStyle(color: AppTheme.neutral_01),
                                     ),
                                     textAlign: TextAlign.center,
                                   ),
@@ -347,7 +346,7 @@ class _DataPendonoranBiasaState extends State<DataPendonoranBiasa> {
                             TextFormField(
                               readOnly: true,
                               controller: _bloodTypeController,
-                              style: GoogleFonts.dmSans(
+                              style: TextStyle(
                                 color: AppTheme.neutral_01.withOpacity(0.4),
                                 fontSize: 16,
                               ),
@@ -394,13 +393,13 @@ class _DataPendonoranBiasaState extends State<DataPendonoranBiasa> {
                                     borderSide: BorderSide(color: AppTheme.neutral_01.withOpacity(0.3)),
                                   ),
                                 ),
-                                style: GoogleFonts.dmSans(
+                                style: TextStyle(
                                   color: AppTheme.neutral_01,
                                   fontSize: 16,
                                 ),
                                 hint: Text(
                                   _isLoadingPMI ? 'Memuat daftar PMI...' : 'Pilih PMI tujuan',
-                                  style: GoogleFonts.dmSans(
+                                  style: TextStyle(
                                     color: AppTheme.neutral_01.withOpacity(0.4),
                                     fontSize: 16,
                                   ),
@@ -412,7 +411,7 @@ class _DataPendonoranBiasaState extends State<DataPendonoranBiasa> {
                                     value: id,
                                     child: Text(
                                       name,
-                                      style: GoogleFonts.dmSans(
+                                      style: TextStyle(
                                         color: AppTheme.neutral_01,
                                         fontSize: 16,
                                       ),
@@ -461,13 +460,13 @@ class _DataPendonoranBiasaState extends State<DataPendonoranBiasa> {
                                     borderSide: BorderSide(color: AppTheme.neutral_01.withOpacity(0.3)),
                                   ),
                                 ),
-                                style: GoogleFonts.dmSans(
+                                style: TextStyle(
                                   color: AppTheme.neutral_01,
                                   fontSize: 16,
                                 ),
                                 hint: Text(
                                   'Pilih riwayat penyakit',
-                                  style: GoogleFonts.dmSans(
+                                  style: TextStyle(
                                     color: AppTheme.neutral_01.withOpacity(0.4),
                                     fontSize: 16,
                                   ),
@@ -477,7 +476,7 @@ class _DataPendonoranBiasaState extends State<DataPendonoranBiasa> {
                                     value: item,
                                     child: Text(
                                       item,
-                                      style: GoogleFonts.dmSans(
+                                      style: TextStyle(
                                         color: AppTheme.neutral_01,
                                         fontSize: 16,
                                       ),
@@ -538,7 +537,7 @@ class _DataPendonoranBiasaState extends State<DataPendonoranBiasa> {
                             )
                           : Text(
                               'Ajukan Pendonoran',
-                              style: GoogleFonts.dmSans(
+                              style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,

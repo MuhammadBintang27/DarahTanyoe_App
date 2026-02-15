@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class MyButton extends StatelessWidget {
   final String text;
@@ -37,7 +36,7 @@ class MyButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 2), // Padding tambahan di dalam button
           child: Text(
             text,
-            style: GoogleFonts.dmSans(
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 16,
               fontWeight: FontWeight.bold,

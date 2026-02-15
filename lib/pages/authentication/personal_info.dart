@@ -1,7 +1,6 @@
 import 'package:darahtanyoe_app/pages/authentication/address_page.dart';
 import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:darahtanyoe_app/components/copyright.dart';
 import 'package:darahtanyoe_app/components/my_button.dart';
 import '../../components/my_textfield.dart';
@@ -66,7 +65,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
       children: [
         Text(
           text,
-          style: GoogleFonts.dmSans(
+          style: const TextStyle(
             color: Colors.white,
             fontSize: 16,
             fontWeight: FontWeight.bold,
@@ -150,7 +149,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                           Center(
                             child: Text(
                               'DATA DIRI',
-                              style: GoogleFonts.dmSans(
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 26,
                                 fontWeight: FontWeight.bold,

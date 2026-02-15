@@ -10,7 +10,6 @@ import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:darahtanyoe_app/service/toast_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -185,7 +184,7 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
         padding: const EdgeInsets.only(bottom: 6),
         child: Text(
           text,
-          style: GoogleFonts.dmSans(
+          style: TextStyle(
             color: text == "Golongan Darah" ? AppTheme.neutral_01.withOpacity(0.6) : AppTheme.neutral_01,
             fontWeight: FontWeight.w600,
             fontSize: 16,
@@ -246,7 +245,7 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
                               )
                                   : Text(
                                 'Isi dengan data anda saat ini',
-                                style: GoogleFonts.dmSans(
+                                style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 18,
                                   fontWeight: FontWeight.w600,
@@ -299,11 +298,11 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
                                   child: TextFormField(
                                     controller: _countryCodeController,
                                     readOnly: true,
-                                    style: GoogleFonts.dmSans(color: AppTheme.neutral_01),
+                                    style: TextStyle(color: AppTheme.neutral_01),
                                     decoration: InputDecoration(
                                       border: InputBorder.none,
                                       hintText: '+62',
-                                      hintStyle: GoogleFonts.dmSans(color: AppTheme.neutral_01),
+                                      hintStyle: TextStyle(color: AppTheme.neutral_01),
                                     ),
                                     textAlign: TextAlign.center,
                                   ),
@@ -333,7 +332,7 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
                             TextFormField(
                               readOnly: true,
                               controller: _bloodTypeController,
-                              style: GoogleFonts.dmSans(
+                              style: TextStyle(
                                 color: AppTheme.neutral_01.withOpacity(0.4),
                                 fontSize: 16,
                               ),
@@ -379,13 +378,13 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
                                     borderSide: BorderSide(color: AppTheme.neutral_01.withOpacity(0.3)),
                                   ),
                                 ),
-                                style: GoogleFonts.dmSans(
+                                style: TextStyle(
                                   color: AppTheme.neutral_01,
                                   fontSize: 16,
                                 ),
                                 hint: Text(
                                   'Pilih riwayat penyakit',
-                                  style: GoogleFonts.dmSans(
+                                  style: TextStyle(
                                     color: AppTheme.neutral_01.withOpacity(0.4),
                                     fontSize: 16,
                                   ),
@@ -395,7 +394,7 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
                                     value: item,
                                     child: Text(
                                       item,
-                                      style: GoogleFonts.dmSans(
+                                      style: TextStyle(
                                         color: AppTheme.neutral_01,
                                         fontSize: 16,
                                       ),
@@ -457,7 +456,7 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
                       )
                           : Text(
                         'Ajukan Pendonoran',
-                        style: GoogleFonts.dmSans(
+                        style: TextStyle(
                           color: Colors.white,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,

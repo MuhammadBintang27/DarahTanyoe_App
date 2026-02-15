@@ -2,7 +2,6 @@ import 'package:darahtanyoe_app/components/copyright.dart';
 import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:pinput/pinput.dart';
 
 import '../../service/auth_service.dart';
@@ -34,7 +33,7 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
 
     _authService.errorCallback = (message) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message, style: GoogleFonts.dmSans())),
+        SnackBar(content: Text(message)),
       );
     };
 
@@ -72,7 +71,7 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
     _authService.sendOTP(phoneNumber, context); // Tambahkan context
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Kode OTP telah dikirim ulang', style: GoogleFonts.dmSans())),
+      SnackBar(content: Text('Kode OTP telah dikirim ulang')),
     );
   }
 
@@ -146,7 +145,7 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
                       alignment: Alignment.center,
                       child: Text(
                         'KODE OTP',
-                        style: GoogleFonts.dmSans(
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 26,
                           fontWeight: FontWeight.bold,
@@ -156,7 +155,7 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
                     const SizedBox(height: 34),
                     Text(
                       'Masukkan Kode yang dikirim via WhatsApp Anda',
-                      style: GoogleFonts.dmSans(
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -181,13 +180,13 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
                       child: RichText(
                         text: TextSpan(
                           text: "Tidak mendapatkan OTP? ",
-                          style: GoogleFonts.dmSans(color: Colors.white),
+                          style: const TextStyle(color: Colors.white),
                           children: [
                             TextSpan(
                               text: _canResend
                                   ? "Kirim Ulang"
                                   : "Kirim ulang dalam $_countdown detik",
-                              style: GoogleFonts.dmSans(
+                              style: TextStyle(
                                 color: Color(0xFFAB4545),
                                 fontWeight: FontWeight.bold,
                                 decoration: _canResend

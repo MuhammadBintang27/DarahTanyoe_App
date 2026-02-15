@@ -1,7 +1,6 @@
 import 'package:darahtanyoe_app/components/copyright.dart';
 import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:darahtanyoe_app/components/my_button.dart';
 import 'package:darahtanyoe_app/components/my_textfield.dart';
 import 'package:darahtanyoe_app/service/auth_service.dart';
@@ -32,7 +31,7 @@ class _LoginPageState extends State<LoginPage> {
 
     _authService.errorCallback = (message) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message, style: GoogleFonts.dmSans())),
+        SnackBar(content: Text(message)),
       );
     };
 
@@ -127,7 +126,7 @@ class _LoginPageState extends State<LoginPage> {
                                 alignment: Alignment.center,
                                 child: Text(
                                   'MASUK/DAFTAR',
-                                  style: GoogleFonts.dmSans(
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 26,
                                     fontWeight: FontWeight.bold,
@@ -137,7 +136,7 @@ class _LoginPageState extends State<LoginPage> {
                               const SizedBox(height: 34),
                               Text(
                                 'Nomor Handphone (WhatsApp)',
-                                style: GoogleFonts.dmSans(
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -158,11 +157,11 @@ class _LoginPageState extends State<LoginPage> {
                                     child: TextFormField(
                                       controller: _countryCodeController,
                                       readOnly: true,
-                                      style: GoogleFonts.dmSans(color: Colors.white),
+                                      style: const TextStyle(color: Colors.white),
                                       decoration: InputDecoration(
                                         border: InputBorder.none,
                                         hintText: '+62',
-                                        hintStyle: GoogleFonts.dmSans(
+                                        hintStyle: TextStyle(
                                           color: Colors.white.withValues(alpha: 0.3),
                                         ),
                                       ),

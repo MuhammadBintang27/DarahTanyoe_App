@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:darahtanyoe_app/components/copyright.dart';
 import 'package:darahtanyoe_app/components/my_button.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../service/auth_service.dart';
 import 'blood_info.dart';
 import 'package:geocoding/geocoding.dart';
@@ -220,7 +219,7 @@ class _AddressPageState extends State<AddressPage> {
                               Center(
                                 child: Text(
                                   'ALAMAT',
-                                  style: GoogleFonts.dmSans(
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 24,
                                     fontWeight: FontWeight.bold,
@@ -271,8 +270,13 @@ class _AddressPageState extends State<AddressPage> {
                                     ),
                                     children: [
                                       TileLayer(
-                                        urlTemplate:
-                                            'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                        urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                        subdomains: const ['a', 'b', 'c'],
+                                        userAgentPackageName: 'com.darahtanyoe.app',
+                                        maxZoom: 18,
+                                        minZoom: 3,
+                                        // Rate limiting untuk menghindari block
+                                        retinaMode: true,
                                       ),
                                       if (selectedLocation != null)
                                         MarkerLayer(
@@ -305,6 +309,19 @@ class _AddressPageState extends State<AddressPage> {
                                             ),
                                           ],
                                         ),
+                                      RichAttributionWidget(
+                                        popupInitialDisplayDuration: Duration.zero,
+                                        animationConfig: FadeRAWA(),
+                                        showFlutterMapAttribution: false,
+                                        alignment: AttributionAlignment.bottomLeft,
+                                        permanentHeight: 16,
+                                        attributions: [
+                                          TextSourceAttribution(
+                                            'OpenStreetMap contributors',
+                                            onTap: () {},
+                                          ),
+                                        ],
+                                      ),
                                     ],
                                   ),
                                   // Button Overlay on Map
@@ -344,7 +361,7 @@ class _AddressPageState extends State<AddressPage> {
                                         ),
                                         label: Text(
                                           'Perubahan Pada Peta',
-                                          style: GoogleFonts.dmSans(
+                                          style: const TextStyle(
                                             color: Colors.white,
                                             fontWeight: FontWeight.w600,
                                             fontSize: 12,
@@ -398,7 +415,7 @@ class _AddressPageState extends State<AddressPage> {
                                 _isLoadingLocation
                                     ? 'Mengambil Lokasi...'
                                     : 'Gunakan Lokasi Saat Ini',
-                                style: GoogleFonts.dmSans(
+                                style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w600,
                                   fontSize: 13,
@@ -432,8 +449,8 @@ class _AddressPageState extends State<AddressPage> {
                                           _addressController.text.isNotEmpty
                                               ? _addressController.text
                                               : 'Mengambil alamat...',
-                                          style: GoogleFonts.dmSans(
-                                            color: const Color(0xFF5A3A3F),
+                                          style: const TextStyle(
+                                            color: Color(0xFF5A3A3F),
                                             fontSize: 12,
                                             fontWeight: FontWeight.w600,
                                           ),
@@ -456,8 +473,8 @@ class _AddressPageState extends State<AddressPage> {
                               child: Center(
                                 child: Text(
                                   'Pilih lokasi di peta atau gunakan lokasi saat ini',
-                                  style: GoogleFonts.dmSans(
-                                    color: const Color(0xFF5A3A3F),
+                                  style: const TextStyle(
+                                    color: Color(0xFF5A3A3F),
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
                                   ),

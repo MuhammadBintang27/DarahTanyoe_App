@@ -369,11 +369,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         title: const Text(
           'Konfirmasi Keluar',
-          style: TextStyle(fontFamily: 'DM Sans', fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         content: const Text(
           'Anda yakin ingin keluar dari aplikasi?',
-          style: TextStyle(fontFamily: 'DM Sans'),
+          style: TextStyle(),
         ),
         actions: [
           TextButton(
@@ -386,7 +386,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Text(
               'Batal',
               style: TextStyle(
-                fontFamily: 'DM Sans',
                 color: Colors.grey[600],
                 fontWeight: FontWeight.w600,
               ),
@@ -404,7 +403,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               'Keluar',
               style: TextStyle(
                 color: Colors.white,
-                fontFamily: 'DM Sans',
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -458,7 +456,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Text(
               _errorMessage!,
               style: const TextStyle(
-                fontFamily: 'DM Sans',
                 color: Colors.white,
                 fontSize: 16,
               ),
@@ -486,7 +483,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return const Center(
         child: Text(
           'Data pengguna tidak tersedia',
-          style: TextStyle(fontFamily: 'DM Sans', color: Colors.white),
+          style: TextStyle(color: Colors.white),
         ),
       );
     }
@@ -594,7 +591,6 @@ class _ProfileHeader extends StatelessWidget {
           style: const TextStyle(
             fontSize: 26,
             fontWeight: FontWeight.bold,
-            fontFamily: 'DM Sans',
             color: Colors.black,
             shadows: [
               Shadow(
@@ -672,7 +668,6 @@ class _Badge extends StatelessWidget {
               color: Colors.white,
               fontWeight: FontWeight.bold,
               fontSize: 14,
-              fontFamily: 'DM Sans',
             ),
           ),
         ],
@@ -712,7 +707,6 @@ class _PersonalInfoSection extends StatelessWidget {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              fontFamily: 'DM Sans',
               color: AppTheme.neutral_02,
             ),
           ),
@@ -803,7 +797,6 @@ class _InfoCard extends StatelessWidget {
             style: TextStyle(
               color: AppTheme.neutral_01,
               fontSize: 12,
-              fontFamily: 'DM Sans',
             ),
           ),
           const SizedBox(height: 6),
@@ -812,7 +805,6 @@ class _InfoCard extends StatelessWidget {
             style: TextStyle(
               fontWeight: FontWeight.w600,
               fontSize: 14,
-              fontFamily: 'DM Sans',
               color: AppTheme.neutral_02,
             ),
             maxLines: 2,
@@ -865,7 +857,6 @@ class _DonorInfoSection extends StatelessWidget {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              fontFamily: 'DM Sans',
               color: AppTheme.neutral_02,
             ),
           ),
@@ -907,7 +898,6 @@ class _DonorInfoSection extends StatelessWidget {
                               'Bisa donor lagi dalam',
                               style: TextStyle(
                                 fontSize: 14,
-                                fontFamily: 'DM Sans',
                                 color: AppTheme.neutral_01,
                               ),
                             ),
@@ -920,7 +910,6 @@ class _DonorInfoSection extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 32,
                                     fontWeight: FontWeight.bold,
-                                    fontFamily: 'DM Sans',
                                     color: AppTheme.brand_02,
                                   ),
                                 ),
@@ -932,7 +921,6 @@ class _DonorInfoSection extends StatelessWidget {
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w500,
-                                      fontFamily: 'DM Sans',
                                       color: AppTheme.neutral_01,
                                     ),
                                   ),
@@ -951,7 +939,6 @@ class _DonorInfoSection extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                fontFamily: 'DM Sans',
                                 color: AppTheme.brand_03,
                               ),
                               textAlign: TextAlign.center,
@@ -982,7 +969,6 @@ class _DonorInfoSection extends StatelessWidget {
                                 'Donor Terakhir',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  fontFamily: 'DM Sans',
                                   color: AppTheme.neutral_01,
                                 ),
                               ),
@@ -992,7 +978,6 @@ class _DonorInfoSection extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  fontFamily: 'DM Sans',
                                   color: AppTheme.neutral_02,
                                 ),
                               ),
@@ -1012,7 +997,6 @@ class _DonorInfoSection extends StatelessWidget {
                                 'Catatan Kesehatan',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  fontFamily: 'DM Sans',
                                   color: AppTheme.neutral_01,
                                 ),
                               ),
@@ -1022,7 +1006,6 @@ class _DonorInfoSection extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  fontFamily: 'DM Sans',
                                   color: AppTheme.neutral_02,
                                 ),
                                 maxLines: 2,
@@ -1083,7 +1066,6 @@ class _NotificationSettings extends StatelessWidget {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              fontFamily: 'DM Sans',
               color: AppTheme.neutral_02,
             ),
           ),
@@ -1099,7 +1081,6 @@ class _NotificationSettings extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        fontFamily: 'DM Sans',
                         color: AppTheme.neutral_02,
                       ),
                     ),
@@ -1110,7 +1091,6 @@ class _NotificationSettings extends StatelessWidget {
                           : 'Nonaktif karena dalam periode donor (${donorStatus.daysUntilEligible} hari lagi)',
                       style: TextStyle(
                         fontSize: 12,
-                        fontFamily: 'DM Sans',
                         color: AppTheme.neutral_01,
                       ),
                     ),
@@ -1205,7 +1185,6 @@ class _NotificationStatusCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    fontFamily: 'DM Sans',
                     color: color[700],
                   ),
                 ),
@@ -1217,7 +1196,6 @@ class _NotificationStatusCard extends StatelessWidget {
             description,
             style: const TextStyle(
               fontSize: 13,
-              fontFamily: 'DM Sans',
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -1227,7 +1205,6 @@ class _NotificationStatusCard extends StatelessWidget {
               'Hingga ${DateFormat('dd MMM yyyy', 'id').format(nextEligibleDate!)}',
               style: const TextStyle(
                 fontSize: 12,
-                fontFamily: 'DM Sans',
                 color: Colors.grey,
               ),
             ),
@@ -1273,7 +1250,6 @@ class _ActionButtons extends StatelessWidget {
                   Text(
                     'Edit Profil',
                     style: TextStyle(
-                      fontFamily: 'DM Sans',
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
                       fontSize: 16,
@@ -1306,7 +1282,6 @@ class _ActionButtons extends StatelessWidget {
                   Text(
                     'Keluar',
                     style: TextStyle(
-                      fontFamily: 'DM Sans',
                       color: AppTheme.brand_01,
                       fontWeight: FontWeight.w600,
                       fontSize: 16,
