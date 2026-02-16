@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:darahtanyoe_app/service/auth_service.dart';
+import 'package:darahtanyoe_app/theme/theme.dart';
 
 /// Push Notification Service untuk menangani FCM notifications
 /// Digunakan untuk menampilkan notifikasi real-time saat campaign dikirim
@@ -57,7 +58,7 @@ class PushNotificationService {
 
       // Setup local notifications for Android
       const AndroidInitializationSettings initializationSettingsAndroid =
-          AndroidInitializationSettings('@mipmap/ic_launcher');
+          AndroidInitializationSettings('ic_notification');
 
       // Create notification channel for Android
       final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
@@ -73,6 +74,8 @@ class PushNotificationService {
             importance: Importance.max,
             enableVibration: true,
             enableLights: true,
+            playSound: true,
+            sound: const RawResourceAndroidNotificationSound('notification_sound'),
           ),
         );
       }
@@ -297,8 +300,10 @@ class PushNotificationService {
         importance: Importance.max,
         priority: Priority.high,
         showWhen: true,
-        color: Color.fromARGB(255, 220, 20, 60), // Crimson red (darah)
+        color: AppTheme.brand_01, // Warna brand merah DarahTanyoe
+        icon: 'ic_notification',
         playSound: true,
+        sound: RawResourceAndroidNotificationSound('notification_sound'),
         enableVibration: true,
         enableLights: true,
       );
@@ -308,6 +313,7 @@ class PushNotificationService {
         presentAlert: true,
         presentBadge: true,
         presentSound: true,
+        sound: 'notification_sound.caf',
       );
 
       const NotificationDetails platformChannelSpecifics = NotificationDetails(
