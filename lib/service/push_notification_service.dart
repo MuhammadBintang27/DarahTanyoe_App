@@ -5,9 +5,11 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:darahtanyoe_app/service/auth_service.dart';
+import 'package:darahtanyoe_app/service/campaign_service.dart';
 import 'package:darahtanyoe_app/theme/theme.dart';
-import 'package:darahtanyoe_app/widgets/notification_banner.dart';
+import 'package:darahtanyoe_app/pages/detail_permintaan/detail_permintaan_darah.dart';
 import 'package:darahtanyoe_app/main.dart';
+import 'package:flutter/cupertino.dart';
 
 /// Push Notification Service untuk menangani FCM notifications
 /// Digunakan untuk menampilkan notifikasi real-time saat campaign dikirim
@@ -242,32 +244,18 @@ class PushNotificationService {
       'timestamp': DateTime.now(),
     });
 
-    // Show in-app banner (WhatsApp style)
-    final context = MyApp.navigatorKey.currentContext;
-    if (context != null) {
-      NotificationBannerOverlay.show(
-        context,
-        title: message.notification?.title ?? 'Notifikasi',
-        body: message.notification?.body ?? '',
-        onTap: () {
-          // Handle notification tap
-          _handleNotificationNavigation(message.data);
-          if (onNotificationTapped != null) {
-            onNotificationTapped!(message.data);
-          }
-        },
-      );
-    }
+    // Show local notification with heads-up (requires android.priority: 'high' from backend)
+    _showLocalNotification(
+      title: message.notification?.title ?? 'Notifikasi',
+      body: message.notification?.body ?? '',
+      payload: jsonEncode(message.data),
+    );
   }
 
   /// Handle notification tap (both foreground and background)
   void _handleNotificationTap(RemoteMessage message) {
-    // Call callback if set
-    if (onNotificationTapped != null) {
-      onNotificationTapped!(message.data);
-    }
-
-    // Handle navigation based on notification type
+    // Handle navigation - this will use direct navigation if possible,
+    // or fallback to callback if context not ready yet
     _handleNotificationNavigation(message.data);
   }
 
@@ -276,9 +264,8 @@ class PushNotificationService {
     try {
       if (response.payload != null) {
         final data = jsonDecode(response.payload!);
-        if (onNotificationTapped != null) {
-          onNotificationTapped!(data);
-        }
+        // Handle navigation - this will use direct navigation if possible,
+        // or fallback to callback if context not ready yet
         _handleNotificationNavigation(data);
       }
     } catch (e) {
@@ -289,14 +276,52 @@ class PushNotificationService {
   void _handleNotificationNavigation(Map<String, dynamic> data) {
     // Handle both camelCase and snake_case field names from Firebase
     final String? referenceId = data['relatedId'] ?? data['related_id'] ?? data['referenceId'];
+    final String? type = data['type'] ?? data['relatedType'];
 
     if (referenceId == null) {
       return;
     }
 
-    // Call callback - let the screen/app handle navigation
+    // Try direct navigation first (for app opened from background/killed state)
+    final context = MyApp.navigatorKey.currentContext;
+    if (context != null) {
+      _navigateToDetail(context, type, referenceId);
+      return;
+    }
+
+    // Fallback to callback if context not available yet
     if (onNotificationTapped != null) {
       onNotificationTapped!(data);
+    }
+  }
+
+  /// Direct navigation to detail page based on notification type
+  void _navigateToDetail(BuildContext context, String? type, String campaignId) async {
+    try {
+      // For campaign/blood_campaign type, navigate to detail page
+      if (type == 'campaign' || type == 'blood_campaign') {
+        // Fetch campaign data
+        final campaign = await CampaignService.getCampaignById(campaignId);
+        
+        if (campaign == null) {
+          return;
+        }
+        
+        // Navigate to detail page using global navigator
+        Navigator.of(context).push(
+          CupertinoPageRoute(
+            builder: (context) => DetailPermintaanDarah(permintaan: campaign),
+          ),
+        );
+      }
+    } catch (e) {
+      // Intentionally empty - navigation error is non-blocking, fallback to callback
+      if (onNotificationTapped != null) {
+        onNotificationTapped!({
+          'relatedId': campaignId,
+          'type': type,
+        });
+      }
     }
   }
 

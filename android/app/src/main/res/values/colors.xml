@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- DarahTanyoe brand color (merah) untuk notification -->
+    <color name="notification_color">#AB4545</color>
+</resources>
