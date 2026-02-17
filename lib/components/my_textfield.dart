@@ -124,12 +124,33 @@ class _MyTextFieldState extends State<MyTextField> {
             style: TextStyle(color: textColor.withValues(alpha: 0.4)),
           ),
           icon: Icon(Icons.arrow_drop_down, color: textColor),
-          style: TextStyle(color: textColor),
-          dropdownColor: Colors.black87.withValues(alpha: 0.9),
+          dropdownColor: Colors.white,
+          // Selected item (displayed in field) - PUTIH
+          selectedItemBuilder: (BuildContext context) {
+            return widget.dropdownItems!.map((String item) {
+              return Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  item,
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 16,
+                  ),
+                ),
+              );
+            }).toList();
+          },
+          // Dropdown menu items - HITAM
           items: widget.dropdownItems?.map((String item) {
             return DropdownMenuItem<String>(
               value: item,
-              child: Text(item, style: TextStyle(color: textColor)),
+              child: Text(
+                item,
+                style: TextStyle(
+                  color: AppTheme.neutral_01,  // Hitam untuk dropdown menu
+                  fontSize: 16,
+                ),
+              ),
             );
           }).toList(),
           onChanged: (value) {

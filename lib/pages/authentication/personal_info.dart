@@ -204,7 +204,7 @@ class _PersonalInfoState extends State<PersonalInfo> {
                           child: MyTextField(
                             hintText: 'Pilih Tanggal Lahir',
                             keyboardType: TextInputType.datetime,
-                            inputType: InputType.text,
+                            inputType: InputType.date,
                             controller: _dateOfBirthController,
                             validator: (value) {
                               if (value == null || value.isEmpty) {
