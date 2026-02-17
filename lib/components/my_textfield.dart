@@ -81,17 +81,17 @@ class _MyTextFieldState extends State<MyTextField> {
   Widget build(BuildContext context) {
     final Color textColor = widget.isAuth ? Colors.white : AppTheme.neutral_01;
     final Color borderColor =
-    widget.isAuth ? Colors.white : AppTheme.neutral_01.withOpacity(0.53);
+    widget.isAuth ? Colors.white : AppTheme.neutral_01.withValues(alpha: 0.53);
 
     return Container(
       width: double.infinity,
       clipBehavior: Clip.none,
       decoration: BoxDecoration(
-        color: widget.isAuth ? textColor.withOpacity(0.11) : Colors.white60,
+        color: widget.isAuth ? textColor.withValues(alpha: 0.11) : Colors.white60,
         boxShadow: widget.isAuth == false
             ? [
           BoxShadow(
-            color: Colors.black.withOpacity(0.10),
+            color: Colors.black.withValues(alpha: 0.10),
             blurRadius: 4,
             offset: const Offset(0, 4),
           )
@@ -107,7 +107,7 @@ class _MyTextFieldState extends State<MyTextField> {
         style: TextStyle(color: textColor),
         decoration: InputDecoration(
           hintText: widget.hintText,
-          hintStyle: TextStyle(color: textColor.withOpacity(0.4)),
+          hintStyle: TextStyle(color: textColor.withValues(alpha: 0.4)),
           border: InputBorder.none,
         ),
         keyboardType: widget.keyboardType,
@@ -121,11 +121,11 @@ class _MyTextFieldState extends State<MyTextField> {
           value: _selectedDropdownValue,
           hint: Text(
             widget.hintText,
-            style: TextStyle(color: textColor.withOpacity(0.4)),
+            style: TextStyle(color: textColor.withValues(alpha: 0.4)),
           ),
           icon: Icon(Icons.arrow_drop_down, color: textColor),
           style: TextStyle(color: textColor),
-          dropdownColor: Colors.black87.withOpacity(0.9),
+          dropdownColor: Colors.black87.withValues(alpha: 0.9),
           items: widget.dropdownItems?.map((String item) {
             return DropdownMenuItem<String>(
               value: item,
@@ -149,7 +149,7 @@ class _MyTextFieldState extends State<MyTextField> {
             decoration: InputDecoration(
               hintText: widget.hintText,
               hintStyle:
-              TextStyle(color: textColor.withOpacity(0.7)),
+              TextStyle(color: textColor.withValues(alpha: 0.7)),
               border: InputBorder.none,
               suffixIcon: Icon(Icons.calendar_today, color: textColor),
             ),

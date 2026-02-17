@@ -39,6 +39,7 @@ class _BloodInfoState extends State<BloodInfo> {
       if (success) {
         // Navigasi sudah ditangani di auth_service.dart
       } else {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Gagal menyimpan informasi darah")),
         );

@@ -30,7 +30,7 @@ class MyButton extends StatelessWidget {
             ),
           ),
           elevation: 8, // Tambahkan elevasi agar ada shadow
-          shadowColor: Colors.black.withOpacity(0.9), // Warna shadow
+          shadowColor: Colors.black.withValues(alpha: 0.9), // Warna shadow
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 2), // Padding tambahan di dalam button

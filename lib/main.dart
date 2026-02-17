@@ -19,6 +19,7 @@ void main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
   } catch (e) {
+    // Intentionally empty - Firebase initialization error is non-blocking
   }
   
   await AuthService.init();
@@ -33,10 +34,12 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
   static final GlobalKey<MainScreenState> mainScreenKey = GlobalKey();
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'DarahTanyoe',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),

@@ -69,6 +69,7 @@ class _DropdownApiState extends State<DropdownApi> {
         throw Exception('Gagal mengambil data, status: ${response.statusCode}');
       }
     } catch (e) {
+      // Intentionally empty - API call failure is handled by UI state
     } finally {
       setState(() {
         isLoading = false;

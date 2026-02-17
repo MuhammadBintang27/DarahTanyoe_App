@@ -16,9 +16,9 @@ class EditProfilPage extends StatefulWidget {
   final Map<String, dynamic> userData;
 
   const EditProfilPage({
-    Key? key,
+    super.key,
     required this.userData,
-  }) : super(key: key);
+  });
 
   @override
   State<EditProfilPage> createState() => _EditProfilPageState();

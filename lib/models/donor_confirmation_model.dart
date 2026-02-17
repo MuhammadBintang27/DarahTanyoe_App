@@ -255,11 +255,12 @@ class DonorConfirmationModel {
         }
       }
     } catch (e) {
+      // Intentionally empty - latitude extraction error is handled by fallback
     }
     return null;
   }
 
-  /// ✅ NEW: Extract longitude from GEOGRAPHY/EWKB format
+  /// Extract longitude from coordinates array
   static double? _extractLongitudeFromGeography(dynamic geoData) {
     if (geoData == null) return null;
     
@@ -279,11 +280,12 @@ class DonorConfirmationModel {
         }
       }
     } catch (e) {
+      // Intentionally empty - longitude extraction error is handled by fallback
     }
     return null;
   }
   
-  /// ✅ NEW: Parse EWKB hexadecimal string to extract latitude (Y coordinate)
+  /// Parse EWKB hexadecimal string to extract latitude (Y coordinate)
   static double? _parseEWKBLatitude(String ewkbHex) {
     try {
       // EWKB format: 01 (byte order) + 01000020 (type) + E6100000 (SRID) + 8 bytes (X/longitude) + 8 bytes (Y/latitude)

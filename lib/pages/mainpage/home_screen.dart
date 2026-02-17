@@ -1,8 +1,8 @@
 import 'dart:ui';
 
 import 'package:darahtanyoe_app/components/action_button.dart';
-import 'package:darahtanyoe_app/components/bloodCard.dart';
-import 'package:darahtanyoe_app/helpers/formatDateTime.dart';
+import 'package:darahtanyoe_app/components/blood_card.dart';
+import 'package:darahtanyoe_app/helpers/format_date_time.dart';
 import 'package:darahtanyoe_app/models/permintaan_darah_model.dart';
 import 'package:darahtanyoe_app/pages/mainpage/transaksi.dart';
 import 'package:darahtanyoe_app/pages/detail_permintaan/detail_permintaan_darah.dart';
@@ -12,7 +12,6 @@ import 'package:darahtanyoe_app/pages/donor_darah/data_donor_biasa.dart';
 import 'package:darahtanyoe_app/pages/detail_donor_confirmation/donor_confirmation_detail.dart';
 import 'package:darahtanyoe_app/models/donor_confirmation_model.dart';
 import 'package:darahtanyoe_app/service/auth_service.dart';
-import 'package:darahtanyoe_app/pages/authentication/login_page.dart';
 import 'package:darahtanyoe_app/service/campaign_service.dart';
 import 'package:darahtanyoe_app/service/toast_service.dart';
 import 'package:darahtanyoe_app/service/animation_service.dart';
@@ -50,12 +49,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String _formatIndonesianDate(DateTime dt) {
     const months = [
-      'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember'
     ];
     final m = months[dt.month - 1];
     return '${dt.day} $m ${dt.year}';
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -106,16 +116,13 @@ class _HomeScreenState extends State<HomeScreen> {
           padding: EdgeInsets.symmetric(horizontal: 16.0),
           child: Row(
             children: [
-              Container(
-                
-                child: CircleAvatar(
-                  radius: 30,
-                  child: Icon(
-                    Icons.person,
-                    size: 30,
-                    color: Colors.white,
-                  ),
-                  backgroundColor: const Color.fromARGB(255, 204, 200, 200), // bisa kamu sesuaikan warnanya
+              CircleAvatar(
+                radius: 30,
+                backgroundColor: const Color.fromARGB(255, 204, 200, 200),
+                child: const Icon(
+                  Icons.person,
+                  size: 30,
+                  color: Colors.white,
                 ),
               ),
               SizedBox(width: 12),
@@ -160,122 +167,125 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  
-
 // Fungsi untuk ambil total poin dari API
 // Fungsi untuk ambil total poin dari API
-Future<int?> fetchTotalPoints() async {
-  final userData = await AuthService().getCurrentUser();
-  final userId = userData?['id'];
+  Future<int?> fetchTotalPoints() async {
+    final userData = await AuthService().getCurrentUser();
+    final userId = userData?['id'];
 
-  if (userId == null) return null;
-  String baseUrl = dotenv.env['BASE_URL'] ?? 'https://default-url.com';
-  final url = Uri.parse('$baseUrl/users/poin/$userId');
+    if (userId == null) return null;
+    String baseUrl = dotenv.env['BASE_URL'] ?? 'https://default-url.com';
+    final url = Uri.parse('$baseUrl/users/poin/$userId');
 
-  try {
-    final response = await http.get(url);
-    
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return data['total_points'];
-    } else {
+    try {
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['total_points'];
+      } else {
+        return null;
+      }
+    } catch (e) {
       return null;
     }
-  } catch (e) {
-    return null;
   }
-}
 
-Widget _buildActionButtons() {
-  return Padding(
-    padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
-    child: Row(
-      children: [
-        Padding(
-          padding: EdgeInsets.only(right: 16, top: 8),
-          child: Column(
-            children: [
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => TransactionBlood()),
-                  );
-                },
-                child: Icon(
-                  Icons.account_balance_wallet,
-                  color: AppTheme.brand_02,
-                  size: 30,
-                ),
-              ),
-              SizedBox(height: 4),
-              FutureBuilder<int?>(
-                future: fetchTotalPoints(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return SizedBox(
-                      height: 16,
-                      width: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+  Widget _buildActionButtons() {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
+      child: Row(
+        children: [
+          Padding(
+            padding: EdgeInsets.only(right: 16, top: 8),
+            child: Column(
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => TransactionBlood()),
                     );
-                  } else if (snapshot.hasError) {
-                    return Text("Error");
-                  } else if (!snapshot.hasData || snapshot.data == null) {
-                    return Text("0 Poin");
-                  }
+                  },
+                  child: Icon(
+                    Icons.account_balance_wallet,
+                    color: AppTheme.brand_02,
+                    size: 30,
+                  ),
+                ),
+                SizedBox(height: 4),
+                FutureBuilder<int?>(
+                  future: fetchTotalPoints(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return SizedBox(
+                        height: 16,
+                        width: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      );
+                    } else if (snapshot.hasError) {
+                      return Text("Error");
+                    } else if (!snapshot.hasData || snapshot.data == null) {
+                      return Text("0 Poin");
+                    }
 
-                  return Text(
-                    '${snapshot.data} Poin',
-                    style: TextStyle(
-                      color: AppTheme.brand_02,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  );
-                },
-              ),
-            ],
+                    return Text(
+                      '${snapshot.data} Poin',
+                      style: TextStyle(
+                        color: AppTheme.brand_02,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
-        ),
-        ActionButton(
-          text: 'Donor Darah',
-          color: AppTheme.brand_03,
-          textColor: Colors.white,
-          icon: Icons.local_hospital,
-          onPressed: () async {
-            if (_donorLoading) return;
-            setState(() { _donorLoading = true; });
-            try {
-              await _handleDonorPressed();
-            } finally {
-              if (mounted) setState(() { _donorLoading = false; });
-            }
-          },
-          isOutlined: false,
-          isLoading: _donorLoading,
-        ),
-        SizedBox(width: 12),
-        ActionButton(
-          text: 'Info PMI',
-          color: AppTheme.brand_01,
-          textColor: Colors.white,
-          icon: Icons.info,
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => InformasiPMI(),
-              ),
-            );
-          },
-        ),
-      ],
-    ),
-  );
-}
+          ActionButton(
+            text: 'Donor Darah',
+            color: AppTheme.brand_03,
+            textColor: Colors.white,
+            icon: Icons.local_hospital,
+            onPressed: () async {
+              if (_donorLoading) return;
+              setState(() {
+                _donorLoading = true;
+              });
+              try {
+                await _handleDonorPressed();
+              } finally {
+                if (mounted)
+                  setState(() {
+                    _donorLoading = false;
+                  });
+              }
+            },
+            isOutlined: false,
+            isLoading: _donorLoading,
+          ),
+          SizedBox(width: 12),
+          ActionButton(
+            text: 'Info PMI',
+            color: AppTheme.brand_01,
+            textColor: Colors.white,
+            icon: Icons.info,
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => InformasiPMI(),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
 
-Widget _buildPendingDonations() {
+  Widget _buildPendingDonations() {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -296,7 +306,8 @@ Widget _buildPendingDonations() {
           } else if (snapshot.hasError) {
             // Check if error is authentication related
             final errorMessage = snapshot.error.toString();
-            if (errorMessage.contains('User tidak ditemukan atau belum login') || 
+            if (errorMessage
+                    .contains('User tidak ditemukan atau belum login') ||
                 errorMessage.contains('belum login')) {
               // Redirect to login page for auth errors
               WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -333,7 +344,8 @@ Widget _buildPendingDonations() {
                   itemCount: donationData.length,
                   itemBuilder: (context, index) {
                     var data = donationData[index];
-                    String formattedDate = formatDateTime(data.endDate.toString());
+                    String formattedDate =
+                        formatDateTime(data.endDate.toString());
 
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
@@ -352,14 +364,17 @@ Widget _buildPendingDonations() {
                         status: data.status,
                         bloodType: data.bloodType ?? 'Tidak Diketahui',
                         date: formattedDate,
-                        hospital: data.organiser?.institutionName ?? 'Institusi',
+                        hospital:
+                            data.organiser?.institutionName ?? 'Institusi',
                         isNearest: true,
                         isHomeScreen: true,
-                        distance: data.distanceKm, // ✅ Dari API getNearestCampaigns
+                        distance:
+                            data.distanceKm, // ✅ Dari API getNearestCampaigns
                         bagCount: data.currentQuantity,
                         totalBags: data.targetQuantity ?? 0,
                         isRequest: true,
-                        uniqueCode: '', // Unique code ada di DonorConfirmationModel
+                        uniqueCode:
+                            '', // Unique code ada di DonorConfirmationModel
                         description: (data.description?.isNotEmpty ?? false)
                             ? data.description!
                             : '-',
@@ -375,10 +390,8 @@ Widget _buildPendingDonations() {
     );
   }
 
-
-  
-/// Get nearby blood campaigns from backend
-/// Backend automatically filters based on user's profile
+  /// Get nearby blood campaigns from backend
+  /// Backend automatically filters based on user's profile
   Future<List<PermintaanDarahModel>> _getNearbyBloodRequests() async {
     try {
       final user = await AuthService().getCurrentUser();
@@ -636,18 +649,19 @@ Widget _buildPendingDonations() {
   Widget _buildPromotionCards() {
     List<Map<String, dynamic>> promotions = [
       {
-    "title": "SEMBAKO GRATIS",
-    "description": "Palang Merah Indonesia memberikan paket sembako gratis bagi pendonor yang telah mengumpulkan poin tertentu.",
-    "points": 50,
-    "backgroundImage": "assets/images/sembako.png"
-  },
-  {
-    "title": "CEK KESEHATANMU",
-    "description": "Dapatkan layanan cek kesehatan dan vitamin gratis untuk menjaga tubuh tetap prima!",
-    "points": 30,
-    "backgroundImage": "assets/images/cek_kesehatan.jpg"
-  },
-  
+        "title": "SEMBAKO GRATIS",
+        "description":
+            "Palang Merah Indonesia memberikan paket sembako gratis bagi pendonor yang telah mengumpulkan poin tertentu.",
+        "points": 50,
+        "backgroundImage": "assets/images/sembako.png"
+      },
+      {
+        "title": "CEK KESEHATANMU",
+        "description":
+            "Dapatkan layanan cek kesehatan dan vitamin gratis untuk menjaga tubuh tetap prima!",
+        "points": 30,
+        "backgroundImage": "assets/images/cek_kesehatan.jpg"
+      },
     ];
 
     return SizedBox(
@@ -686,7 +700,8 @@ Widget _buildPendingDonations() {
         return;
       }
 
-      final uri = Uri.parse('$baseUrl/janji-donor/active').replace(queryParameters: {
+      final uri =
+          Uri.parse('$baseUrl/janji-donor/active').replace(queryParameters: {
         'donor_id': donorId,
       });
       final resp = await http.get(uri);
@@ -694,11 +709,13 @@ Widget _buildPendingDonations() {
         final json = jsonDecode(resp.body) as Map<String, dynamic>;
         final active = json['active'];
         if (active != null) {
-          final model = DonorConfirmationModel.fromJson(active as Map<String, dynamic>);
+          final model =
+              DonorConfirmationModel.fromJson(active as Map<String, dynamic>);
           if (!mounted) return;
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => DonorConfirmationDetail(confirmation: model)),
+            MaterialPageRoute(
+                builder: (_) => DonorConfirmationDetail(confirmation: model)),
           );
           return;
         }
@@ -710,13 +727,16 @@ Widget _buildPendingDonations() {
         final profileUri = Uri.parse('$baseUrl/users/$donorId');
         final profileResp = await http.get(
           profileUri,
-          headers: token != null ? {
-            'Authorization': 'Bearer $token',
-            'Cache-Control': 'no-cache',
-          } : {},
+          headers: token != null
+              ? {
+                  'Authorization': 'Bearer $token',
+                  'Cache-Control': 'no-cache',
+                }
+              : {},
         );
         if (profileResp.statusCode == 200) {
-          final profileJson = jsonDecode(profileResp.body) as Map<String, dynamic>;
+          final profileJson =
+              jsonDecode(profileResp.body) as Map<String, dynamic>;
           final userJson = profileJson['user'] as Map<String, dynamic>?;
           final lastStr = userJson?['last_donation_date'];
           final last = _parseDate(lastStr);
@@ -728,28 +748,33 @@ Widget _buildPendingDonations() {
               await AnimationService.showInfo(
                 context,
                 title: 'Belum Bisa Donor',
-                message: 'Donasi terakhir: $lastFmt.\nAnda dapat donor kembali setelah $nextFmt.',
+                message:
+                    'Donasi terakhir: $lastFmt.\nAnda dapat donor kembali setelah $nextFmt.',
                 buttonText: 'Tutup',
               );
+              if (!mounted) return;
             } else {
               // Eligible and no active appointment -> allow scheduling
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const DataPendonoranBiasa()),
+                MaterialPageRoute(
+                    builder: (context) => const DataPendonoranBiasa()),
               );
             }
           } else {
             // No last donation info -> allow scheduling
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const DataPendonoranBiasa()),
+              MaterialPageRoute(
+                  builder: (context) => const DataPendonoranBiasa()),
             );
           }
         } else {
           // Profile fetch failed -> allow scheduling
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const DataPendonoranBiasa()),
+            MaterialPageRoute(
+                builder: (context) => const DataPendonoranBiasa()),
           );
         }
       } catch (_) {
@@ -770,4 +795,4 @@ Widget _buildPendingDonations() {
       return;
     }
   }
-  }
+}

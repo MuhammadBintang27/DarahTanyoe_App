@@ -30,9 +30,11 @@ class _LoginPageState extends State<LoginPage> {
     };
 
     _authService.errorCallback = (message) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      }
     };
 
     _authService.successCallback = () {

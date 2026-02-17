@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:darahtanyoe_app/components/background_widget.dart';
-import 'package:darahtanyoe_app/components/loadingIndicator.dart';
+import 'package:darahtanyoe_app/components/loading_indicator.dart';
 import 'package:darahtanyoe_app/pages/detail_donor_confirmation/donor_confirmation_detail.dart';
 import 'package:darahtanyoe_app/service/auth_service.dart';
 import 'package:darahtanyoe_app/theme/theme.dart';
@@ -91,7 +91,7 @@ class _TransactionBloodState extends State<TransactionBlood> {
             // Prefetch nama PMI untuk donor biasa
             final ids = berlangsungList
                 .map((c) => c.pmiId)
-                .where((id) => id != null && id!.isNotEmpty)
+                .where((id) => id != null && id.isNotEmpty)
                 .cast<String>()
                 .toSet();
             for (final id in ids) {
@@ -140,7 +140,7 @@ class _TransactionBloodState extends State<TransactionBlood> {
                 .toList();
             final ids = selesaiList
                 .map((c) => c.pmiId)
-                .where((id) => id != null && id!.isNotEmpty)
+                .where((id) => id != null && id.isNotEmpty)
                 .cast<String>()
                 .toSet();
             for (final id in ids) {
@@ -319,13 +319,13 @@ class _TransactionBloodState extends State<TransactionBlood> {
               Icon(
                 Icons.inbox_outlined,
                 size: 64,
-                color: AppTheme.neutral_01.withOpacity(0.3),
+                color: AppTheme.neutral_01.withValues(alpha: 0.3),
               ),
               const SizedBox(height: 16),
               Text(
                 'Tidak ada pendonoran sedang berlangsung',
                 style: TextStyle(
-                  color: AppTheme.neutral_01.withOpacity(0.6),
+                  color: AppTheme.neutral_01.withValues(alpha: 0.6),
                   fontSize: 16,
                 ),
               ),
@@ -362,13 +362,13 @@ class _TransactionBloodState extends State<TransactionBlood> {
               Icon(
                 Icons.check_circle_outline,
                 size: 64,
-                color: AppTheme.neutral_01.withOpacity(0.3),
+                color: AppTheme.neutral_01.withValues(alpha: 0.3),
               ),
               const SizedBox(height: 16),
               Text(
                 'Belum ada pendonoran yang selesai',
                 style: TextStyle(
-                  color: AppTheme.neutral_01.withOpacity(0.6),
+                  color: AppTheme.neutral_01.withValues(alpha: 0.6),
                   fontSize: 16,
                 ),
               ),
@@ -437,7 +437,7 @@ class _TransactionBloodState extends State<TransactionBlood> {
               border: Border.all(color: borderColor, width: 1.5),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.25),
+                  color: Colors.black.withValues(alpha: 0.25),
                   blurRadius: 4,
                   offset: const Offset(0, 4),
                 ),
@@ -491,7 +491,7 @@ class _TransactionBloodState extends State<TransactionBlood> {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: titleColor.withOpacity(0.1),
+                            color: titleColor.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Row(
@@ -522,7 +522,7 @@ class _TransactionBloodState extends State<TransactionBlood> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 0, top: 8),
                   child: Divider(
-                    color: const Color(0xFFA3A3A3).withOpacity(0.4),
+                    color: const Color(0xFFA3A3A3).withValues(alpha: 0.4),
                     thickness: 1,
                     height: 16,
                   ),
@@ -663,10 +663,10 @@ class _TransactionBloodState extends State<TransactionBlood> {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: titleColor.withOpacity(0.1),
+                            color: titleColor.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
-                              color: titleColor.withOpacity(0.3),
+                              color: titleColor.withValues(alpha: 0.3),
                               width: 1,
                             ),
                           ),

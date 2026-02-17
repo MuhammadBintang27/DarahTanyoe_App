@@ -60,6 +60,7 @@ class _SplashScreenState extends State<SplashScreen> {
             // Non-blocking error, continue navigation
           }
           
+          if (!mounted) return;
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => MainScreen()),
@@ -70,6 +71,8 @@ class _SplashScreenState extends State<SplashScreen> {
 
       // If no valid token or expired, check onboarding completion first
       final String? onboardingCompleted = await storage.read(key: 'onboarding_completed');
+      
+      if (!mounted) return;
       
       if (onboardingCompleted == null || onboardingCompleted != 'true') {
         // Show onboarding if not completed
@@ -89,6 +92,8 @@ class _SplashScreenState extends State<SplashScreen> {
       if (!mounted) return;
       
       final String? onboardingCompleted = await storage.read(key: 'onboarding_completed');
+      
+      if (!mounted) return;
       
       if (onboardingCompleted == null || onboardingCompleted != 'true') {
         // Show onboarding if not completed

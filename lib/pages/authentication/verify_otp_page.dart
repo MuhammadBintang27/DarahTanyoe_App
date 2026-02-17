@@ -32,9 +32,11 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
     };
 
     _authService.errorCallback = (message) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      }
     };
 
     // _authService.successCallback = () {
@@ -70,9 +72,11 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
     final phoneNumber = _authService.registrationData['phoneNumber'];
     _authService.sendOTP(phoneNumber, context); // Tambahkan context
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Kode OTP telah dikirim ulang')),
-    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Kode OTP telah dikirim ulang')),
+      );
+    }
   }
 
 

@@ -30,6 +30,7 @@ class InstitutionService {
         }
       }
     } catch (e) {
+      // Intentionally empty - institution lookup error is handled by fallback return null
     }
     return null;
   }

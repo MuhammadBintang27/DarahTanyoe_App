@@ -185,7 +185,7 @@ class DonorStatus {
 // ============================================================================
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({Key? key}) : super(key: key);
+  const ProfileScreen({super.key});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -321,6 +321,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         body: jsonEncode({'notifications_enabled': enabled}),
       );
 
+      if (!mounted) return;
+
       if (response.statusCode == 200) {
         // Update local state
         final body = jsonDecode(response.body);
@@ -351,10 +353,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         throw Exception('Status code: ${response.statusCode}');
       }
     } catch (e) {
-      ToastService.showError(
-        context,
-        message: 'Gagal memperbarui pengaturan: $e',
-      );
+      if (mounted) {
+        ToastService.showError(
+          context,
+          message: 'Gagal memperbarui pengaturan: $e',
+        );
+      }
       // Revert UI
       await _loadUserProfile();
     }
@@ -570,7 +574,7 @@ class _ProfileHeader extends StatelessWidget {
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.15),
+                color: Colors.black.withValues(alpha: 0.15),
                 spreadRadius: 2,
                 blurRadius: 15,
                 offset: const Offset(0, 5),
@@ -650,7 +654,7 @@ class _Badge extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.3),
+            color: color.withValues(alpha: 0.3),
             spreadRadius: 0,
             blurRadius: 8,
             offset: const Offset(0, 2),
@@ -692,7 +696,7 @@ class _PersonalInfoSection extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.neutral_01.withOpacity(0.08),
+            color: AppTheme.neutral_01.withValues(alpha: 0.08),
             spreadRadius: 0,
             blurRadius: 15,
             offset: const Offset(0, 5),
@@ -782,10 +786,10 @@ class _InfoCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.06),
+        color: color.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: color.withOpacity(0.12),
+          color: color.withValues(alpha: 0.12),
           width: 1,
         ),
       ),
@@ -842,7 +846,7 @@ class _DonorInfoSection extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.neutral_01.withOpacity(0.08),
+            color: AppTheme.neutral_01.withValues(alpha: 0.08),
             spreadRadius: 0,
             blurRadius: 15,
             offset: const Offset(0, 5),
@@ -865,10 +869,10 @@ class _DonorInfoSection extends StatelessWidget {
           Container(
             height: 150,
             decoration: BoxDecoration(
-              color: AppTheme.neutral_01.withOpacity(0.02),
+              color: AppTheme.neutral_01.withValues(alpha: 0.02),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: AppTheme.neutral_03.withOpacity(0.2),
+                color: AppTheme.neutral_03.withValues(alpha: 0.2),
                 width: 1,
               ),
             ),
@@ -882,8 +886,8 @@ class _DonorInfoSection extends StatelessWidget {
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: isWithin3Months
-                            ? AppTheme.brand_02.withOpacity(0.08)
-                            : AppTheme.brand_03.withOpacity(0.08),
+                            ? AppTheme.brand_02.withValues(alpha: 0.08)
+                            : AppTheme.brand_03.withValues(alpha: 0.08),
                         borderRadius: const BorderRadius.only(
                           topLeft: Radius.circular(16),
                           bottomLeft: Radius.circular(16),
@@ -951,7 +955,7 @@ class _DonorInfoSection extends StatelessWidget {
                   // Divider vertikal
                   Container(
                     width: 1,
-                    color: AppTheme.neutral_03.withOpacity(0.3),
+                    color: AppTheme.neutral_03.withValues(alpha: 0.3),
                   ),
                   // Panel Kanan - Info Detail
                   Expanded(
@@ -987,7 +991,7 @@ class _DonorInfoSection extends StatelessWidget {
                           Container(
                             margin: const EdgeInsets.symmetric(vertical: 10),
                             height: 1,
-                            color: AppTheme.neutral_03.withOpacity(0.3),
+                            color: AppTheme.neutral_03.withValues(alpha: 0.3),
                           ),
                           // Catatan Kesehatan
                           Column(
@@ -1051,7 +1055,7 @@ class _NotificationSettings extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.neutral_01.withOpacity(0.08),
+            color: AppTheme.neutral_01.withValues(alpha: 0.08),
             spreadRadius: 0,
             blurRadius: 15,
             offset: const Offset(0, 5),
@@ -1162,10 +1166,10 @@ class _NotificationStatusCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: color.withOpacity(0.3),
+          color: color.withValues(alpha: 0.3),
         ),
       ),
       child: Column(

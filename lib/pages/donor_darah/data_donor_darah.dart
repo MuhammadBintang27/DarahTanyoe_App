@@ -1,10 +1,7 @@
 import 'dart:convert';
-import 'dart:math';
-import 'package:darahtanyoe_app/components/AppBarWithLogo.dart';
+import 'package:darahtanyoe_app/components/app_bar_with_logo.dart';
 import 'package:darahtanyoe_app/components/background_widget.dart';
 import 'package:darahtanyoe_app/components/my_textfield.dart';
-import 'package:darahtanyoe_app/pages/mainpage/main_screen.dart';
-import 'package:darahtanyoe_app/pages/mainpage/transaksi.dart';
 import 'package:darahtanyoe_app/pages/donor_darah/donor_confirmation_success.dart';
 import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +9,6 @@ import 'package:darahtanyoe_app/service/toast_service.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 
 class DataPendonoranDarah extends StatefulWidget {
   final String? confirmationId;    // From notification
@@ -20,11 +16,11 @@ class DataPendonoranDarah extends StatefulWidget {
   final String golonganDarah;
 
   const DataPendonoranDarah({
-    Key? key,
+    super.key,
     this.confirmationId,
     required this.campaignId,
     required this.golonganDarah,
-  }) : super(key: key);
+  });
 
   @override
   State<DataPendonoranDarah> createState() => _DataPendonoranDarahState();
@@ -65,6 +61,8 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
     try {
       final userDataString = await _storage.read(key: 'userData');
       
+      if (!mounted) return;
+      
       if (userDataString == null) {
         ToastService.showError(context, message: 'Data pengguna tidak ditemukan. Silakan login kembali.');
         return;
@@ -92,7 +90,9 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
         }
       });
     } catch (e) {
-      ToastService.showError(context, message: 'Gagal memuat data pengguna: ${e.toString()}');
+      if (mounted) {
+        ToastService.showError(context, message: 'Gagal memuat data pengguna: ${e.toString()}');
+      }
     } finally {
       setState(() {
         _isLoading = false;
@@ -185,7 +185,7 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
         child: Text(
           text,
           style: TextStyle(
-            color: text == "Golongan Darah" ? AppTheme.neutral_01.withOpacity(0.6) : AppTheme.neutral_01,
+            color: text == "Golongan Darah" ? AppTheme.neutral_01.withValues(alpha: 0.6) : AppTheme.neutral_01,
             fontWeight: FontWeight.w600,
             fontSize: 16,
           ),
@@ -221,7 +221,7 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.25),
+                              color: Colors.black.withValues(alpha: 0.25),
                               blurRadius: 4,
                               offset: Offset(0, 4),
                             ),
@@ -287,12 +287,12 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
                                     borderRadius: BorderRadius.circular(16),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withOpacity(0.10),
+                                        color: Colors.black.withValues(alpha: 0.10),
                                         blurRadius: 4,
                                         offset: const Offset(0, 4),
                                       )
                                     ],
-                                    border: Border.all(color: AppTheme.neutral_01.withOpacity(0.53), width: 0.5),
+                                    border: Border.all(color: AppTheme.neutral_01.withValues(alpha: 0.53), width: 0.5),
                                   ),
                                   alignment: Alignment.center,
                                   child: TextFormField(
@@ -333,7 +333,7 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
                               readOnly: true,
                               controller: _bloodTypeController,
                               style: TextStyle(
-                                color: AppTheme.neutral_01.withOpacity(0.4),
+                                color: AppTheme.neutral_01.withValues(alpha: 0.4),
                                 fontSize: 16,
                               ),
                               decoration: InputDecoration(
@@ -341,11 +341,11 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
                                 fillColor: Colors.white38,
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(16),
-                                  borderSide: BorderSide(color: AppTheme.neutral_01.withOpacity(0.2)),
+                                  borderSide: BorderSide(color: AppTheme.neutral_01.withValues(alpha: 0.2)),
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(16),
-                                  borderSide: BorderSide(color: AppTheme.neutral_01.withOpacity(0.2)),
+                                  borderSide: BorderSide(color: AppTheme.neutral_01.withValues(alpha: 0.2)),
                                 ),
                               ),
                             ),
@@ -355,7 +355,7 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
                               decoration: BoxDecoration(
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
+                                    color: Colors.black.withValues(alpha: 0.1),
                                     blurRadius: 6,
                                     offset: const Offset(0, 4),
                                   ),
@@ -371,11 +371,11 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
                                   fillColor: Colors.white60,
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(16),
-                                    borderSide: BorderSide(color: AppTheme.neutral_01.withOpacity(0.3)),
+                                    borderSide: BorderSide(color: AppTheme.neutral_01.withValues(alpha: 0.3)),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(16),
-                                    borderSide: BorderSide(color: AppTheme.neutral_01.withOpacity(0.3)),
+                                    borderSide: BorderSide(color: AppTheme.neutral_01.withValues(alpha: 0.3)),
                                   ),
                                 ),
                                 style: TextStyle(
@@ -385,7 +385,7 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
                                 hint: Text(
                                   'Pilih riwayat penyakit',
                                   style: TextStyle(
-                                    color: AppTheme.neutral_01.withOpacity(0.4),
+                                    color: AppTheme.neutral_01.withValues(alpha: 0.4),
                                     fontSize: 16,
                                   ),
                                 ),
@@ -428,11 +428,11 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
                 width: double.infinity,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: _isLoading ? AppTheme.brand_04.withOpacity(0.6) : AppTheme.brand_04,
+                  color: _isLoading ? AppTheme.brand_04.withValues(alpha: 0.6) : AppTheme.brand_04,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.25),
+                      color: Colors.black.withValues(alpha: 0.25),
                       blurRadius: 4,
                       offset: Offset(0, 4),
                     ),
@@ -471,7 +471,7 @@ class _DataPendonoranDarahState extends State<DataPendonoranDarah> {
                 child: Text(
                   '© 2025 Beyond. Hak Cipta Dilindungi.',
                   style: TextStyle(
-                    color: AppTheme.neutral_01.withOpacity(0.4),
+                    color: AppTheme.neutral_01.withValues(alpha: 0.4),
                     fontSize: 12,
                   ),
                 ),

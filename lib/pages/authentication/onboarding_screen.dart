@@ -20,19 +20,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     title: "Sekilas DarahTanyoe",
     description:
         "DarahTanyoe adalah aplikasi donor darah yang mengintegrasikan pendonor, PMI, dan rumah sakit dalam satu sistem terpadu.",
-    image: "assets/images/onboarding_1.png",
+    image: "assets/images/onboarding_1.webp",
   ),
   OnboardingData(
     title: "Di Sekitar Anda",
     description:
         "Aplikasi menampilkan kebutuhan darah di sekitar lokasi pendonor serta mendukung proses pendonoran melalui PMI.",
-    image: "assets/images/onboarding_2.png",
+    image: "assets/images/onboarding_2.webp",
   ),
   OnboardingData(
     title: "Dalam Genggaman",
     description:
         "Pantau pendonoran, transaksi, serta informasi stok darah dan PMI langsung melalui aplikasi.",
-    image: "assets/images/onboarding_3.png",
+    image: "assets/images/onboarding_3.webp",
   ),
 ];
   @override
@@ -63,7 +63,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
+
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
@@ -115,7 +115,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               return Icon(
                                 _getIconForIndex(index),
                                 size: 240,
-                                color: AppTheme.brand_01.withOpacity(0.3),
+                                color: AppTheme.brand_01.withValues(alpha: 0.3),
                               );
                             },
                           );
@@ -175,7 +175,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       Text(
                         onboardingPages[currentIndex].description,
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                           fontSize: 17,
                           height: 1.6,
                           letterSpacing: 0.2,
@@ -198,7 +198,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             decoration: BoxDecoration(
                               color: currentIndex == index
                                   ? Colors.white
-                                  : Colors.white.withOpacity(0.4),
+                                  : Colors.white.withValues(alpha: 0.4),
                               borderRadius: BorderRadius.circular(4),
                             ),
                           ),
@@ -244,7 +244,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 child: Text(
                                   'Lewati',
                                   style: TextStyle(
-                                    color: Colors.white.withOpacity(0.8),
+                                    color: Colors.white.withValues(alpha: 0.8),
                                     fontSize: 16,
                                     fontWeight: FontWeight.w500,
                                   ),

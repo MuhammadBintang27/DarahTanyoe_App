@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 class LoadingIndicator extends StatelessWidget {
   final String message;
 
-  const LoadingIndicator({Key? key, this.message = "Memuat data ..."}) : super(key: key);
+  const LoadingIndicator({super.key, this.message = "Memuat data ..."});
 
   @override
   Widget build(BuildContext context) {

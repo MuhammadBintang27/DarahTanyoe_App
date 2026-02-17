@@ -1,4 +1,4 @@
-import 'package:darahtanyoe_app/components/AppBarWithLogo.dart';
+import 'package:darahtanyoe_app/components/app_bar_with_logo.dart';
 import 'package:darahtanyoe_app/pages/mainpage/main_screen.dart';
 import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:flutter/material.dart';
@@ -13,13 +13,13 @@ class DonorConfirmationSuccess extends StatefulWidget {
   final String codeExpiresAt;
 
   const DonorConfirmationSuccess({
-    Key? key,
+    super.key,
     required this.uniqueCode,
     required this.donorName,
     required this.bloodType,
     required this.instructions,
     required this.codeExpiresAt,
-  }) : super(key: key);
+  });
 
   @override
   State<DonorConfirmationSuccess> createState() => _DonorConfirmationSuccessState();
@@ -54,13 +54,13 @@ class _DonorConfirmationSuccessState extends State<DonorConfirmationSuccess> {
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            Colors.green.withOpacity(0.2),
-                            Colors.green.withOpacity(0.05),
+                            Colors.green.withValues(alpha: 0.2),
+                            Colors.green.withValues(alpha: 0.05),
                           ],
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.green.withOpacity(0.2),
+                            color: Colors.green.withValues(alpha: 0.2),
                             blurRadius: 20,
                             spreadRadius: 5,
                           ),
@@ -102,13 +102,13 @@ class _DonorConfirmationSuccessState extends State<DonorConfirmationSuccess> {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            const Color(0xFFAB4545).withOpacity(0.2),
-                            Colors.white.withOpacity(0.01),
+                            const Color(0xFFAB4545).withValues(alpha: 0.2),
+                            Colors.white.withValues(alpha: 0.01),
                           ],
                           stops: const [0.37, 0.81],
                         ),
                         border: Border.all(
-                          color: const Color(0xFF565656).withOpacity(0.26),
+                          color: const Color(0xFF565656).withValues(alpha: 0.26),
                           width: 2,
                           strokeAlign: BorderSide.strokeAlignInside,
                         ),
@@ -147,7 +147,7 @@ class _DonorConfirmationSuccessState extends State<DonorConfirmationSuccess> {
                               borderRadius: BorderRadius.circular(12),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
+                                  color: Colors.black.withValues(alpha: 0.05),
                                   blurRadius: 10,
                                   offset: const Offset(0, 2),
                                 ),
@@ -244,10 +244,11 @@ class _DonorConfirmationSuccessState extends State<DonorConfirmationSuccess> {
                     elevation: 2,
                   ),
                   onPressed: () async {
+                    final currentContext = context;
                     final prefs = await SharedPreferences.getInstance();
                     await prefs.setInt('selectedIndex', 0);
                     if (mounted) {
-                      Navigator.of(context).pushAndRemoveUntil(
+                      Navigator.of(currentContext).pushAndRemoveUntil(
                         MaterialPageRoute(builder: (context) => const MainScreen()),
                         (route) => false,
                       );
@@ -279,10 +280,11 @@ class _DonorConfirmationSuccessState extends State<DonorConfirmationSuccess> {
                     ),
                   ),
                   onPressed: () async {
+                    final currentContext = context;
                     final prefs = await SharedPreferences.getInstance();
                     await prefs.setInt('selectedIndex', 3 );
                     if (mounted) {
-                      Navigator.of(context).pushAndRemoveUntil(
+                      Navigator.of(currentContext).pushAndRemoveUntil(
                         MaterialPageRoute(
                           builder: (context) => const MainScreen(initialIndex: 3),
                         ),

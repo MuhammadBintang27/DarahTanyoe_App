@@ -1,5 +1,4 @@
 import 'package:darahtanyoe_app/components/background_widget.dart';
-import 'package:darahtanyoe_app/pages/detail_permintaan/detail_permintaan_darah.dart';
 import 'package:flutter/material.dart';
 import 'package:darahtanyoe_app/service/toast_service.dart';
 import 'package:flutter/services.dart';
@@ -8,8 +7,9 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../service/auth_service.dart';
 import '../../service/animation_service.dart';
-import '../../service/notification_service.dart' as NotifService;
+import '../../service/notification_service.dart' as notif_service;
 import '../../models/notification_model.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 
 class NotificationPage extends StatefulWidget {
@@ -97,7 +97,7 @@ class _NotificationPageState extends State<NotificationPage> {
     });
 
     try {
-      final notifications = await NotifService.NotificationService.getNotifications(userId, includeRead: false);
+      final notifications = await notif_service.NotificationService.getNotifications(userId, includeRead: false);
       
       if (mounted) {
         setState(() {
@@ -121,7 +121,7 @@ class _NotificationPageState extends State<NotificationPage> {
   Future<void> _markAsRead(String notificationId, String userId) async {
     // Call API to mark as read
     try {
-      await NotifService.NotificationService.markAsRead(notificationId);
+      await notif_service.NotificationService.markAsRead(notificationId);
       
       // Update UI after successful API call
       if (mounted) {
@@ -157,6 +157,7 @@ class _NotificationPageState extends State<NotificationPage> {
         });
       }
     } catch (e) {
+      // Intentionally empty - notification action error is non-blocking
     }
   }
 
@@ -179,7 +180,7 @@ class _NotificationPageState extends State<NotificationPage> {
 
       try {
         // Fetch campaign details from API
-        final baseUrl = 'http://10.0.2.2:4000'; // Adjust as needed
+        final baseUrl = dotenv.env['BASE_URL'] ?? 'http://10.0.2.2:4000'; // Adjust as needed
         final response = await http.get(
           Uri.parse('$baseUrl/campaigns/${notification.relatedId}'),
         );
@@ -190,6 +191,8 @@ class _NotificationPageState extends State<NotificationPage> {
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body)['data'];
           final status = data['status'] ?? 'unknown';
+
+          if (!mounted) return;
 
           if (status == 'completed' || status == 'cancelled') {
             // Campaign sudah tidak active
@@ -202,7 +205,9 @@ class _NotificationPageState extends State<NotificationPage> {
           }
         } else {
           // API error
-          ToastService.showError(context, message: 'Gagal memuat data permintaan darah');
+          if (mounted) {
+            ToastService.showError(context, message: 'Gagal memuat data permintaan darah');
+          }
         }
       } catch (e) {
         // Dismiss loading dialog jika masih ada
@@ -300,7 +305,7 @@ class _NotificationPageState extends State<NotificationPage> {
                   children: [
                     Expanded(
                       child: Container(
-                        color: Colors.white.withOpacity(0.4), // Lebih transparan agar motif batik lebih terlihat
+                        color: Colors.white.withValues(alpha: 0.4), // Lebih transparan agar motif batik lebih terlihat
                         padding: const EdgeInsets.only(top: 30),
                         child: Column(
                           children: [
@@ -554,7 +559,7 @@ class _NotificationPageState extends State<NotificationPage> {
             boxShadow: [
               BoxShadow(
                 color:
-                    Colors.black.withOpacity(0.08), // Slightly stronger shadow
+                    Colors.black.withValues(alpha: 0.08), // Slightly stronger shadow
                 blurRadius: 6,
                 offset: const Offset(0, 3),
               ),
@@ -573,7 +578,7 @@ class _NotificationPageState extends State<NotificationPage> {
                   child: Opacity(
                     opacity: 0.1, // Very subtle background
                     child: Image.asset(
-                      'assets/images/Hero.png',
+                      'assets/images/Hero.webp',
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
                         // Fallback if the image is not found

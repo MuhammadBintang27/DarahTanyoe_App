@@ -1,8 +1,8 @@
 import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:flutter/material.dart';
-import 'package:darahtanyoe_app/pages/notifikasi/Notifikasi.dart';
+import 'package:darahtanyoe_app/pages/notifikasi/notifikasi.dart';
 import 'package:darahtanyoe_app/service/auth_service.dart';
-import 'package:darahtanyoe_app/service/notification_service.dart' as NotifService;
+import 'package:darahtanyoe_app/service/notification_service.dart' as notif_service;
 
 class HeaderWidget extends StatefulWidget {
   const HeaderWidget({super.key});
@@ -13,7 +13,7 @@ class HeaderWidget extends StatefulWidget {
 
 class _HeaderWidgetState extends State<HeaderWidget> {
   int _unreadCount = 0;
-  bool _isLoading = true;
+
   
   @override
   void initState() {
@@ -25,7 +25,7 @@ class _HeaderWidgetState extends State<HeaderWidget> {
     try {
       final user = await AuthService().getCurrentUser();
       if (user != null && mounted) {
-        final notifications = await NotifService.NotificationService.getNotifications(
+        final notifications = await notif_service.NotificationService.getNotifications(
           user['id'] ?? '',
           includeRead: false,
         );
@@ -36,14 +36,13 @@ class _HeaderWidgetState extends State<HeaderWidget> {
         if (mounted) {
           setState(() {
             _unreadCount = unreadNotifications.length;
-            _isLoading = false;
           });
         }
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _isLoading = false;
+          // Error handling
         });
       }
     }
@@ -81,7 +80,7 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: AppTheme.brand_02.withOpacity(0.5),
+                        color: AppTheme.brand_02.withValues(alpha: 0.5),
                         spreadRadius: 6,
                         blurRadius: 15,
                         offset: const Offset(0, 0),

@@ -1,4 +1,4 @@
-import 'package:darahtanyoe_app/pages/notifikasi/Notifikasi.dart';
+import 'package:darahtanyoe_app/pages/notifikasi/notifikasi.dart';
 import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 
@@ -24,7 +24,7 @@ class AppBarWithLogo extends StatelessWidget implements PreferredSizeWidget {
             color: AppTheme.brand_01,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.25),
+                color: Colors.black.withValues(alpha: 0.25),
                 offset: const Offset(0, 4),
                 blurRadius: 4,
               ),
@@ -96,7 +96,7 @@ class AppBarWithLogo extends StatelessWidget implements PreferredSizeWidget {
         //         border: Border.all(color: Colors.red.shade300), // Garis tepi merah
         //         boxShadow: [
         //           BoxShadow(
-        //             color: Colors.black.withOpacity(0.1),
+        //             color: Colors.black.withValues(alpha: 0.1),
         //             blurRadius: 4,
         //             offset: const Offset(0, 2),
         //           ),

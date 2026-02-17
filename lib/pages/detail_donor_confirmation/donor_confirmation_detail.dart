@@ -1,5 +1,5 @@
 import 'package:darahtanyoe_app/models/donor_confirmation_model.dart';
-import 'package:darahtanyoe_app/components/AppBarWithLogo.dart';
+import 'package:darahtanyoe_app/components/app_bar_with_logo.dart';
 import 'package:darahtanyoe_app/service/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:darahtanyoe_app/service/toast_service.dart';
@@ -16,9 +16,9 @@ class DonorConfirmationDetail extends StatefulWidget {
   final DonorConfirmationModel confirmation;
 
   const DonorConfirmationDetail({
-    Key? key,
+    super.key,
     required this.confirmation,
-  }) : super(key: key);
+  });
 
   @override
   State<DonorConfirmationDetail> createState() =>
@@ -77,6 +77,7 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
           });
         }
       } catch (e) {
+        // Intentionally empty - PMI institution fetch error is non-blocking
       }
     }
   }
@@ -753,9 +754,7 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
     );
   }
 
-  String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
-  }
+
 
   Color _getStatusColor(String? status) {
     switch (status) {
@@ -800,7 +799,9 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
           if (await canLaunchUrl(url)) {
             await launchUrl(url, mode: LaunchMode.externalApplication);
           } else {
-            ToastService.showError(context, message: 'Tidak dapat membuka lokasi PMI di Google Maps');
+            if (mounted) {
+              ToastService.showError(context, message: 'Tidak dapat membuka lokasi PMI di Google Maps');
+            }
           }
           return;
         }
@@ -809,7 +810,9 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
         if (await canLaunchUrl(url)) {
           await launchUrl(url, mode: LaunchMode.externalApplication);
         } else {
-          ToastService.showError(context, message: 'Tidak dapat membuka pencarian PMI di Google Maps');
+          if (mounted) {
+            ToastService.showError(context, message: 'Tidak dapat membuka pencarian PMI di Google Maps');
+          }
         }
         return;
       }
@@ -840,11 +843,15 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
         if (await canLaunchUrl(url)) {
           await launchUrl(url, mode: LaunchMode.externalApplication);
         } else {
-          ToastService.showError(context, message: 'Koordinat lokasi tidak tersedia dan tidak dapat mencari berdasarkan nama');
+          if (mounted) {
+            ToastService.showError(context, message: 'Koordinat lokasi tidak tersedia dan tidak dapat mencari berdasarkan nama');
+          }
         }
       }
     } catch (e) {
-      ToastService.showError(context, message: 'Gagal membuka Google Maps');
+      if (mounted) {
+        ToastService.showError(context, message: 'Gagal membuka Google Maps');
+      }
     }
   }
 

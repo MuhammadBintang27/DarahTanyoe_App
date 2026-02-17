@@ -71,7 +71,7 @@ class _ArticleSliderState extends State<ArticleSlider> {
         final Uri url = Uri.parse(article.articleUrl);
 
         if (await canLaunchUrl(url)) {
-          final bool launched = await launchUrl(
+          await launchUrl(
             url,
             mode: LaunchMode.externalApplication,
           );
@@ -93,8 +93,8 @@ class _ArticleSliderState extends State<ArticleSlider> {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Colors.black.withOpacity(0.1),
-                Colors.black.withOpacity(0.7),
+                Colors.black.withValues(alpha: 0.1),
+                Colors.black.withValues(alpha: 0.7),
               ],
             ),
           ),
@@ -117,7 +117,7 @@ class _ArticleSliderState extends State<ArticleSlider> {
                 article.preview,
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                 ),
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
@@ -138,7 +138,7 @@ class _ArticleSliderState extends State<ArticleSlider> {
         shape: BoxShape.circle,
         color: _currentPage == index
             ? Colors.white
-            : Colors.white.withOpacity(0.5),
+            : Colors.white.withValues(alpha: 0.5),
       ),
     );
   }

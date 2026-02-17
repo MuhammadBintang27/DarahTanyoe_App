@@ -69,14 +69,14 @@ class AuthService {
       String responseBody = await response.stream.bytesToString();
 
       // Sembunyikan loading jika context tersedia
-      if (context != null) {
+      if (context != null && context.mounted) {
         AnimationService.hideLoading(context);
       }
 
       if (response.statusCode == 200) {
         successCallback?.call();
 
-        if (context != null) {
+        if (context != null && context.mounted) {
           await AnimationService.showSuccess(
             context,
             message: 'OTP berhasil dikirim!',
@@ -89,7 +89,7 @@ class AuthService {
 
         errorCallback?.call(errorMsg);
 
-        if (context != null) {
+        if (context != null && context.mounted) {
           await AnimationService.showError(context, message: errorMsg);
         }
 
@@ -98,7 +98,7 @@ class AuthService {
     } catch (e) {
       errorCallback?.call(e.toString());
 
-      if (context != null) {
+      if (context != null && context.mounted) {
         AnimationService.hideLoading(context);
         await AnimationService.showError(context, message: e.toString());
       }
@@ -126,7 +126,11 @@ class AuthService {
       );
 
       // Hide animation
-      AnimationService.hideLoading(context);
+      if (context.mounted) {
+        AnimationService.hideLoading(context);
+      } else {
+        return false;
+      }
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         final String? accessToken =
@@ -158,11 +162,12 @@ class AuthService {
           successCallback?.call();
 
           // Show success and navigate
-          await AnimationService.showSuccess(
-            context,
-            message: 'Verifikasi berhasil!',
-            onComplete: () {
-              Navigator.of(context).pushReplacement(
+          if (context.mounted) {
+            await AnimationService.showSuccess(
+              context,
+              message: 'Verifikasi berhasil!',
+              onComplete: () {
+                Navigator.of(context).pushReplacement(
                 PageRouteBuilder(
                   pageBuilder: (context, animation, secondaryAnimation) =>
                       MainScreen(),
@@ -178,6 +183,7 @@ class AuthService {
               );
             },
           );
+          }
           return true;
         } else {
           // ✅ Register FCM token juga untuk user baru yang belum lengkap profile
@@ -189,11 +195,12 @@ class AuthService {
           }
 
           // Show success and navigate to personal info
-          await AnimationService.showSuccess(
-            context,
-            message: 'Verifikasi berhasil! Silahkan lengkapi data diri',
-            onComplete: () {
-              Navigator.of(context).pushReplacement(
+          if (context.mounted) {
+            await AnimationService.showSuccess(
+              context,
+              message: 'Verifikasi berhasil! Silahkan lengkapi data diri',
+              onComplete: () {
+                Navigator.of(context).pushReplacement(
                 PageRouteBuilder(
                   pageBuilder: (context, animation, secondaryAnimation) =>
                       PersonalInfo(),
@@ -209,6 +216,7 @@ class AuthService {
               );
             },
           );
+          }
           return false;
         }
       } else {
@@ -218,7 +226,9 @@ class AuthService {
         errorCallback?.call(errorMsg);
 
         // Show error animation
-        await AnimationService.showError(context, message: errorMsg);
+        if (context.mounted) {
+          await AnimationService.showError(context, message: errorMsg);
+        }
         return false;
       }
     } catch (e) {
@@ -226,8 +236,10 @@ class AuthService {
       errorCallback?.call(e.toString());
 
       // Hide loading and show error
-      AnimationService.hideLoading(context);
-      await AnimationService.showError(context, message: e.toString());
+      if (context.mounted) {
+        AnimationService.hideLoading(context);
+        await AnimationService.showError(context, message: e.toString());
+      }
       return false;
     } finally {
       // Call original loading callback
@@ -255,7 +267,7 @@ class AuthService {
       successCallback?.call();
 
       // Tampilkan animasi sukses jika ada context
-      if (context != null) {
+      if (context != null && context.mounted) {
         await AnimationService.showSuccess(context,
             message: 'Informasi pribadi tersimpan!');
       }
@@ -266,7 +278,7 @@ class AuthService {
       errorCallback?.call(e.toString());
 
       // Tampilkan animasi error jika ada context
-      if (context != null) {
+      if (context != null && context.mounted) {
         await AnimationService.showError(context, message: e.toString());
       }
 
@@ -276,7 +288,7 @@ class AuthService {
       loadingCallback?.call(false);
 
       // Sembunyikan animasi loading jika ada context
-      if (context != null) {
+      if (context != null && context.mounted) {
         AnimationService.hideLoading(context);
       }
     }
@@ -303,7 +315,7 @@ class AuthService {
       successCallback?.call();
 
       // Tampilkan animasi sukses jika ada context
-      if (context != null) {
+      if (context != null && context.mounted) {
         await AnimationService.showSuccess(context,
             message: 'Alamat tersimpan!');
       }
@@ -314,7 +326,7 @@ class AuthService {
       errorCallback?.call(e.toString());
 
       // Tampilkan animasi error jika ada context
-      if (context != null) {
+      if (context != null && context.mounted) {
         await AnimationService.showError(context, message: e.toString());
       }
 
@@ -324,7 +336,7 @@ class AuthService {
       loadingCallback?.call(false);
 
       // Sembunyikan animasi loading jika ada context
-      if (context != null) {
+      if (context != null && context.mounted) {
         AnimationService.hideLoading(context);
       }
     }
@@ -364,7 +376,7 @@ class AuthService {
       );
 
       // Hide loading animation before showing success/error
-      if (context != null) {
+      if (context != null && context.mounted) {
         AnimationService.hideLoading(context);
       }
 
@@ -387,7 +399,7 @@ class AuthService {
         }
 
         // Tampilkan animasi sukses dan navigasi jika ada context
-        if (context != null) {
+        if (context != null && context.mounted) {
           await AnimationService.showSuccess(context,
               message: 'Registrasi berhasil!', onComplete: () {
             Navigator.of(context).pushAndRemoveUntil(
@@ -418,7 +430,7 @@ class AuthService {
       errorCallback?.call(e.toString());
 
       // Hide loading and show error animation if context available
-      if (context != null) {
+      if (context != null && context.mounted) {
         AnimationService.hideLoading(context);
         await AnimationService.showError(context, message: e.toString());
       }
@@ -458,19 +470,21 @@ class AuthService {
     // Reset registration data from Hive
     await resetRegistration();
     
-    // Navigate to the login page
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => LoginPage()),
-      (route) => false,
-    );
+    // Navigate to the login page (guard with mounted check)
+    if (context.mounted) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => LoginPage()),
+        (route) => false,
+      );
+    }
   } catch (e) {
-    // Handle any errors during logout
-    
-    // Show error message to user via ToastService
-    ToastService.showError(
-      context,
-      message: 'Logout gagal: ${e.toString()}',
-    );
+    // Handle any errors during logout (guard with mounted check)
+    if (context.mounted) {
+      ToastService.showError(
+        context,
+        message: 'Logout gagal: ${e.toString()}',
+      );
+    }
   }
 }
 
@@ -526,6 +540,7 @@ class AuthService {
       final userDataString = jsonEncode(mergedData);
       await storage.write(key: 'userData', value: userDataString);
     } catch (e) {
+      // Intentionally empty - local storage update error is non-blocking
     }
   }
   

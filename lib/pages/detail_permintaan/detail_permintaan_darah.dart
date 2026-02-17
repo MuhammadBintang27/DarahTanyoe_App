@@ -1,7 +1,7 @@
-import 'package:darahtanyoe_app/components/AppBarWithLogo.dart';
-import 'package:darahtanyoe_app/components/allSvg.dart';
+import 'package:darahtanyoe_app/components/app_bar_with_logo.dart';
+import 'package:darahtanyoe_app/components/all_svg.dart';
 import 'package:darahtanyoe_app/components/background_widget.dart';
-import 'package:darahtanyoe_app/helpers/formatDateTime.dart';
+import 'package:darahtanyoe_app/helpers/format_date_time.dart';
 import 'package:darahtanyoe_app/models/permintaan_darah_model.dart';
 import 'package:darahtanyoe_app/pages/donor_darah/data_donor_darah.dart';
 import 'package:flutter/material.dart';
@@ -20,10 +20,10 @@ class DetailPermintaanDarah extends StatefulWidget {
   final String? confirmationId;  // From notification
 
   const DetailPermintaanDarah({
-    Key? key,
+    super.key,
     required this.permintaan,
     this.confirmationId,
-  }) : super(key: key);
+  });
 
   @override
   State<DetailPermintaanDarah> createState() => _DetailPermintaanDarahState();
@@ -84,6 +84,7 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
         });
       }
     } catch (e) {
+      // Intentionally empty - blood availability check error is non-blocking
     } finally {
       setState(() {
         _preCheckLoading = false;
@@ -99,7 +100,10 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
       }
 
       final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.best,
+        locationSettings: LocationSettings(
+          accuracy: LocationAccuracy.best,
+          distanceFilter: 0,
+        ),
       ).timeout(
         const Duration(seconds: 10),
         onTimeout: () async {
@@ -119,21 +123,20 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
         },
       );
 
-      if (position.latitude != 0 && position.longitude != 0 && widget.permintaan.latitude != null && widget.permintaan.longitude != null) {
-        final distance = Geolocator.distanceBetween(
-          position.latitude,
-          position.longitude,
-          widget.permintaan.latitude!,
-          widget.permintaan.longitude!,
-        ) / 1000; // Convert meters to km
+      final distance = Geolocator.distanceBetween(
+        position.latitude,
+        position.longitude,
+        widget.permintaan.latitude,
+        widget.permintaan.longitude,
+      ) / 1000; // Convert meters to km
 
-        if (mounted) {
-          setState(() {
-            _distance = double.parse(distance.toStringAsFixed(1));
-          });
-        }
+      if (mounted) {
+        setState(() {
+          _distance = double.parse(distance.toStringAsFixed(1));
+        });
       }
     } catch (e) {
+      // Intentionally empty - donor confirmation failure is non-blocking
     }
   }
 
@@ -154,7 +157,7 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
               _buildInfoCard(
                 leadingIcon: SvgPicture.string(
                   userRequest,
-                  color: AppTheme.neutral_01,
+                  colorFilter: ColorFilter.mode(AppTheme.neutral_01, BlendMode.srcIn),
                   width: 30,
                   height: 30,
                 ),
@@ -174,7 +177,7 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
                         color: AppTheme.brand_01,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.25),
+                            color: Colors.black.withValues(alpha: 0.25),
                             blurRadius: 4,
                             offset: const Offset(0, 4),
                           ),
@@ -188,7 +191,7 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
                         children: [
                           SvgPicture.string(
                             bloodTypeSvg,
-                            color: Colors.white,
+                            colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn),
                             width: 30,
                             height: 30,
                           ),
@@ -216,7 +219,7 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.25),
+                            color: Colors.black.withValues(alpha: 0.25),
                             blurRadius: 4,
                             offset: const Offset(0, 4),
                           ),
@@ -226,7 +229,7 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
                         children: [
                           SvgPicture.string(
                             bloodTube,
-                            color: Colors.white,
+                            colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn),
                             width: 36,
                             height: 36,
                           ),
@@ -269,7 +272,7 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
               _buildInfoCard(
                 leadingIcon: SvgPicture.string(
                   timeSand,
-                  color: AppTheme.neutral_01,
+                  colorFilter: ColorFilter.mode(AppTheme.neutral_01, BlendMode.srcIn),
                   width: 30,
                   height: 30,
                 ),
@@ -279,7 +282,7 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
               _buildInfoCard(
                 leadingIcon: SvgPicture.string(
                   descriptionSvg,
-                  color: AppTheme.neutral_01,
+                  colorFilter: ColorFilter.mode(AppTheme.neutral_01, BlendMode.srcIn),
                   width: 30,
                   height: 30,
                 ),
@@ -292,7 +295,7 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
               _buildInfoCard(
                 leadingIcon: SvgPicture.string(
                   info,
-                  color: AppTheme.neutral_01,
+                  colorFilter: ColorFilter.mode(AppTheme.neutral_01, BlendMode.srcIn),
                   width: 30,
                   height: 30,
                 ),
@@ -308,7 +311,7 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.25),
+                      color: Colors.black.withValues(alpha: 0.25),
                       blurRadius: 4,
                       offset: Offset(0, 4),
                     ),
@@ -366,7 +369,7 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
                 child: Text(
                   '© 2025 Beyond. Hak Cipta Dilindungi.',
                   style: TextStyle(
-                    color: AppTheme.neutral_01.withOpacity(0.4),
+                    color: AppTheme.neutral_01.withValues(alpha: 0.4),
                     fontSize: 12,
                   ),
                 ),
@@ -390,12 +393,12 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
-          border: Border.all(color: AppTheme.brand_02.withOpacity(0.37)),
+          border: Border.all(color: AppTheme.brand_02.withValues(alpha: 0.37)),
           color: const Color(0xFFEEE8D7),
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.25),
+              color: Colors.black.withValues(alpha: 0.25),
               blurRadius: 4,
               offset: const Offset(0, 4),
             )
@@ -446,12 +449,12 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-          border: Border.all(color: AppTheme.brand_02.withOpacity(0.37)),
+          border: Border.all(color: AppTheme.brand_02.withValues(alpha: 0.37)),
           color: const Color(0xFFEEE8D7),
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.25),
+              color: Colors.black.withValues(alpha: 0.25),
               blurRadius: 4,
               offset: const Offset(0, 4),
             )
@@ -461,7 +464,7 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
         children: [
           SvgPicture.string(
             hospitalSvg,
-            color: AppTheme.neutral_01,
+            colorFilter: ColorFilter.mode(AppTheme.neutral_01, BlendMode.srcIn),
             width: 30,
             height: 30,
           ),
@@ -499,7 +502,7 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
           InkWell(
             onTap: () async {
               final Uri url = Uri.parse(
-                'https://www.google.com/maps/search/?api=1&query=${widget.permintaan.latitude},${widget.permintaan.longitude}',
+                'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude',
               );
               if (await canLaunchUrl(url)) {
                 await launchUrl(url, mode: LaunchMode.externalApplication);
@@ -513,10 +516,10 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
               decoration: BoxDecoration(
                 color: AppTheme.brand_04,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppTheme.brand_02.withOpacity(0.37)),
+                border: Border.all(color: AppTheme.brand_02.withValues(alpha: 0.37)),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.25),
+                    color: Colors.black.withValues(alpha: 0.25),
                     blurRadius: 4,
                     offset: const Offset(0, 4),
                   )

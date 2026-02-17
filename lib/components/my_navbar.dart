@@ -28,7 +28,7 @@ class CustomBottomNavBar extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-              color: Colors.black.withOpacity(0.25),
+              color: Colors.black.withValues(alpha: 0.25),
               blurRadius: 4,
               spreadRadius: 0,
               offset: Offset(0, -4)
@@ -83,8 +83,8 @@ class CustomBottomNavBar extends StatelessWidget {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      AppTheme.neutral_03.withOpacity(0.2),
-                      AppTheme.neutral_03.withOpacity(0.0),
+                      AppTheme.neutral_03.withValues(alpha: 0.2),
+                      AppTheme.neutral_03.withValues(alpha: 0.0),
                     ],
                   ),
                   borderRadius: (label == 'Beranda')

@@ -61,12 +61,7 @@ class ToastService {
 
   static void _showToast(_ToastRequest request) {
     final overlay = Overlay.of(request.context, rootOverlay: true);
-    if (overlay == null) {
-      _isShowing = false;
-      _processQueue();
-      return;
-    }
-
+    
     late OverlayEntry entry;
     entry = OverlayEntry(
       builder: (_) => _ToastWidget(
@@ -207,7 +202,6 @@ class _ToastWidget extends StatefulWidget {
   final VoidCallback onDismiss;
 
   const _ToastWidget({
-    super.key,
     required this.message,
     this.title,
     required this.type,
@@ -406,13 +400,13 @@ class _ToastWidgetState extends State<_ToastWidget>
                             border: Border.all(color: _borderColor, width: 1),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.08),
+                                color: Colors.black.withValues(alpha: 0.08),
                                 blurRadius: 16,
                                 offset: const Offset(0, 4),
                                 spreadRadius: 0,
                               ),
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.04),
+                                color: Colors.black.withValues(alpha: 0.04),
                                 blurRadius: 4,
                                 offset: const Offset(0, 2),
                                 spreadRadius: 0,
@@ -487,7 +481,7 @@ class _ToastWidgetState extends State<_ToastWidget>
                                     child: Icon(
                                       Icons.close_rounded,
                                       size: 18,
-                                      color: _textColor.withOpacity(0.5),
+                                      color: _textColor.withValues(alpha: 0.5),
                                     ),
                                   ),
                                 ],

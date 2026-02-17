@@ -1,9 +1,9 @@
-import 'package:darahtanyoe_app/helpers/getSelisih.dart';
+import 'package:darahtanyoe_app/helpers/get_selisih.dart';
 import 'package:darahtanyoe_app/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_layout_grid/flutter_layout_grid.dart';
-import 'package:darahtanyoe_app/components/allSvg.dart';
+import 'package:darahtanyoe_app/components/all_svg.dart';
 
 class BloodCard extends StatelessWidget {
   final String status;
@@ -23,7 +23,7 @@ class BloodCard extends StatelessWidget {
   final void Function()? onTap;
 
   const BloodCard({
-    Key? key,
+    super.key,
     required this.status,
     required this.bloodType,
     required this.date,
@@ -39,7 +39,7 @@ class BloodCard extends StatelessWidget {
     this.isUrgent = false,
     this.distance,
     this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -92,7 +92,7 @@ class BloodCard extends StatelessWidget {
               border: Border.all(color: borderColor, width: 1.5),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.25),
+                  color: Colors.black.withValues(alpha: 0.25),
                   blurRadius: 4,
                   offset: Offset(0, 4),
                 ),
@@ -142,7 +142,7 @@ class BloodCard extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(bottom: 0, top: 2),
                     child: Divider(
-                      color: Color(0xFFA3A3A3).withOpacity(0.4),
+                      color: Color(0xFFA3A3A3).withValues(alpha: 0.4),
                       thickness: 1,
                       height: 24,
                     ),
@@ -316,7 +316,7 @@ class BloodCard extends StatelessWidget {
                       Text(
                         getSelisih(createdAt),
                         style: TextStyle(
-                          color: AppTheme.neutral_01.withOpacity(0.5),
+                          color: AppTheme.neutral_01.withValues(alpha: 0.5),
                           fontWeight: FontWeight.normal,
                           fontSize: 11,
                         ),

@@ -13,7 +13,7 @@ class LanjutButton extends StatelessWidget {
         decoration: BoxDecoration(
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.25), // ⬅️ Shadow ringan
+              color: Colors.black.withValues(alpha: 0.25), // ⬅️ Shadow ringan
               blurRadius: 4,
               offset: Offset(0, 4),
             ),

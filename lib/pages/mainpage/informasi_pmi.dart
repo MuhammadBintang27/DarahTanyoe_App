@@ -85,7 +85,7 @@ class _InformasiPMIState extends State<InformasiPMI> with WidgetsBindingObserver
           }
         });
       }
-    } catch (e, stackTrace) {
+    } catch (e) {
 
       if (mounted) {
         ToastService.showError(context, message: 'Gagal memuat data PMI: $e');

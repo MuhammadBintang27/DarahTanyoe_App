@@ -1,12 +1,13 @@
 import 'dart:io' show Platform;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:darahtanyoe_app/service/auth_service.dart';
 import 'package:darahtanyoe_app/theme/theme.dart';
+import 'package:darahtanyoe_app/widgets/notification_banner.dart';
+import 'package:darahtanyoe_app/main.dart';
 
 /// Push Notification Service untuk menangani FCM notifications
 /// Digunakan untuk menampilkan notifikasi real-time saat campaign dikirim
@@ -52,7 +53,7 @@ class PushNotificationService {
             _localNotifications.resolvePlatformSpecificImplementation<
                 AndroidFlutterLocalNotificationsPlugin>();
         if (androidImplementation != null) {
-          final granted = await androidImplementation.requestNotificationsPermission();
+          await androidImplementation.requestNotificationsPermission();
         }
       }
 
@@ -68,7 +69,7 @@ class PushNotificationService {
       if (androidImplementation != null) {
         await androidImplementation.createNotificationChannel(
           AndroidNotificationChannel(
-            'darahtanyoe_channel',
+            'darahtanyoe_channel_v2', // New channel ID to force recreation
             'DarahTanyoe Notifications',
             description: 'Notifikasi untuk kampanye dan permintaan darah',
             importance: Importance.max,
@@ -98,11 +99,9 @@ class PushNotificationService {
         onDidReceiveNotificationResponse: _handleNotificationResponse,
       );
 
-      // Get FCM token
-      String? token = await _firebaseMessaging.getToken();
-
-      // DON'T save token yet - wait until user logs in
-      // Token akan disimpan di verifyOTP() atau savePersonalInfo()
+      // Get FCM token but don't save yet - wait until user logs in
+      // Token akan disimpan di registerFCMTokenForUser() setelah login
+      await _firebaseMessaging.getToken();
 
       // Handle foreground notifications
       FirebaseMessaging.onMessage.listen(_handleForegroundNotification);
@@ -116,6 +115,7 @@ class PushNotificationService {
       });
 
     } catch (e) {
+      // Intentionally empty - non-blocking error
     }
   }
 
@@ -144,6 +144,7 @@ class PushNotificationService {
       } else {
       }
     } catch (e) {
+      // Intentionally empty - token registration error is non-blocking
     }
   }
 
@@ -168,13 +169,15 @@ class PushNotificationService {
       );
 
       if (response.statusCode == 200) {
+        // Token registered successfully
       } else {
+        // API error - non-blocking
       }
     } catch (e) {
+      // Intentionally empty - non-blocking error
     }
   }
 
-  /// Update FCM token for current logged-in user (when token is refreshed)
   Future<void> _updateFCMTokenForCurrentUser(String newToken) async {
     try {
       final user = await AuthService().getCurrentUser();
@@ -196,13 +199,15 @@ class PushNotificationService {
       );
 
       if (response.statusCode == 200) {
+        // Token updated successfully
       } else {
+        // API error - non-blocking
       }
     } catch (e) {
+      // Intentionally empty - non-blocking error
     }
   }
 
-  /// Unregister FCM token (called on logout)
   Future<void> unregisterFCMTokenForUser(String userId) async {
     try {
       String? token = await _firebaseMessaging.getToken();
@@ -220,13 +225,14 @@ class PushNotificationService {
       );
 
       if (response.statusCode == 200) {
+        // Token unregistered successfully
       } else {
+        // API error - non-blocking
       }
     } catch (e) {
+      // Intentionally empty - non-blocking error
     }
   }
-
-  /// Handle foreground notifications (when app is open)
   void _handleForegroundNotification(RemoteMessage message) {
     // Add to received notifications list
     receivedNotifications.add({
@@ -236,12 +242,22 @@ class PushNotificationService {
       'timestamp': DateTime.now(),
     });
 
-    // Show local notification
-    _showLocalNotification(
-      title: message.notification?.title ?? 'Notifikasi',
-      body: message.notification?.body ?? '',
-      payload: jsonEncode(message.data),
-    );
+    // Show in-app banner (WhatsApp style)
+    final context = MyApp.navigatorKey.currentContext;
+    if (context != null) {
+      NotificationBannerOverlay.show(
+        context,
+        title: message.notification?.title ?? 'Notifikasi',
+        body: message.notification?.body ?? '',
+        onTap: () {
+          // Handle notification tap
+          _handleNotificationNavigation(message.data);
+          if (onNotificationTapped != null) {
+            onNotificationTapped!(message.data);
+          }
+        },
+      );
+    }
   }
 
   /// Handle notification tap (both foreground and background)
@@ -266,13 +282,12 @@ class PushNotificationService {
         _handleNotificationNavigation(data);
       }
     } catch (e) {
+      // Intentionally empty - notification tap handling error is non-blocking
     }
   }
 
-  /// Navigate based on notification type
   void _handleNotificationNavigation(Map<String, dynamic> data) {
     // Handle both camelCase and snake_case field names from Firebase
-    final String? type = data['type'] ?? data['relatedType'];
     final String? referenceId = data['relatedId'] ?? data['related_id'] ?? data['referenceId'];
 
     if (referenceId == null) {
@@ -294,7 +309,7 @@ class PushNotificationService {
     try {
       const AndroidNotificationDetails androidPlatformChannelSpecifics =
           AndroidNotificationDetails(
-        'darahtanyoe_channel',
+        'darahtanyoe_channel_v2', // New channel ID to force recreation
         'DarahTanyoe Notifications',
         channelDescription: 'Notifikasi untuk kampanye dan permintaan darah',
         importance: Importance.max,
@@ -332,10 +347,10 @@ class PushNotificationService {
       );
       
     } catch (e) {
+      // Intentionally empty - notification display error is non-blocking
     }
   }
 
-  /// Get all received notifications
   List<Map<String, dynamic>> getReceivedNotifications() {
     return receivedNotifications;
   }
@@ -351,6 +366,7 @@ class PushNotificationService {
     try {
       await _firebaseMessaging.subscribeToTopic(topic);
     } catch (e) {
+      // Intentionally empty - non-blocking error
     }
   }
 
@@ -359,6 +375,7 @@ class PushNotificationService {
     try {
       await _firebaseMessaging.unsubscribeFromTopic(topic);
     } catch (e) {
+      // Intentionally empty - non-blocking error
     }
   }
 }

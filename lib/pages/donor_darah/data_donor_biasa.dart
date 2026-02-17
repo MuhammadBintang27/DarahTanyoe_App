@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:darahtanyoe_app/components/AppBarWithLogo.dart';
+import 'package:darahtanyoe_app/components/app_bar_with_logo.dart';
 import 'package:darahtanyoe_app/components/background_widget.dart';
 import 'package:darahtanyoe_app/components/my_textfield.dart';
 import 'package:darahtanyoe_app/pages/donor_darah/donor_confirmation_success.dart';
@@ -13,7 +13,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 class DataPendonoranBiasa extends StatefulWidget {
-  const DataPendonoranBiasa({Key? key}) : super(key: key);
+  const DataPendonoranBiasa({super.key});
 
   @override
   State<DataPendonoranBiasa> createState() => _DataPendonoranBiasaState();
@@ -121,18 +121,22 @@ class _DataPendonoranBiasaState extends State<DataPendonoranBiasa> {
         final userDataString = await _storage.read(key: 'userData');
         if (userDataString == null) {
           setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('User belum login')),
-          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('User belum login')),
+            );
+          }
           return;
         }
         final userData = jsonDecode(userDataString);
         final donorId = userData['id'];
         if (_selectedPMIId == null || _selectedPMIId!.isEmpty) {
           setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Silakan pilih PMI tujuan terlebih dahulu.')),
-          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Silakan pilih PMI tujuan terlebih dahulu.')),
+            );
+          }
           return;
         }
         final requestBody = {
@@ -174,22 +178,28 @@ class _DataPendonoranBiasaState extends State<DataPendonoranBiasa> {
             );
           } else {
             final errorMsg = data['message'] ?? 'Janji Donor aktif sudah ada';
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(errorMsg)),
-            );
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(errorMsg)),
+              );
+            }
           }
         } else {
           final error = jsonDecode(response.body);
           final errorMsg = error['message'] ?? response.body;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $errorMsg')),
-          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Error: $errorMsg')),
+            );
+          }
         }
       } catch (e) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e')),
+          );
+        }
       }
     }
   }
@@ -202,7 +212,7 @@ class _DataPendonoranBiasaState extends State<DataPendonoranBiasa> {
         child: Text(
           text,
           style: TextStyle(
-            color: text == "Golongan Darah" ? AppTheme.neutral_01.withOpacity(0.6) : AppTheme.neutral_01,
+            color: text == "Golongan Darah" ? AppTheme.neutral_01.withValues(alpha: 0.6) : AppTheme.neutral_01,
             fontWeight: FontWeight.w600,
             fontSize: 16,
           ),
@@ -235,7 +245,7 @@ class _DataPendonoranBiasaState extends State<DataPendonoranBiasa> {
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.25),
+                              color: Colors.black.withValues(alpha: 0.25),
                               blurRadius: 4,
                               offset: const Offset(0, 4),
                             ),
@@ -301,12 +311,12 @@ class _DataPendonoranBiasaState extends State<DataPendonoranBiasa> {
                                     borderRadius: BorderRadius.circular(16),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withOpacity(0.10),
+                                        color: Colors.black.withValues(alpha: 0.10),
                                         blurRadius: 4,
                                         offset: const Offset(0, 4),
                                       )
                                     ],
-                                    border: Border.all(color: AppTheme.neutral_01.withOpacity(0.53), width: 0.5),
+                                    border: Border.all(color: AppTheme.neutral_01.withValues(alpha: 0.53), width: 0.5),
                                   ),
                                   alignment: Alignment.center,
                                   child: TextFormField(
@@ -347,7 +357,7 @@ class _DataPendonoranBiasaState extends State<DataPendonoranBiasa> {
                               readOnly: true,
                               controller: _bloodTypeController,
                               style: TextStyle(
-                                color: AppTheme.neutral_01.withOpacity(0.4),
+                                color: AppTheme.neutral_01.withValues(alpha: 0.4),
                                 fontSize: 16,
                               ),
                               decoration: InputDecoration(
@@ -355,11 +365,11 @@ class _DataPendonoranBiasaState extends State<DataPendonoranBiasa> {
                                 fillColor: Colors.white38,
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(16),
-                                  borderSide: BorderSide(color: AppTheme.neutral_01.withOpacity(0.2)),
+                                  borderSide: BorderSide(color: AppTheme.neutral_01.withValues(alpha: 0.2)),
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(16),
-                                  borderSide: BorderSide(color: AppTheme.neutral_01.withOpacity(0.2)),
+                                  borderSide: BorderSide(color: AppTheme.neutral_01.withValues(alpha: 0.2)),
                                 ),
                               ),
                             ),
@@ -369,7 +379,7 @@ class _DataPendonoranBiasaState extends State<DataPendonoranBiasa> {
                               decoration: BoxDecoration(
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
+                                    color: Colors.black.withValues(alpha: 0.1),
                                     blurRadius: 6,
                                     offset: const Offset(0, 4),
                                   ),
@@ -386,11 +396,11 @@ class _DataPendonoranBiasaState extends State<DataPendonoranBiasa> {
                                   fillColor: Colors.white60,
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(16),
-                                    borderSide: BorderSide(color: AppTheme.neutral_01.withOpacity(0.3)),
+                                    borderSide: BorderSide(color: AppTheme.neutral_01.withValues(alpha: 0.3)),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(16),
-                                    borderSide: BorderSide(color: AppTheme.neutral_01.withOpacity(0.3)),
+                                    borderSide: BorderSide(color: AppTheme.neutral_01.withValues(alpha: 0.3)),
                                   ),
                                 ),
                                 style: TextStyle(
@@ -400,7 +410,7 @@ class _DataPendonoranBiasaState extends State<DataPendonoranBiasa> {
                                 hint: Text(
                                   _isLoadingPMI ? 'Memuat daftar PMI...' : 'Pilih PMI tujuan',
                                   style: TextStyle(
-                                    color: AppTheme.neutral_01.withOpacity(0.4),
+                                    color: AppTheme.neutral_01.withValues(alpha: 0.4),
                                     fontSize: 16,
                                   ),
                                 ),
@@ -437,7 +447,7 @@ class _DataPendonoranBiasaState extends State<DataPendonoranBiasa> {
                               decoration: BoxDecoration(
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
+                                    color: Colors.black.withValues(alpha: 0.1),
                                     blurRadius: 6,
                                     offset: const Offset(0, 4),
                                   ),
@@ -453,11 +463,11 @@ class _DataPendonoranBiasaState extends State<DataPendonoranBiasa> {
                                   fillColor: Colors.white60,
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(16),
-                                    borderSide: BorderSide(color: AppTheme.neutral_01.withOpacity(0.3)),
+                                    borderSide: BorderSide(color: AppTheme.neutral_01.withValues(alpha: 0.3)),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(16),
-                                    borderSide: BorderSide(color: AppTheme.neutral_01.withOpacity(0.3)),
+                                    borderSide: BorderSide(color: AppTheme.neutral_01.withValues(alpha: 0.3)),
                                   ),
                                 ),
                                 style: TextStyle(
@@ -467,7 +477,7 @@ class _DataPendonoranBiasaState extends State<DataPendonoranBiasa> {
                                 hint: Text(
                                   'Pilih riwayat penyakit',
                                   style: TextStyle(
-                                    color: AppTheme.neutral_01.withOpacity(0.4),
+                                    color: AppTheme.neutral_01.withValues(alpha: 0.4),
                                     fontSize: 16,
                                   ),
                                 ),
@@ -509,11 +519,11 @@ class _DataPendonoranBiasaState extends State<DataPendonoranBiasa> {
                 width: double.infinity,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: _isLoading ? AppTheme.brand_04.withOpacity(0.6) : AppTheme.brand_04,
+                  color: _isLoading ? AppTheme.brand_04.withValues(alpha: 0.6) : AppTheme.brand_04,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.25),
+                      color: Colors.black.withValues(alpha: 0.25),
                       blurRadius: 4,
                       offset: const Offset(0, 4),
                     ),
@@ -552,7 +562,7 @@ class _DataPendonoranBiasaState extends State<DataPendonoranBiasa> {
                 child: Text(
                   '© 2025 Beyond. Hak Cipta Dilindungi.',
                   style: TextStyle(
-                    color: AppTheme.neutral_01.withOpacity(0.4),
+                    color: AppTheme.neutral_01.withValues(alpha: 0.4),
                     fontSize: 12,
                   ),
                 ),
