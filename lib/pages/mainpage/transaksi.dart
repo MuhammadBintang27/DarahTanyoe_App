@@ -15,8 +15,9 @@ import 'package:darahtanyoe_app/service/institution_service.dart';
 class TransactionBlood extends StatefulWidget {
   final String? defaultTab;
   final String? uniqueCode;
+  final String? confirmationId; // For deep link auto-navigation
 
-  const TransactionBlood({super.key, this.uniqueCode, this.defaultTab});
+  const TransactionBlood({super.key, this.uniqueCode, this.defaultTab, this.confirmationId});
 
   @override
   State<TransactionBlood> createState() => _TransactionBloodState();
@@ -31,6 +32,7 @@ class _TransactionBloodState extends State<TransactionBlood> {
   final Map<String, String> _pmiNameCache = {};
   // Golongan darah pendonor (untuk Donor Biasa)
   String? _currentUserBloodType;
+  bool _hasAutoNavigated = false; // Track if auto-navigation happened
 
   // Lists for storing donor confirmation data
   List<DonorConfirmationModel> berlangsungList = [];
@@ -99,6 +101,11 @@ class _TransactionBloodState extends State<TransactionBlood> {
             }
             isLoading = false;
           });
+          
+          // Auto-navigate to detail if confirmationId provided (from deep link)
+          if (widget.confirmationId != null && !_hasAutoNavigated) {
+            _autoNavigateToDetail(widget.confirmationId!);
+          }
         }
       } else {
         throw Exception('Gagal mengambil data: ${response.statusCode}');
@@ -770,5 +777,25 @@ class _TransactionBloodState extends State<TransactionBlood> {
             DonorConfirmationDetail(confirmation: confirmation),
       ),
     );
+  }
+
+  // Auto-navigate to detail from deep link
+  void _autoNavigateToDetail(String confirmationId) {
+    if (_hasAutoNavigated) return;
+    
+    // Find confirmation in list
+    final confirmation = berlangsungList.firstWhere(
+      (item) => item.id == confirmationId,
+      );
+    
+    if (confirmation.id != null) {
+      _hasAutoNavigated = true;
+      // Delay to ensure UI is ready
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) {
+          _navigateToDonationDetail(confirmation);
+        }
+      });
+    }
   }
 }
