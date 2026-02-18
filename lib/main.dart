@@ -9,7 +9,7 @@ import 'service/push_notification_service.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'dart:async';
 import 'package:app_links/app_links.dart';
-import 'package:darahtanyoe_app/pages/mainpage/transaksi.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -52,18 +52,20 @@ class DeepLinkService {
     });
   }
   
-  static void _handleDeepLink(Uri uri) {
+  static void _handleDeepLink(Uri uri) async {
     // Handle: darahtanyoe://confirmation/{confirmation_id}
     if (uri.scheme == 'darahtanyoe' && uri.host == 'confirmation') {
       final confirmationId = uri.pathSegments.isNotEmpty ? uri.pathSegments[0] : null;
       if (confirmationId != null) {
-        // Navigate to Transaksi page with confirmation ID for auto-navigation
+        // Store confirmation ID in SharedPreferences for TransactionBlood to read
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('deeplink_confirmation_id', confirmationId);
+        await prefs.setInt('selectedIndex', 3); // Tab index for Transaksi
+        
+        // Navigate to MainScreen (with bottom nav) at Transaksi tab
         MyApp.navigatorKey.currentState?.pushAndRemoveUntil(
           MaterialPageRoute(
-            builder: (context) => TransactionBlood(
-              defaultTab: 'berlangsung',
-              confirmationId: confirmationId,
-            ),
+            builder: (context) => const MainScreen(initialIndex: 3),
           ),
           (route) => false,
         );

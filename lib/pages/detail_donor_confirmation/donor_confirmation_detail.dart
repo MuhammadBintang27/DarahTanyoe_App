@@ -850,7 +850,7 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
       }
     } catch (e) {
       if (mounted) {
-        ToastService.showError(context, message: 'Gagal membuka Google Maps');
+        ToastService.showError(context, message: 'Gagal membuka. Pastikan Google Maps terinstal');
       }
     }
   }

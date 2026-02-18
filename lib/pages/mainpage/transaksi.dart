@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:darahtanyoe_app/service/toast_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:darahtanyoe_app/service/institution_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TransactionBlood extends StatefulWidget {
   final String? defaultTab;
@@ -37,12 +38,28 @@ class _TransactionBloodState extends State<TransactionBlood> {
   // Lists for storing donor confirmation data
   List<DonorConfirmationModel> berlangsungList = [];
   List<DonorConfirmationModel> selesaiList = [];
+  String? _deeplinkConfirmationId; // From SharedPreferences (deep link)
 
   @override
   void initState() {
     super.initState();
+    _loadDeeplinkConfirmationId();
     _ensureCurrentUserBloodType();
     _loadBerlangsung();
+  }
+
+  // Load confirmation ID from SharedPreferences (deep link)
+  Future<void> _loadDeeplinkConfirmationId() async {
+    final prefs = await SharedPreferences.getInstance();
+    final id = prefs.getString('deeplink_confirmation_id');
+    
+    if (id != null) {
+      setState(() {
+        _deeplinkConfirmationId = id;
+      });
+      // Clear after reading
+      await prefs.remove('deeplink_confirmation_id');
+    }
   }
 
   Future<void> _ensureCurrentUserBloodType() async {
@@ -103,8 +120,9 @@ class _TransactionBloodState extends State<TransactionBlood> {
           });
           
           // Auto-navigate to detail if confirmationId provided (from deep link)
-          if (widget.confirmationId != null && !_hasAutoNavigated) {
-            _autoNavigateToDetail(widget.confirmationId!);
+          final confirmId = widget.confirmationId ?? _deeplinkConfirmationId;
+          if (confirmId != null && !_hasAutoNavigated) {
+            _autoNavigateToDetail(confirmId);
           }
         }
       } else {
@@ -783,17 +801,28 @@ class _TransactionBloodState extends State<TransactionBlood> {
   void _autoNavigateToDetail(String confirmationId) {
     if (_hasAutoNavigated) return;
     
-    // Find confirmation in list
-    final confirmation = berlangsungList.firstWhere(
-      (item) => item.id == confirmationId,
+    // Find confirmation in berlangsung list
+    DonorConfirmationModel? confirmation;
+    try {
+      confirmation = berlangsungList.firstWhere(
+        (item) => item.id == confirmationId,
       );
+    } catch (e) {
+      // Not found in berlangsung, might be in selesai
+      _hasAutoNavigated = true;
+      _showError(
+        "Janji donor tidak ditemukan di tab Berlangsung. "
+        "Mungkin sudah selesai, silakan cek di tab Selesai."
+      );
+      return;
+    }
     
-    if (confirmation.id != null) {
+    if (confirmation != null) {
       _hasAutoNavigated = true;
       // Delay to ensure UI is ready
       Future.delayed(const Duration(milliseconds: 300), () {
         if (mounted) {
-          _navigateToDonationDetail(confirmation);
+          _navigateToDonationDetail(confirmation!);
         }
       });
     }
