@@ -18,6 +18,7 @@ class _InformasiPMIState extends State<InformasiPMI> with WidgetsBindingObserver
   List<Map<String, dynamic>> _pmiList = [];
   String? _selectedPMIId;
   bool _isLoading = false;
+  String _selectedComponent = "WB";
 
   final List<String> bloodTypes = [
     "A+",
@@ -28,6 +29,14 @@ class _InformasiPMIState extends State<InformasiPMI> with WidgetsBindingObserver
     "AB-",
     "O+",
     "O-"
+  ];
+
+  final List<Map<String, String>> bloodComponents = [
+    {"code": "WB", "name": "Whole Blood"},
+    {"code": "PRC", "name": "Packed Red Cells"},
+    {"code": "FFP", "name": "Fresh Frozen Plasma"},
+    {"code": "TC", "name": "Trombosit"},
+    {"code": "Cryo", "name": "Kriopresipitat"},
   ];
 
   @override
@@ -104,13 +113,16 @@ class _InformasiPMIState extends State<InformasiPMI> with WidgetsBindingObserver
     }
   }
 
-  int _getStockQuantity(String bloodType) {
+  int _getStockQuantity(String bloodType, String componentType) {
     if (_selectedPMI == null) return 0;
 
     try {
-      // Sum up ALL stocks for this blood type (there might be multiple entries)
+      // Sum up ALL stocks for this blood type + component type combination
       final stocks = (_selectedPMI!["blood_stock"] as List)
-          .where((s) => s["blood_type"] == bloodType)
+          .where((s) => 
+            s["blood_type"] == bloodType && 
+            s["component_type"] == componentType
+          )
           .toList();
       
       if (stocks.isEmpty) return 0;
@@ -437,7 +449,58 @@ class _InformasiPMIState extends State<InformasiPMI> with WidgetsBindingObserver
                                         ),
                                         SizedBox(height: 16),
 
-                                        // Grid Stok Darah
+                                        // Filter Komponen
+                                        Text(
+                                          "Filter Jenis Komponen",
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.grey[700],
+                                          ),
+                                        ),
+                                        SizedBox(height: 8),
+                                        Wrap(
+                                          spacing: 8,
+                                          runSpacing: 8,
+                                          children: bloodComponents.map((comp) {
+                                            bool isSelected = _selectedComponent == comp["code"];
+                                            return GestureDetector(
+                                              onTap: () {
+                                                setState(() {
+                                                  _selectedComponent = comp["code"]!;
+                                                });
+                                              },
+                                              child: Container(
+                                                padding: EdgeInsets.symmetric(
+                                                    horizontal: 12, vertical: 8),
+                                                decoration: BoxDecoration(
+                                                  color: isSelected
+                                                      ? AppTheme.brand_01
+                                                      : Colors.grey[200],
+                                                  borderRadius: BorderRadius.circular(8),
+                                                  border: isSelected
+                                                      ? Border.all(
+                                                          color: AppTheme.brand_01,
+                                                          width: 2)
+                                                      : null,
+                                                ),
+                                                child: Text(
+                                                  comp["code"]!,
+                                                  style: TextStyle(
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: isSelected
+                                                        ? Colors.white
+                                                        : Colors.grey[700],
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          }).toList(),
+                                        ),
+                                        SizedBox(height: 16),
+
+                                        // Grid Stok Per Golongan Darah
                                         GridView.builder(
                                           shrinkWrap: true,
                                           physics: NeverScrollableScrollPhysics(),
@@ -451,14 +514,12 @@ class _InformasiPMIState extends State<InformasiPMI> with WidgetsBindingObserver
                                           itemCount: bloodTypes.length,
                                           itemBuilder: (context, index) {
                                             String bloodType = bloodTypes[index];
-                                            int quantity =
-                                                _getStockQuantity(bloodType);
-                                            Color statusColor =
-                                                _getStockColor(quantity);
+                                            int quantity = _getStockQuantity(bloodType, _selectedComponent);
+                                            Color statusColor = _getStockColor(quantity);
 
                                             return Container(
                                               padding: EdgeInsets.symmetric(
-                                                  vertical: 10, horizontal: 6),
+                                                  vertical: 8, horizontal: 4),
                                               decoration: BoxDecoration(
                                                 color: statusColor
                                                     .withValues(alpha: 0.1),
@@ -475,19 +536,25 @@ class _InformasiPMIState extends State<InformasiPMI> with WidgetsBindingObserver
                                                     MainAxisAlignment.center,
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
+                                                  Icon(
+                                                    Icons.water_drop,
+                                                    color: statusColor,
+                                                    size: 16,
+                                                  ),
+                                                  SizedBox(height: 2),
                                                   Text(
                                                     bloodType,
                                                     style: TextStyle(
-                                                      fontSize: 15,
+                                                      fontSize: 14,
                                                       fontWeight: FontWeight.bold,
-                                                      color: statusColor,
+                                                      color: Colors.black87,
                                                     ),
                                                   ),
-                                                  SizedBox(height: 6),
+                                                  SizedBox(height: 4),
                                                   Text(
                                                     "$quantity",
                                                     style: TextStyle(
-                                                      fontSize: 22,
+                                                      fontSize: 20,
                                                       fontWeight: FontWeight.bold,
                                                       color: statusColor,
                                                     ),
@@ -496,7 +563,7 @@ class _InformasiPMIState extends State<InformasiPMI> with WidgetsBindingObserver
                                                   Text(
                                                     "Kantong",
                                                     style: TextStyle(
-                                                      fontSize: 9,
+                                                      fontSize: 8,
                                                       color: Colors.grey[600],
                                                       fontWeight: FontWeight.w500,
                                                     ),

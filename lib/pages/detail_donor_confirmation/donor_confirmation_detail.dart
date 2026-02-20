@@ -556,20 +556,23 @@ class _DonorConfirmationDetailState extends State<DonorConfirmationDetail> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                ValueListenableBuilder<String>(
-                  valueListenable: _timeRemaining,
-                  builder: (context, timeValue, child) {
-                    return Text(
-                      timeValue,
-                      style: const TextStyle(
-                        fontSize: 36,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF8B4545),
-                        letterSpacing: 1,
-                        height: 1.2,
-                      ),
-                    );
-                  },
+                Center(
+                  child: ValueListenableBuilder<String>(
+                    valueListenable: _timeRemaining,
+                    builder: (context, timeValue, child) {
+                      return Text(
+                        timeValue,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 36,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF8B4545),
+                          letterSpacing: 1,
+                          height: 1.2,
+                        ),
+                      );
+                    },
+                  ),
                 ),
                 const SizedBox(height: 16),
                 // Tombol Batalkan

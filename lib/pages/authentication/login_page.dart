@@ -180,7 +180,7 @@ class _LoginPageState extends State<LoginPage> {
                                       validator: (value) {
                                         if (value == null || value.isEmpty) {
                                           return 'Nomor WhatsApp tidak boleh kosong';
-                                        } else if (value.length < 10) {
+                                        } else if (value.length < 7 || value.length > 15) {
                                           return 'Nomor WhatsApp tidak valid';
                                         }
                                         return null;
