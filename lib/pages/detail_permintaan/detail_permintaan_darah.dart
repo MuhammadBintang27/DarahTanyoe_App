@@ -154,19 +154,23 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 30.0),
           child: Column(
             children: [
-              _buildInfoCard(
-                leadingIcon: SvgPicture.string(
-                  userRequest,
-                  colorFilter: ColorFilter.mode(AppTheme.neutral_01, BlendMode.srcIn),
-                  width: 30,
-                  height: 30,
-                ),
-                title: 'Peminta Darah',
-                subtitle: widget.permintaan.patientName ?? '-',
-                isProfile: true,
-              ),
-              const SizedBox(height: 6),
-              Row(
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      _buildInfoCard(
+                        leadingIcon: SvgPicture.string(
+                          userRequest,
+                          colorFilter: ColorFilter.mode(AppTheme.neutral_01, BlendMode.srcIn),
+                          width: 30,
+                          height: 30,
+                        ),
+                        title: 'Peminta Darah',
+                        subtitle: widget.permintaan.patientName ?? '-',
+                        isProfile: true,
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
                 children: [
                   Expanded(
                     flex: 2,
@@ -292,17 +296,21 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
                     : '-',
                 hasMoreButton: true,
               ),
-              _buildInfoCard(
-                leadingIcon: SvgPicture.string(
-                  info,
-                  colorFilter: ColorFilter.mode(AppTheme.neutral_01, BlendMode.srcIn),
-                  width: 30,
-                  height: 30,
+                      _buildInfoCard(
+                        leadingIcon: SvgPicture.string(
+                          info,
+                          colorFilter: ColorFilter.mode(AppTheme.neutral_01, BlendMode.srcIn),
+                          width: 30,
+                          height: 30,
+                        ),
+                        title: 'Progress Permintaan',
+                        subtitle: 'Telah terisi ${widget.permintaan.currentQuantity} dari ${widget.permintaan.relatedBloodRequest?.quantity ?? 0} Kantong',
+                      ),
+                    ],
+                  ),
                 ),
-                title: 'Progress Permintaan',
-                subtitle: 'Telah terisi ${widget.permintaan.currentQuantity} dari ${widget.permintaan.relatedBloodRequest?.quantity ?? 0} Kantong',
               ),
-              const Spacer(),
+              const SizedBox(height: 20),
               Container(
                 width: double.infinity,
                 height: 56,
@@ -380,6 +388,7 @@ class _DetailPermintaanDarahState extends State<DetailPermintaanDarah> {
       ),
     );
   }
+
 
   Widget _buildInfoCard({
     required Widget leadingIcon,

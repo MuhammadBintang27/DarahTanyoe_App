@@ -22,6 +22,7 @@ class _AddressPageState extends State<AddressPage> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
   bool _isLoadingLocation = false;
+  bool _isMapLoading = true; // NEW: Track map tile loading
   final AuthService _authService = AuthService();
 
   LatLng? userLocation;
@@ -31,6 +32,16 @@ class _AddressPageState extends State<AddressPage> {
   @override
   void initState() {
     super.initState();
+    
+    // Hide map loading indicator after 5 seconds
+    Future.delayed(const Duration(seconds: 5), () {
+      if (mounted) {
+        setState(() {
+          _isMapLoading = false;
+        });
+      }
+    });
+    
     _authService.loadingCallback = (isLoading) {
       if (mounted) {
         setState(() {
@@ -87,6 +98,7 @@ class _AddressPageState extends State<AddressPage> {
                 '${place.street}, ${place.locality}, ${place.country}';
             userLocation = LatLng(position.latitude, position.longitude);
             selectedLocation = userLocation;
+            _isMapLoading = false; // Map tiles sudah siap saat location didapat
             mapController.move(userLocation!, 15.0);
           });
         }
@@ -107,7 +119,9 @@ class _AddressPageState extends State<AddressPage> {
   }
 
   Future<void> _onMapTapped(LatLng tapPosition) async {
+    // Map bisa diakses, hide loading indicator
     setState(() {
+      _isMapLoading = false;
       selectedLocation = tapPosition;
       mapController.move(selectedLocation!, 15.0);
     });
@@ -258,6 +272,10 @@ class _AddressPageState extends State<AddressPage> {
                               borderRadius: BorderRadius.circular(16),
                               child: Stack(
                                 children: [
+                                  // Background color untuk map saat loading
+                                  Container(
+                                    color: Colors.lightBlue.shade50,
+                                  ),
                                   FlutterMap(
                                     mapController: mapController,
                                     options: MapOptions(
@@ -270,13 +288,10 @@ class _AddressPageState extends State<AddressPage> {
                                     ),
                                     children: [
                                       TileLayer(
-                                        urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                                        subdomains: const ['a', 'b', 'c'],
+                                        urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                                         userAgentPackageName: 'com.darahtanyoe.app',
-                                        maxZoom: 18,
-                                        minZoom: 3,
-                                        // Rate limiting untuk menghindari block
-                                        retinaMode: true,
+                                        maxZoom: 19,
+                                        minZoom: 1,
                                       ),
                                       if (selectedLocation != null)
                                         MarkerLayer(
@@ -324,6 +339,42 @@ class _AddressPageState extends State<AddressPage> {
                                       ),
                                     ],
                                   ),
+                                  
+                                  // Loading overlay saat map tiles sedang dimuat
+                                  if (_isMapLoading)
+                                    Container(
+                                      color: Colors.lightBlue.shade50.withOpacity(0.9),
+                                      child: Center(
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            const CircularProgressIndicator(
+                                              valueColor: AlwaysStoppedAnimation<Color>(
+                                                Color(0xFFD1495A),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 12),
+                                            Text(
+                                              'Memuat peta...',
+                                              style: TextStyle(
+                                                color: Colors.grey.shade700,
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 6),
+                                            Text(
+                                              'Mohon tunggu sebentar',
+                                              style: TextStyle(
+                                                color: Colors.grey.shade600,
+                                                fontSize: 11,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  
                                   // Button Overlay on Map
                                   Positioned(
                                     bottom: 12,

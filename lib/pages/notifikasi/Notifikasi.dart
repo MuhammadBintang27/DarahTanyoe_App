@@ -8,7 +8,9 @@ import 'package:http/http.dart' as http;
 import '../../service/auth_service.dart';
 import '../../service/animation_service.dart';
 import '../../service/notification_service.dart' as notif_service;
+import '../../service/campaign_service.dart';
 import '../../models/notification_model.dart';
+import '../detail_permintaan/detail_permintaan_darah.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 
@@ -179,32 +181,30 @@ class _NotificationPageState extends State<NotificationPage> {
       );
 
       try {
-        // Fetch campaign details from API
-        final baseUrl = dotenv.env['BASE_URL'] ?? 'http://10.0.2.2:4000'; // Adjust as needed
-        final response = await http.get(
-          Uri.parse('$baseUrl/campaigns/${notification.relatedId}'),
-        );
+        // Fetch campaign details using CampaignService
+        final campaign = await CampaignService.getCampaignById(notification.relatedId!);
 
         // Dismiss loading dialog
         if (mounted) Navigator.of(context).pop();
 
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body)['data'];
-          final status = data['status'] ?? 'unknown';
-
+        if (campaign != null) {
           if (!mounted) return;
+
+          final status = campaign.status ?? 'unknown';
 
           if (status == 'completed' || status == 'cancelled') {
             // Campaign sudah tidak active
             AnimationService.showCampaignUnavailable(context, status: status);
           } else if (status == 'active' || status == 'draft') {
-            // Campaign masih active, navigate to detail
-            ToastService.showSuccess(context, message: 'Membuka detail permintaan darah...');
-            // TODO: Implement navigation ke campaign detail page
-            // Bisa fetch PermintaanDarahModel dari API dan navigate
+            // Campaign masih active, navigate to detail page
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => DetailPermintaanDarah(permintaan: campaign),
+              ),
+            );
           }
         } else {
-          // API error
+          // API error - campaign not found
           if (mounted) {
             ToastService.showError(context, message: 'Gagal memuat data permintaan darah');
           }
@@ -215,7 +215,9 @@ class _NotificationPageState extends State<NotificationPage> {
           Navigator.of(context).pop();
         }
 
-        ToastService.showError(context, message: 'Error: ${e.toString()}');
+        if (mounted) {
+          ToastService.showError(context, message: 'Terjadi kesalahan saat memuat data');
+        }
       }
     }
   }

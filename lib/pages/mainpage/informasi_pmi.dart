@@ -500,76 +500,100 @@ class _InformasiPMIState extends State<InformasiPMI> with WidgetsBindingObserver
                                         ),
                                         SizedBox(height: 16),
 
-                                        // Grid Stok Per Golongan Darah
-                                        GridView.builder(
-                                          shrinkWrap: true,
-                                          physics: NeverScrollableScrollPhysics(),
-                                          gridDelegate:
-                                              SliverGridDelegateWithFixedCrossAxisCount(
-                                            crossAxisCount: 4,
-                                            crossAxisSpacing: 10,
-                                            mainAxisSpacing: 10,
-                                            childAspectRatio: 0.85,
-                                          ),
-                                          itemCount: bloodTypes.length,
-                                          itemBuilder: (context, index) {
-                                            String bloodType = bloodTypes[index];
-                                            int quantity = _getStockQuantity(bloodType, _selectedComponent);
-                                            Color statusColor = _getStockColor(quantity);
+                                        // Grid Stok Per Golongan Darah (Responsive)
+                                        LayoutBuilder(
+                                          builder: (context, constraints) {
+                                            // Responsif: hitung ukuran berdasarkan lebar container
+                                            double cardWidth = (constraints.maxWidth - 24) / 4; // 3*8 spacing
+                                            double iconSize = cardWidth * 0.18;
+                                            double bloodTypeSize = cardWidth * 0.17;
+                                            double quantitySize = cardWidth * 0.24;
+                                            double kantongSize = cardWidth * 0.12;
+                                            
+                                            return GridView.builder(
+                                              shrinkWrap: true,
+                                              physics: NeverScrollableScrollPhysics(),
+                                              gridDelegate:
+                                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                                crossAxisCount: 4,
+                                                crossAxisSpacing: 8,
+                                                mainAxisSpacing: 8,
+                                                childAspectRatio: 0.88,
+                                              ),
+                                              itemCount: bloodTypes.length,
+                                              itemBuilder: (context, index) {
+                                                String bloodType = bloodTypes[index];
+                                                int quantity = _getStockQuantity(bloodType, _selectedComponent);
+                                                Color statusColor = _getStockColor(quantity);
 
-                                            return Container(
-                                              padding: EdgeInsets.symmetric(
-                                                  vertical: 8, horizontal: 4),
-                                              decoration: BoxDecoration(
-                                                color: statusColor
-                                                    .withValues(alpha: 0.1),
-                                                border: Border.all(
-                                                  color: statusColor
-                                                      .withValues(alpha: 0.3),
-                                                  width: 1.5,
-                                                ),
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                              ),
-                                              child: Column(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Icon(
-                                                    Icons.water_drop,
-                                                    color: statusColor,
-                                                    size: 16,
-                                                  ),
-                                                  SizedBox(height: 2),
-                                                  Text(
-                                                    bloodType,
-                                                    style: TextStyle(
-                                                      fontSize: 14,
-                                                      fontWeight: FontWeight.bold,
-                                                      color: Colors.black87,
+                                                return Container(
+                                                  padding: EdgeInsets.symmetric(
+                                                      vertical: cardWidth * 0.08, 
+                                                      horizontal: cardWidth * 0.04),
+                                                  decoration: BoxDecoration(
+                                                    color: statusColor
+                                                        .withValues(alpha: 0.1),
+                                                    border: Border.all(
+                                                      color: statusColor
+                                                          .withValues(alpha: 0.3),
+                                                      width: 1.5,
                                                     ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(12),
                                                   ),
-                                                  SizedBox(height: 4),
-                                                  Text(
-                                                    "$quantity",
-                                                    style: TextStyle(
-                                                      fontSize: 20,
-                                                      fontWeight: FontWeight.bold,
-                                                      color: statusColor,
-                                                    ),
+                                                  child: Column(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.center,
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: [
+                                                      Icon(
+                                                        Icons.water_drop,
+                                                        color: statusColor,
+                                                        size: iconSize.clamp(12.0, 16.0),
+                                                      ),
+                                                      SizedBox(height: cardWidth * 0.02),
+                                                      Flexible(
+                                                        child: Text(
+                                                          bloodType,
+                                                          style: TextStyle(
+                                                            fontSize: bloodTypeSize.clamp(11.0, 14.0),
+                                                            fontWeight: FontWeight.bold,
+                                                            color: Colors.black87,
+                                                          ),
+                                                          maxLines: 1,
+                                                          overflow: TextOverflow.ellipsis,
+                                                        ),
+                                                      ),
+                                                      SizedBox(height: cardWidth * 0.03),
+                                                      Flexible(
+                                                        child: Text(
+                                                          "$quantity",
+                                                          style: TextStyle(
+                                                            fontSize: quantitySize.clamp(16.0, 20.0),
+                                                            fontWeight: FontWeight.bold,
+                                                            color: statusColor,
+                                                          ),
+                                                          maxLines: 1,
+                                                          overflow: TextOverflow.visible,
+                                                        ),
+                                                      ),
+                                                      SizedBox(height: cardWidth * 0.01),
+                                                      Flexible(
+                                                        child: Text(
+                                                          "Kantong",
+                                                          style: TextStyle(
+                                                            fontSize: kantongSize.clamp(8.0, 10.0),
+                                                            color: Colors.grey[600],
+                                                            fontWeight: FontWeight.w500,
+                                                          ),
+                                                          maxLines: 1,
+                                                          overflow: TextOverflow.ellipsis,
+                                                        ),
+                                                      ),
+                                                    ],
                                                   ),
-                                                  SizedBox(height: 2),
-                                                  Text(
-                                                    "Kantong",
-                                                    style: TextStyle(
-                                                      fontSize: 8,
-                                                      color: Colors.grey[600],
-                                                      fontWeight: FontWeight.w500,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
+                                                );
+                                              },
                                             );
                                           },
                                         ),
@@ -596,7 +620,10 @@ class _InformasiPMIState extends State<InformasiPMI> with WidgetsBindingObserver
                                     ),
                                   ),
 
-                                  SizedBox(height: 20),
+                                  // Bottom padding responsif untuk navigation bar
+                                  SizedBox(
+                                    height: MediaQuery.of(context).size.height * 0.1,
+                                  ),
                                 ],
                               ],
                             ),

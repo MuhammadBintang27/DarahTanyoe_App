@@ -33,6 +33,7 @@ class _EditProfilPageState extends State<EditProfilPage> {
   
   bool isLoading = false;
   bool isLoadingLocation = false;
+  bool _isMapLoading = true; // Track map tile loading
   double? newLatitude;
   double? newLongitude;
   String newAddress = '';
@@ -43,6 +44,16 @@ class _EditProfilPageState extends State<EditProfilPage> {
   @override
   void initState() {
     super.initState();
+    
+    // Hide map loading indicator after 5 seconds
+    Future.delayed(const Duration(seconds: 5), () {
+      if (mounted) {
+        setState(() {
+          _isMapLoading = false;
+        });
+      }
+    });
+    
     emailController = TextEditingController(text: widget.userData['email'] ?? '');
     phoneController = TextEditingController(text: widget.userData['phone_number'] ?? '');
     addressController = TextEditingController(text: widget.userData['address'] ?? '');
@@ -89,6 +100,7 @@ class _EditProfilPageState extends State<EditProfilPage> {
             newLongitude = position.longitude;
             newAddress = '${place.street}, ${place.locality}, ${place.country}';
             selectedLocation = LatLng(position.latitude, position.longitude);
+            _isMapLoading = false; // Map tiles sudah siap
             mapController.move(selectedLocation!, 15.0);
             addressController.text = newAddress;
           });
@@ -107,6 +119,7 @@ class _EditProfilPageState extends State<EditProfilPage> {
 
   Future<void> _onMapTapped(LatLng tapPosition) async {
     setState(() {
+      _isMapLoading = false; // Map bisa diakses
       selectedLocation = tapPosition;
       newLatitude = tapPosition.latitude;
       newLongitude = tapPosition.longitude;
@@ -341,6 +354,10 @@ class _EditProfilPageState extends State<EditProfilPage> {
                               borderRadius: BorderRadius.circular(16),
                               child: Stack(
                                 children: [
+                                  // Background color untuk map saat loading
+                                  Container(
+                                    color: Colors.lightBlue.shade50,
+                                  ),
                                   FlutterMap(
                                     mapController: mapController,
                                     options: MapOptions(
@@ -353,12 +370,10 @@ class _EditProfilPageState extends State<EditProfilPage> {
                                     ),
                                     children: [
                                       TileLayer(
-                                        urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                                        subdomains: const ['a', 'b', 'c'],
+                                        urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                                         userAgentPackageName: 'com.darahtanyoe.app',
-                                        maxZoom: 18,
-                                        minZoom: 3,
-                                        retinaMode: true,
+                                        maxZoom: 19,
+                                        minZoom: 1,
                                       ),
                                       if (selectedLocation != null)
                                         MarkerLayer(
@@ -405,6 +420,41 @@ class _EditProfilPageState extends State<EditProfilPage> {
                                       ),
                                     ],
                                   ),
+                                  
+                                  // Loading overlay saat map tiles sedang dimuat
+                                  if (_isMapLoading)
+                                    Container(
+                                      color: Colors.lightBlue.shade50.withOpacity(0.9),
+                                      child: Center(
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            const CircularProgressIndicator(
+                                              valueColor: AlwaysStoppedAnimation<Color>(
+                                                AppTheme.brand_02,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 12),
+                                            Text(
+                                              'Memuat peta...',
+                                              style: TextStyle(
+                                                color: Colors.grey.shade700,
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 6),
+                                            Text(
+                                              'Mohon tunggu sebentar',
+                                              style: TextStyle(
+                                                color: Colors.grey.shade600,
+                                                fontSize: 11,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
                                 ],
                               ),
                             ),
